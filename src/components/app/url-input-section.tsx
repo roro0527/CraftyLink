@@ -24,7 +24,7 @@ const UrlInputSection: React.FC<UrlInputSectionProps> = ({
         placeholder="URL을 입력하거나 검색어를 입력하세요..."
         value={urlsInput}
         onChange={(e) => onUrlsInputChange(e.target.value)}
-        className="h-14 text-base pl-12 pr-4 rounded-full shadow-lg"
+        className="h-14 text-base pl-12 pr-4 rounded-full shadow-lg border-[2px] border-black"
         disabled={isAnalyzing}
         onKeyDown={(e) => {
           if (e.key === 'Enter' && !isAnalyzing && urlsInput.trim()) {

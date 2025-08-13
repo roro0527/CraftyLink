@@ -59,9 +59,9 @@ const SuperParametersSection: React.FC<SuperParametersSectionProps> = ({
   return (
     <Card className="shadow-lg">
       <CardHeader>
-        <CardTitle className="text-2xl">3. Configure Super-Parameters</CardTitle>
+        <CardTitle className="text-2xl">3. 슈퍼 매개변수 구성</CardTitle>
         <CardDescription>
-          Use AI to suggest parameters or define them yourself. These will be used to generate all URL permutations.
+          AI를 사용하여 매개변수를 제안하거나 직접 정의하세요. 모든 URL 순열을 생성하는 데 사용됩니다.
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-6">
@@ -71,7 +71,7 @@ const SuperParametersSection: React.FC<SuperParametersSectionProps> = ({
           ) : (
             <Sparkles />
           )}
-          <span className="ml-2">Suggest with AI</span>
+          <span className="ml-2">AI로 추천받기</span>
         </Button>
         
         {isSuggesting && (
@@ -83,8 +83,8 @@ const SuperParametersSection: React.FC<SuperParametersSectionProps> = ({
 
         {!isSuggesting && superParams.length === 0 && (
           <div className="text-center text-muted-foreground py-10 border-2 border-dashed rounded-lg">
-            <p>No super-parameters defined.</p>
-            <p className="text-sm">Click "Suggest with AI" or add them manually.</p>
+            <p>정의된 슈퍼 매개변수가 없습니다.</p>
+            <p className="text-sm">"AI로 추천받기"를 클릭하거나 수동으로 추가하세요.</p>
           </div>
         )}
 
@@ -95,7 +95,7 @@ const SuperParametersSection: React.FC<SuperParametersSectionProps> = ({
                 <CardContent className="pt-6">
                   <div className="space-y-4">
                     <div>
-                      <Label htmlFor={`name-${param.id}`}>Name</Label>
+                      <Label htmlFor={`name-${param.id}`}>이름</Label>
                       <Input
                         id={`name-${param.id}`}
                         value={param.name}
@@ -104,7 +104,7 @@ const SuperParametersSection: React.FC<SuperParametersSectionProps> = ({
                       />
                     </div>
                     <div>
-                      <Label htmlFor={`desc-${param.id}`}>Description</Label>
+                      <Label htmlFor={`desc-${param.id}`}>설명</Label>
                       <Input
                         id={`desc-${param.id}`}
                         value={param.description}
@@ -112,7 +112,7 @@ const SuperParametersSection: React.FC<SuperParametersSectionProps> = ({
                       />
                     </div>
                     <div>
-                      <Label>Values</Label>
+                      <Label>값</Label>
                       <div className="flex flex-wrap gap-2 p-2 border rounded-md min-h-12 bg-background">
                         {param.values.map(v => (
                           <Badge key={v} variant="secondary" className="text-base">
@@ -126,13 +126,13 @@ const SuperParametersSection: React.FC<SuperParametersSectionProps> = ({
                     </div>
                     <div className="flex gap-2">
                       <Input
-                        placeholder="Add a new value"
+                        placeholder="새 값 추가"
                         value={newValues[param.id] || ''}
                         onChange={(e) => handleNewValueChange(param.id, e.target.value)}
                          onKeyDown={(e) => e.key === 'Enter' && handleAddValue(param.id)}
                       />
                       <Button size="sm" variant="secondary" onClick={() => handleAddValue(param.id)}>
-                        <Plus className="h-4 w-4 mr-1" /> Add
+                        <Plus className="h-4 w-4 mr-1" /> 추가
                       </Button>
                     </div>
                   </div>
@@ -146,7 +146,7 @@ const SuperParametersSection: React.FC<SuperParametersSectionProps> = ({
       <CardFooter>
         <Button onClick={onGenerate} disabled={isSuggesting || superParams.length === 0}>
           <Rocket />
-          <span className="ml-2">Generate Permutations</span>
+          <span className="ml-2">순열 생성</span>
         </Button>
       </CardFooter>
     </Card>

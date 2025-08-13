@@ -43,9 +43,9 @@ const ParsedUrlsSection: React.FC<ParsedUrlsSectionProps> = ({ parsedUrls, onUpd
   return (
     <Card className="shadow-lg">
       <CardHeader>
-        <CardTitle className="text-2xl">2. Review Parsed Data</CardTitle>
+        <CardTitle className="text-2xl">2. 분석된 데이터 검토</CardTitle>
         <CardDescription>
-          Review the parsed URLs and their parameters. You can edit the values if needed. The first URL's base path will be used for generation.
+          분석된 URL과 해당 매개변수를 검토하세요. 필요한 경우 값을 편집할 수 있습니다. 첫 번째 URL의 기본 경로는 생성에 사용됩니다.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -57,14 +57,14 @@ const ParsedUrlsSection: React.FC<ParsedUrlsSectionProps> = ({ parsedUrls, onUpd
               </AccordionTrigger>
               <AccordionContent>
                 <div className="p-2 bg-muted/50 rounded-md">
-                    <p className="text-sm text-muted-foreground mb-1">Base URL</p>
+                    <p className="text-sm text-muted-foreground mb-1">기준 URL</p>
                     <p className="font-mono bg-background p-2 rounded">{url.baseUrl}</p>
-                    <p className="text-sm text-muted-foreground mt-4 mb-2">Parameters</p>
+                    <p className="text-sm text-muted-foreground mt-4 mb-2">매개변수</p>
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>Key</TableHead>
-                          <TableHead>Value</TableHead>
+                          <TableHead>키</TableHead>
+                          <TableHead>값</TableHead>
                           <TableHead className="w-[50px]"></TableHead>
                         </TableRow>
                       </TableHeader>
@@ -95,7 +95,7 @@ const ParsedUrlsSection: React.FC<ParsedUrlsSectionProps> = ({ parsedUrls, onUpd
                       </TableBody>
                     </Table>
                      <Button variant="outline" size="sm" className="mt-2" onClick={() => handleAddParam(url.id)}>
-                        <PlusCircle className="mr-2 h-4 w-4" /> Add Parameter
+                        <PlusCircle className="mr-2 h-4 w-4" /> 매개변수 추가
                       </Button>
                 </div>
               </AccordionContent>

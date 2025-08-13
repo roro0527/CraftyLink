@@ -23,8 +23,8 @@ const GeneratedUrlsSection: React.FC<GeneratedUrlsSectionProps> = ({ generatedUr
   const copyToClipboard = (text: string, url?: string) => {
     navigator.clipboard.writeText(text).then(() => {
       toast({
-        title: 'Copied to clipboard!',
-        description: url ? 'The URL has been copied.' : 'All generated URLs have been copied.',
+        title: '클립보드에 복사되었습니다!',
+        description: url ? 'URL이 복사되었습니다.' : '생성된 모든 URL이 복사되었습니다.',
       });
       if (url) {
         setCopiedUrl(url);
@@ -45,9 +45,9 @@ const GeneratedUrlsSection: React.FC<GeneratedUrlsSectionProps> = ({ generatedUr
   return (
     <Card className="shadow-lg">
       <CardHeader>
-        <CardTitle className="text-2xl">4. Generated URLs</CardTitle>
+        <CardTitle className="text-2xl">4. 생성된 URL</CardTitle>
         <CardDescription>
-          Here are all the possible URL permutations based on your super-parameters. You can filter, copy, or open them.
+          슈퍼 매개변수를 기반으로 생성된 모든 URL 순열입니다. 필터링, 복사 또는 열기가 가능합니다.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -55,7 +55,7 @@ const GeneratedUrlsSection: React.FC<GeneratedUrlsSectionProps> = ({ generatedUr
           <div className="relative flex-grow">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Filter URLs..."
+              placeholder="URL 필터링..."
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
               className="pl-10"
@@ -63,7 +63,7 @@ const GeneratedUrlsSection: React.FC<GeneratedUrlsSectionProps> = ({ generatedUr
           </div>
           <Button onClick={handleCopyAll} variant="outline" disabled={filteredUrls.length === 0}>
             <Clipboard className="mr-2 h-4 w-4" />
-            Copy All ({filteredUrls.length})
+            모두 복사 ({filteredUrls.length})
           </Button>
         </div>
         
@@ -85,7 +85,7 @@ const GeneratedUrlsSection: React.FC<GeneratedUrlsSectionProps> = ({ generatedUr
                           </Button>
                         </TooltipTrigger>
                         <TooltipContent>
-                          <p>Copy URL</p>
+                          <p>URL 복사</p>
                         </TooltipContent>
                       </Tooltip>
                     </li>
@@ -94,7 +94,7 @@ const GeneratedUrlsSection: React.FC<GeneratedUrlsSectionProps> = ({ generatedUr
               </ul>
             ) : (
               <div className="flex items-center justify-center h-full text-muted-foreground">
-                <p>No URLs match your filter.</p>
+                <p>필터와 일치하는 URL이 없습니다.</p>
               </div>
             )}
           </div>

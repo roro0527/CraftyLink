@@ -18,6 +18,6 @@ export async function suggestSuperParametersAction(
     return suggestions;
   } catch (error) {
     console.error('Error suggesting super-parameters:', error);
-    throw new Error('Failed to get suggestions from the AI. Please try again.');
+    throw new Error('AI로부터 제안을 받아오지 못했습니다. 다시 시도해주세요.');
   }
 }

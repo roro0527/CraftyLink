@@ -20,7 +20,7 @@ export type SuggestSuperParametersInput = z.infer<typeof SuggestSuperParametersI
 const SuggestSuperParametersOutputSchema = z.array(
   z.object({
     name: z.string().describe('The name of the super-parameter.'),
-    description: z.string().describe('A description of the super-parameter.'),
+    description: z.string().describe('A description of the super-parameter in Korean.'),
     values: z.array(z.string()).describe('The possible values for the super-parameter.'),
   })
 );
@@ -47,8 +47,9 @@ const prompt = ai.definePrompt({
   - The super-parameters should be relevant to the purpose of the URLs.
   - The super-parameters should capture meaningful combinations of parameters and their possible values.
   - The super-parameters should be concise and easy to understand.
+  - The description for each super-parameter must be in Korean.
 
-  Return a JSON array of super-parameters, where each super-parameter has a name, description, and an array of possible values.
+  Return a JSON array of super-parameters, where each super-parameter has a name, description (in Korean), and an array of possible values.
   `,
 });
 

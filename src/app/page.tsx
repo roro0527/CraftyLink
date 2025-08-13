@@ -33,8 +33,8 @@ export default function Home() {
       if (parsed.length === 0) {
         toast({
           variant: 'destructive',
-          title: 'No valid URLs found',
-          description: 'Please enter at least one valid URL to analyze.',
+          title: '유효한 URL을 찾을 수 없습니다',
+          description: '분석을 위해 하나 이상의 유효한 URL을 입력해주세요.',
         });
         setIsAnalyzing(false);
         return;
@@ -55,13 +55,13 @@ export default function Home() {
       const suggestions = await suggestSuperParametersAction(urlsToSuggest);
       setSuperParams(suggestions.map(s => ({...s, id: nanoid()})));
        toast({
-        title: 'AI Suggestions Ready!',
-        description: 'Review and edit the super-parameters below.',
+        title: 'AI 추천 준비 완료!',
+        description: '아래에서 슈퍼 매개변수를 검토하고 편집하세요.',
       });
     } catch (error) {
       toast({
         variant: 'destructive',
-        title: 'AI Suggestion Failed',
+        title: 'AI 추천 실패',
         description: (error as Error).message,
       });
     } finally {
@@ -77,8 +77,8 @@ export default function Home() {
     if (parsedUrls.length === 0) {
       toast({
         variant: 'destructive',
-        title: 'No Base URL',
-        description: 'Please analyze at least one URL first.',
+        title: '기준 URL 없음',
+        description: '먼저 하나 이상의 URL을 분석해주세요.',
       });
       return;
     }

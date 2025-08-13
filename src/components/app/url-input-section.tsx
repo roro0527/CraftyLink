@@ -23,18 +23,18 @@ const UrlInputSection: React.FC<UrlInputSectionProps> = ({
     <Card className="shadow-lg">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-2xl">
-          1. Enter URLs
+          1. URL 입력
         </CardTitle>
         <CardDescription>
-          Paste one or more URLs below, each on a new line. The app will parse their query parameters.
+          아래에 하나 이상의 URL을 한 줄에 하나씩 붙여넣으세요. 앱이 쿼리 매개변수를 분석합니다.
         </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="grid w-full gap-1.5">
-          <Label htmlFor="urls">URLs</Label>
+          <Label htmlFor="urls">URL 목록</Label>
           <Textarea
             id="urls"
-            placeholder="e.g. https://example.com?lang=en&theme=dark&#10;https://example.com?lang=fr&theme=light"
+            placeholder="예: https://example.com?lang=en&theme=dark\nhttps://example.com?lang=fr&theme=light"
             value={urlsInput}
             onChange={(e) => onUrlsInputChange(e.target.value)}
             rows={6}
@@ -50,7 +50,7 @@ const UrlInputSection: React.FC<UrlInputSectionProps> = ({
           ) : (
             <Wand2 />
           )}
-          <span className="ml-2">Analyze URLs</span>
+          <span className="ml-2">URL 분석</span>
         </Button>
       </CardFooter>
     </Card>

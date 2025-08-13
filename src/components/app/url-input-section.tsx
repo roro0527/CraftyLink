@@ -18,7 +18,7 @@ const UrlInputSection: React.FC<UrlInputSectionProps> = ({
   isAnalyzing,
 }) => {
   return (
-    <div className="flex flex-col gap-4">
+    <>
       <p className="text-sm text-muted-foreground">
         아래에 하나 이상의 URL을 한 줄에 하나씩 붙여넣으세요. 앱이 쿼리 매개변수를 분석합니다.
       </p>
@@ -44,7 +44,7 @@ const UrlInputSection: React.FC<UrlInputSectionProps> = ({
           <span className="ml-2">URL 분석</span>
         </Button>
       </div>
-    </div>
+    </>
   );
 };
 

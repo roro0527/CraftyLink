@@ -12,6 +12,25 @@ import UrlInputSection from '@/components/app/url-input-section';
 import ParsedUrlsSection from '@/components/app/parsed-urls-section';
 import SuperParametersSection from '@/components/app/super-parameters-section';
 import GeneratedUrlsSection from '@/components/app/generated-urls-section';
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarInset,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton,
+  SidebarHeader,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupLabel
+} from '@/components/ui/sidebar';
+import {
+  Home as HomeIcon,
+  Settings,
+  History,
+  Info
+} from 'lucide-react';
+
 
 export default function Home() {
   const { toast } = useToast();
@@ -88,38 +107,79 @@ export default function Home() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-background text-foreground">
-      <AppHeader />
-      <main className="flex-grow container mx-auto px-4 py-8">
-        <div className="max-w-4xl mx-auto flex flex-col gap-12">
-          <UrlInputSection
-            urlsInput={urlsInput}
-            onUrlsInputChange={setUrlsInput}
-            onAnalyze={handleAnalyze}
-            isAnalyzing={isAnalyzing}
-          />
+    <>
+      <Sidebar>
+        <SidebarContent>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarGroup>
+                <SidebarGroupLabel>메뉴</SidebarGroupLabel>
+                <SidebarMenu>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton isActive>
+                      <HomeIcon />
+                      <span>홈</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton>
+                      <History />
+                      <span>기록</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton>
+                      <Settings />
+                      <span>설정</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                   <SidebarMenuItem>
+                    <SidebarMenuButton>
+                      <Info />
+                      <span>정보</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                </SidebarMenu>
+              </SidebarGroup>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarContent>
+      </Sidebar>
+      <SidebarInset>
+        <div className="flex flex-col min-h-screen bg-background text-foreground">
+          <AppHeader />
+          <main className="flex-grow container mx-auto px-4 py-8">
+            <div className="max-w-4xl mx-auto flex flex-col gap-12">
+              <UrlInputSection
+                urlsInput={urlsInput}
+                onUrlsInputChange={setUrlsInput}
+                onAnalyze={handleAnalyze}
+                isAnalyzing={isAnalyzing}
+              />
 
-          {parsedUrls.length > 0 && (
-            <div className="flex flex-col gap-12">
-              <ParsedUrlsSection
-                parsedUrls={parsedUrls}
-                onUpdateParsedUrl={handleUpdateParsedUrl}
-              />
-              <SuperParametersSection
-                superParams={superParams}
-                onUpdateSuperParam={handleUpdateSuperParam}
-                onSuggest={handleSuggest}
-                onGenerate={handleGenerate}
-                isSuggesting={isSuggesting}
-              />
+              {parsedUrls.length > 0 && (
+                <div className="flex flex-col gap-12">
+                  <ParsedUrlsSection
+                    parsedUrls={parsedUrls}
+                    onUpdateParsedUrl={handleUpdateParsedUrl}
+                  />
+                  <SuperParametersSection
+                    superParams={superParams}
+                    onUpdateSuperParam={handleUpdateSuperParam}
+                    onSuggest={handleSuggest}
+                    onGenerate={handleGenerate}
+                    isSuggesting={isSuggesting}
+                  />
+                </div>
+              )}
+
+              {generatedUrls.length > 0 && (
+                <GeneratedUrlsSection generatedUrls={generatedUrls} />
+              )}
             </div>
-          )}
-
-          {generatedUrls.length > 0 && (
-            <GeneratedUrlsSection generatedUrls={generatedUrls} />
-          )}
+          </main>
         </div>
-      </main>
-    </div>
+      </SidebarInset>
+    </>
   );
 }

@@ -106,6 +106,8 @@ export default function Home() {
     setGeneratedUrls(permutations);
   };
 
+  const showResults = parsedUrls.length > 0 || generatedUrls.length > 0;
+
   return (
     <>
       <Sidebar>
@@ -148,34 +150,36 @@ export default function Home() {
       <SidebarInset>
         <div className="flex flex-col min-h-screen bg-background text-foreground">
           <AppHeader />
-          <main className="flex-grow container mx-auto px-4 py-8">
-            <div className="max-w-4xl mx-auto flex flex-col gap-12">
-              <UrlInputSection
-                urlsInput={urlsInput}
-                onUrlsInputChange={setUrlsInput}
-                onAnalyze={handleAnalyze}
-                isAnalyzing={isAnalyzing}
-              />
+          <main className={`flex-grow flex flex-col ${showResults ? 'items-start' : 'items-center justify-center -mt-24'}`}>
+            <div className={`w-full ${showResults ? 'container mx-auto px-4 py-8' : ''}`}>
+              <div className={`mx-auto flex flex-col gap-12 ${showResults ? 'max-w-4xl' : 'max-w-2xl'}`}>
+                <UrlInputSection
+                  urlsInput={urlsInput}
+                  onUrlsInputChange={setUrlsInput}
+                  onAnalyze={handleAnalyze}
+                  isAnalyzing={isAnalyzing}
+                />
 
-              {parsedUrls.length > 0 && (
-                <div className="flex flex-col gap-12">
-                  <ParsedUrlsSection
-                    parsedUrls={parsedUrls}
-                    onUpdateParsedUrl={handleUpdateParsedUrl}
-                  />
-                  <SuperParametersSection
-                    superParams={superParams}
-                    onUpdateSuperParam={handleUpdateSuperParam}
-                    onSuggest={handleSuggest}
-                    onGenerate={handleGenerate}
-                    isSuggesting={isSuggesting}
-                  />
-                </div>
-              )}
+                {parsedUrls.length > 0 && (
+                  <div className="flex flex-col gap-12">
+                    <ParsedUrlsSection
+                      parsedUrls={parsedUrls}
+                      onUpdateParsedUrl={handleUpdateParsedUrl}
+                    />
+                    <SuperParametersSection
+                      superParams={superParams}
+                      onUpdateSuperParam={handleUpdateSuperParam}
+                      onSuggest={handleSuggest}
+                      onGenerate={handleGenerate}
+                      isSuggesting={isSuggesting}
+                    />
+                  </div>
+                )}
 
-              {generatedUrls.length > 0 && (
-                <GeneratedUrlsSection generatedUrls={generatedUrls} />
-              )}
+                {generatedUrls.length > 0 && (
+                  <GeneratedUrlsSection generatedUrls={generatedUrls} />
+                )}
+              </div>
             </div>
           </main>
         </div>

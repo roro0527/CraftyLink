@@ -59,6 +59,7 @@ export default function Home() {
         return;
       }
       setParsedUrls(parsed);
+      setUrlsInput(''); // Clear input after analysis
       setIsAnalyzing(false);
     }, 500);
   };
@@ -149,17 +150,15 @@ export default function Home() {
       </Sidebar>
       <SidebarInset>
         <div className="flex flex-col min-h-screen bg-background text-foreground">
-          <AppHeader />
-          <main className={`flex-grow flex flex-col ${showResults ? 'items-start' : 'items-start justify-start pt-8'}`}>
+          <AppHeader 
+            urlsInput={urlsInput}
+            onUrlsInputChange={setUrlsInput}
+            onAnalyze={handleAnalyze}
+            isAnalyzing={isAnalyzing}
+          />
+          <main className={`flex-grow flex flex-col items-start justify-start pt-8`}>
             <div className={`w-full ${showResults ? 'container mx-auto px-4 py-8' : ''}`}>
-              <div className={`${showResults ? 'mx-auto max-w-4xl' : 'max-w-md ml-8'} flex flex-col gap-12`}>
-                <UrlInputSection
-                  urlsInput={urlsInput}
-                  onUrlsInputChange={setUrlsInput}
-                  onAnalyze={handleAnalyze}
-                  isAnalyzing={isAnalyzing}
-                />
-
+              <div className={`${showResults ? 'mx-auto max-w-4xl' : ''} flex flex-col gap-12`}>
                 {parsedUrls.length > 0 && (
                   <div className="flex flex-col gap-12">
                     <ParsedUrlsSection

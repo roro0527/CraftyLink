@@ -152,7 +152,7 @@ export default function Home() {
         <div className="flex flex-col min-h-screen bg-background text-foreground">
           <AppHeader />
           <main className={`flex-grow flex flex-col items-start justify-start pt-8 -mt-10`}>
-             <div className="w-full max-w-xl ml-auto mt-[95px] mr-[45px]">
+             <div className="w-full max-w-xl ml-auto mt-[170px] mr-[95px]">
                <UrlInputSection
                 urlsInput={urlsInput}
                 onUrlsInputChange={setUrlsInput}

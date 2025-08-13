@@ -22,9 +22,6 @@ const UrlInputSection: React.FC<UrlInputSectionProps> = ({
   return (
     <Card className="shadow-lg">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-2xl">
-          1. URL 검색
-        </CardTitle>
         <CardDescription>
           아래에 하나 이상의 URL을 한 줄에 하나씩 붙여넣으세요. 앱이 쿼리 매개변수를 분석합니다.
         </CardDescription>

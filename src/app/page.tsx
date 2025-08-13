@@ -26,9 +26,9 @@ import {
 } from '@/components/ui/sidebar';
 import {
   Home as HomeIcon,
-  Settings,
-  History,
-  Info
+  Compass,
+  TrendingUp,
+  LineChart
 } from 'lucide-react';
 
 
@@ -123,20 +123,20 @@ export default function Home() {
                   </SidebarMenuItem>
                   <SidebarMenuItem>
                     <SidebarMenuButton>
-                      <History />
-                      <span>기록</span>
+                      <Compass />
+                      <span>탐색</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                   <SidebarMenuItem>
                     <SidebarMenuButton>
-                      <Settings />
-                      <span>설정</span>
+                      <TrendingUp />
+                      <span>실시간 인기</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                    <SidebarMenuItem>
                     <SidebarMenuButton>
-                      <Info />
-                      <span>정보</span>
+                      <LineChart />
+                      <span>트렌드 분석</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 </SidebarMenu>

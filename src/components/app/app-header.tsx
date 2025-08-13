@@ -1,5 +1,6 @@
 import { Link2, Menu } from 'lucide-react';
 import { SidebarTrigger } from '@/components/ui/sidebar';
+import { Button } from '@/components/ui/button';
 
 const AppHeader = () => {
   return (
@@ -15,6 +16,12 @@ const AppHeader = () => {
               CraftyLink
             </h1>
           </div>
+          <nav className="hidden md:flex items-center space-x-2 ml-10">
+            <Button variant="ghost" className="text-base">홈</Button>
+            <Button variant="ghost" className="text-base">탐색</Button>
+            <Button variant="ghost" className="text-base">실시간 인기</Button>
+            <Button variant="ghost" className="text-base">트렌드 분석</Button>
+          </nav>
         </div>
       </div>
     </header>

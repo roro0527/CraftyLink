@@ -6,11 +6,11 @@ const AppHeader = () => {
   return (
     <header className="border-b border-border/50 bg-card/50 backdrop-blur-sm sticky top-0 z-10">
       <div className="px-4">
-        <div className="flex items-start h-16 py-3">
+        <div className="flex items-center h-16 py-3">
           <SidebarTrigger>
             <Menu className="h-7 w-7" />
           </SidebarTrigger>
-          <div className='flex items-center ml-4 pt-0.5'>
+          <div className='flex items-center ml-4'>
             <Link2 className="h-7 w-7 text-primary" />
             <h1 className="ml-3 text-2xl font-bold text-foreground">
               CraftyLink

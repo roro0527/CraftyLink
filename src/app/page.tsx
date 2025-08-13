@@ -150,9 +150,9 @@ export default function Home() {
       <SidebarInset>
         <div className="flex flex-col min-h-screen bg-background text-foreground">
           <AppHeader />
-          <main className={`flex-grow flex flex-col ${showResults ? 'items-start' : 'items-center justify-start pt-20'}`}>
+          <main className={`flex-grow flex flex-col ${showResults ? 'items-start' : 'items-center justify-start pt-8'}`}>
             <div className={`w-full ${showResults ? 'container mx-auto px-4 py-8' : ''}`}>
-              <div className={`mx-auto flex flex-col gap-12 ${showResults ? 'max-w-4xl' : 'max-w-2xl'}`}>
+              <div className={`${showResults ? 'mx-auto max-w-4xl' : 'max-w-md ml-12'} flex flex-col gap-12`}>
                 <UrlInputSection
                   urlsInput={urlsInput}
                   onUrlsInputChange={setUrlsInput}

@@ -9,7 +9,7 @@ interface AppHeaderProps {}
 
 const AppHeader: React.FC<AppHeaderProps> = ({}) => {
   return (
-    <header className="border-b border-border/50 bg-card/50 backdrop-blur-sm sticky top-0 z-10">
+    <header className="border-b border-border/50 bg-card/50 backdrop-blur-sm sticky top-0 z-20">
       <div className="px-4">
         <div className="flex items-center h-16 py-3">
           <SidebarTrigger>

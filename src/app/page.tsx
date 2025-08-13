@@ -150,13 +150,16 @@ export default function Home() {
       </Sidebar>
       <SidebarInset>
         <div className="flex flex-col min-h-screen bg-background text-foreground">
-          <AppHeader 
-            urlsInput={urlsInput}
-            onUrlsInputChange={setUrlsInput}
-            onAnalyze={handleAnalyze}
-            isAnalyzing={isAnalyzing}
-          />
-          <main className={`flex-grow flex flex-col items-start justify-start pt-8`}>
+          <AppHeader />
+          <main className={`flex-grow flex flex-col items-center justify-start pt-8 -mt-10`}>
+             <div className="w-full max-w-xl">
+               <UrlInputSection
+                urlsInput={urlsInput}
+                onUrlsInputChange={setUrlsInput}
+                onAnalyze={handleAnalyze}
+                isAnalyzing={isAnalyzing}
+              />
+            </div>
             <div className={`w-full ${showResults ? 'container mx-auto px-4 py-8' : ''}`}>
               <div className={`${showResults ? 'mx-auto max-w-4xl' : ''} flex flex-col gap-12`}>
                 {parsedUrls.length > 0 && (

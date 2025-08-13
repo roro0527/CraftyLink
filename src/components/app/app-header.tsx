@@ -5,19 +5,9 @@ import UrlInputSection from './url-input-section';
 import * as React from 'react';
 
 
-interface AppHeaderProps {
-  urlsInput: string;
-  onUrlsInputChange: (value: string) => void;
-  onAnalyze: () => void;
-  isAnalyzing: boolean;
-}
+interface AppHeaderProps {}
 
-const AppHeader: React.FC<AppHeaderProps> = ({
-  urlsInput,
-  onUrlsInputChange,
-  onAnalyze,
-  isAnalyzing,
-}) => {
+const AppHeader: React.FC<AppHeaderProps> = ({}) => {
   return (
     <header className="border-b border-border/50 bg-card/50 backdrop-blur-sm sticky top-0 z-10">
       <div className="px-4">
@@ -32,14 +22,6 @@ const AppHeader: React.FC<AppHeaderProps> = ({
             </h1>
           </div>
           <div className="flex-grow flex justify-end items-center gap-4">
-            <div className="w-1/3 mt-5">
-              <UrlInputSection
-                urlsInput={urlsInput}
-                onUrlsInputChange={onUrlsInputChange}
-                onAnalyze={onAnalyze}
-                isAnalyzing={isAnalyzing}
-              />
-            </div>
             <nav className="hidden md:flex items-center space-x-2">
               <Button variant="ghost" className="text-base">홈</Button>
               <Button variant="ghost" className="text-base">탐색</Button>

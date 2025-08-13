@@ -1,6 +1,6 @@
 'use client';
 
-import { Wand2, LoaderCircle } from 'lucide-react';
+import { Wand2, LoaderCircle, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
@@ -23,24 +23,24 @@ const UrlInputSection: React.FC<UrlInputSectionProps> = ({
     <Card className="shadow-lg">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-2xl">
-          1. URL 입력
+          1. URL 검색
         </CardTitle>
         <CardDescription>
           아래에 하나 이상의 URL을 한 줄에 하나씩 붙여넣으세요. 앱이 쿼리 매개변수를 분석합니다.
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="grid w-full gap-1.5">
-          <Label htmlFor="urls">URL 목록</Label>
-          <Textarea
-            id="urls"
-            placeholder="예: https://example.com?lang=en&theme=dark\nhttps://example.com?lang=fr&theme=light"
-            value={urlsInput}
-            onChange={(e) => onUrlsInputChange(e.target.value)}
-            rows={6}
-            className="text-base"
-            disabled={isAnalyzing}
-          />
+        <div className="relative w-full">
+            <Search className="absolute left-3.5 top-3.5 h-5 w-5 text-muted-foreground" />
+            <Textarea
+              id="urls"
+              placeholder="예: https://example.com?lang=en&theme=dark"
+              value={urlsInput}
+              onChange={(e) => onUrlsInputChange(e.target.value)}
+              rows={4}
+              className="text-base pl-12 pr-4 py-3 resize-none"
+              disabled={isAnalyzing}
+            />
         </div>
       </CardContent>
       <CardFooter>

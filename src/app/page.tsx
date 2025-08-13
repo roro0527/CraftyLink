@@ -151,7 +151,7 @@ export default function Home() {
       <SidebarInset>
         <div className="flex flex-col min-h-screen bg-background text-foreground">
           <AppHeader />
-          <main className={`flex-grow flex flex-col items-start justify-start pt-8 -mt-10`}>
+          <main className="flex-grow flex flex-col items-start pt-8 -mt-10">
              <div className="w-full max-w-md ml-auto mt-[170px] mr-[195px]">
                <UrlInputSection
                 urlsInput={urlsInput}

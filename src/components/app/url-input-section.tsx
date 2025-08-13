@@ -1,7 +1,9 @@
 'use client';
 
-import { Search } from 'lucide-react';
-import { Input } from '@/components/ui/input';
+import { Search, LoaderCircle } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 
 interface UrlInputSectionProps {
   urlsInput: string;
@@ -17,22 +19,29 @@ const UrlInputSection: React.FC<UrlInputSectionProps> = ({
   isAnalyzing,
 }) => {
   return (
-    <div className="relative w-full">
-      <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-      <Input
-        id="urls"
-        placeholder="URL을 입력하거나 검색어를 입력하세요..."
-        value={urlsInput}
-        onChange={(e) => onUrlsInputChange(e.target.value)}
-        className="h-14 text-base pl-12 pr-4 rounded-full shadow-lg border-[2px] border-gray-300"
-        disabled={isAnalyzing}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' && !isAnalyzing && urlsInput.trim()) {
-            onAnalyze();
-          }
-        }}
-      />
-    </div>
+    <Card>
+      <CardContent className="p-4">
+        <div className="grid gap-4">
+            <h2 className="text-xl font-semibold">1. 분석할 URL 입력</h2>
+            <Textarea
+              id="urls"
+              placeholder="분석할 URL 목록을 한 줄에 하나씩 입력하세요. (예: https://example.com?a=1&b=2)"
+              value={urlsInput}
+              onChange={(e) => onUrlsInputChange(e.target.value)}
+              className="min-h-[120px] text-sm"
+              disabled={isAnalyzing}
+            />
+            <Button onClick={onAnalyze} disabled={isAnalyzing || !urlsInput.trim()} className="w-full">
+              {isAnalyzing ? (
+                <LoaderCircle className="animate-spin" />
+              ) : (
+                <Search />
+              )}
+              <span className="ml-2">URL 분석</span>
+            </Button>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 

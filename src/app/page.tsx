@@ -12,25 +12,6 @@ import UrlInputSection from '@/components/app/url-input-section';
 import ParsedUrlsSection from '@/components/app/parsed-urls-section';
 import SuperParametersSection from '@/components/app/super-parameters-section';
 import GeneratedUrlsSection from '@/components/app/generated-urls-section';
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarInset,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
-  SidebarHeader,
-  SidebarFooter,
-  SidebarGroup,
-  SidebarGroupLabel
-} from '@/components/ui/sidebar';
-import {
-  Home as HomeIcon,
-  Compass,
-  TrendingUp,
-  LineChart
-} from 'lucide-react';
-
 
 export default function Home() {
   const { toast } = useToast();
@@ -110,82 +91,39 @@ export default function Home() {
   const showResults = parsedUrls.length > 0 || generatedUrls.length > 0;
 
   return (
-    <>
-      <Sidebar>
-        <SidebarContent>
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarGroup>
-                <SidebarGroupLabel>메뉴</SidebarGroupLabel>
-                <SidebarMenu>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton isActive>
-                      <HomeIcon />
-                      <span>홈</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton>
-                      <Compass />
-                      <span>탐색</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton>
-                      <TrendingUp />
-                      <span>실시간 인기</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                   <SidebarMenuItem>
-                    <SidebarMenuButton>
-                      <LineChart />
-                      <span>트렌드 분석</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                </SidebarMenu>
-              </SidebarGroup>
-            </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarContent>
-      </Sidebar>
-      <SidebarInset>
-        <div className="flex flex-col min-h-screen bg-background text-foreground">
-          <AppHeader />
-          <main className="flex-grow flex flex-col items-start pt-8 -mt-10">
-             <div className="w-full max-w-md ml-auto mt-[170px] mr-[195px]">
-               <UrlInputSection
-                urlsInput={urlsInput}
-                onUrlsInputChange={setUrlsInput}
-                onAnalyze={handleAnalyze}
-                isAnalyzing={isAnalyzing}
-              />
-            </div>
-            <div className={`w-full ${showResults ? 'container mx-auto px-4 py-8' : ''}`}>
-              <div className={`${showResults ? 'mx-auto max-w-4xl' : ''} flex flex-col gap-12`}>
-                {parsedUrls.length > 0 && (
-                  <div className="flex flex-col gap-12">
-                    <ParsedUrlsSection
-                      parsedUrls={parsedUrls}
-                      onUpdateParsedUrl={handleUpdateParsedUrl}
-                    />
-                    <SuperParametersSection
-                      superParams={superParams}
-                      onUpdateSuperParam={handleUpdateSuperParam}
-                      onSuggest={handleSuggest}
-                      onGenerate={handleGenerate}
-                      isSuggesting={isSuggesting}
-                    />
-                  </div>
-                )}
-
-                {generatedUrls.length > 0 && (
-                  <GeneratedUrlsSection generatedUrls={generatedUrls} />
-                )}
-              </div>
-            </div>
-          </main>
+    <div className="flex flex-col min-h-screen bg-background text-foreground">
+      <AppHeader />
+      <main className="flex-grow container mx-auto px-4 py-8">
+         <div className="w-full max-w-xl mx-auto mb-12">
+           <UrlInputSection
+            urlsInput={urlsInput}
+            onUrlsInputChange={setUrlsInput}
+            onAnalyze={handleAnalyze}
+            isAnalyzing={isAnalyzing}
+          />
         </div>
-      </SidebarInset>
-    </>
+        <div className="flex flex-col gap-12 max-w-4xl mx-auto">
+          {parsedUrls.length > 0 && (
+            <>
+              <ParsedUrlsSection
+                parsedUrls={parsedUrls}
+                onUpdateParsedUrl={handleUpdateParsedUrl}
+              />
+              <SuperParametersSection
+                superParams={superParams}
+                onUpdateSuperParam={handleUpdateSuperParam}
+                onSuggest={handleSuggest}
+                onGenerate={handleGenerate}
+                isSuggesting={isSuggesting}
+              />
+            </>
+          )}
+
+          {generatedUrls.length > 0 && (
+            <GeneratedUrlsSection generatedUrls={generatedUrls} />
+          )}
+        </div>
+      </main>
+    </div>
   );
 }

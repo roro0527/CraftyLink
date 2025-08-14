@@ -14,6 +14,7 @@ import SuperParametersSection from '@/components/app/super-parameters-section';
 import GeneratedUrlsSection from '@/components/app/generated-urls-section';
 import { Toaster } from "@/components/ui/toaster"
 import { Sidebar } from '@/components/ui/sidebar';
+import { FloatingCard } from '@/components/app/floating-card';
 
 export default function Home() {
   const { toast } = useToast();
@@ -129,6 +130,7 @@ export default function Home() {
           </div>
         </main>
         <Toaster />
+        <FloatingCard />
       </div>
     </>
   );

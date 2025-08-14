@@ -15,7 +15,7 @@ export function Sidebar() {
 
   return (
       <Sheet open={isOpen} onOpenChange={onClose}>
-        <SheetContent side="left" className="p-0 pt-16">
+        <SheetContent side="left" className="p-0 top-auto bottom-0" style={{ height: 'calc(100% - 65px)' }}>
             <SheetHeader>
               <SheetTitle className="sr-only">Menu</SheetTitle>
             </SheetHeader>

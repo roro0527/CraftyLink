@@ -39,8 +39,8 @@ const AppHeader: React.FC<AppHeaderProps> = ({}) => {
               <Button asChild variant="ghost" className="text-base"><Link href="/compare">비교</Link></Button>
               <Button asChild variant="ghost" className="text-base"><Link href="/region-explore">지역 탐색</Link></Button>
             </nav>
-            <Button variant="ghost" size="icon" onClick={onOpenCard}>
-              <HelpCircle className="h-6 w-6" />
+            <Button variant="ghost" className="text-base" onClick={onOpenCard}>
+              요약
             </Button>
           </div>
         </div>

@@ -122,16 +122,6 @@ export default function KeywordPage() {
         <div className="space-y-6">
            <Card>
             <CardHeader>
-              <CardTitle>지역별 관심도</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="h-60 bg-muted rounded-md flex items-center justify-center">
-                <p className="text-muted-foreground">[미니맵]</p>
-              </div>
-            </CardContent>
-          </Card>
-           <Card>
-            <CardHeader>
               <CardTitle>연관 태그</CardTitle>
             </CardHeader>
             <CardContent>

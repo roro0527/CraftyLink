@@ -7,13 +7,11 @@ import { useToast } from '@/hooks/use-toast';
 import type { ParsedUrl, SuperParam } from '@/lib/types';
 import { parseUrlsFromString, generateUrlPermutations } from '@/lib/url-utils';
 import { suggestSuperParametersAction } from '@/app/actions';
-import AppHeader from '@/components/app/app-header';
 import UrlInputSection from '@/components/app/url-input-section';
 import ParsedUrlsSection from '@/components/app/parsed-urls-section';
 import SuperParametersSection from '@/components/app/super-parameters-section';
 import GeneratedUrlsSection from '@/components/app/generated-urls-section';
 import { Toaster } from "@/components/ui/toaster"
-import { Sidebar } from '@/components/ui/sidebar';
 import { FloatingCard } from '@/components/app/floating-card';
 import { useFloatingCard } from '@/hooks/use-floating-card';
 
@@ -105,9 +103,7 @@ export default function Home() {
 
   return (
     <>
-      <Sidebar />
       <div className="flex flex-col min-h-screen">
-        <AppHeader />
         <main className="flex-grow container mx-auto px-4 py-8">
            <div className="w-full max-w-2xl mx-auto mb-12">
              <UrlInputSection
@@ -144,4 +140,3 @@ export default function Home() {
       </div>
     </>
   );
-}

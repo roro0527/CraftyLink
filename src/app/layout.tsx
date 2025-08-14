@@ -1,5 +1,7 @@
 import type {Metadata} from 'next';
 import './globals.css';
+import AppHeader from '@/components/app/app-header';
+import { Sidebar } from '@/components/ui/sidebar';
 
 export const metadata: Metadata = {
   title: 'CraftyLink',
@@ -20,6 +22,8 @@ export default function RootLayout({
       </head>
       <body className="font-body antialiased">
         <div className="min-h-screen bg-background text-foreground">
+          <AppHeader />
+          <Sidebar />
           {children}
         </div>
       </body>

@@ -9,9 +9,14 @@ import {
 } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { useMobileSidebar } from '@/hooks/use-mobile-sidebar';
+import Link from 'next/link';
 
 export function Sidebar() {
-  const { isOpen, onClose } = useMobileSidebar();
+  const { isOpen, onClose, onOpen } = useMobileSidebar();
+
+  const handleLinkClick = () => {
+    onClose();
+  };
 
   return (
       <Sheet open={isOpen} onOpenChange={onClose}>
@@ -20,10 +25,11 @@ export function Sidebar() {
               <SheetTitle className="sr-only">Menu</SheetTitle>
             </SheetHeader>
            <nav className="flex flex-col items-start p-4 space-y-2">
-              <Button variant="ghost" className="text-base w-full justify-start">홈</Button>
-              <Button variant="ghost" className="text-base w-full justify-start">키워드</Button>
-              <Button variant="ghost" className="text-base w-full justify-start">비교</Button>
-              <Button variant="ghost" className="text-base w-full justify-start">지역 탐색</Button>
+              <Button asChild variant="ghost" className="text-base w-full justify-start" onClick={handleLinkClick}><Link href="/">홈</Link></Button>
+              <Button asChild variant="ghost" className="text-base w-full justify-start" onClick={handleLinkClick}><Link href="/keyword">키워드</Link></Button>
+              <Button asChild variant="ghost" className="text-base w-full justify-start" onClick={handleLinkClick}><Link href="/compare">비교</Link></Button>
+              <Button asChild variant="ghost" className="text-base w-full justify-start" onClick={handleLinkClick}><Link href="/region-explore">지역 탐색</Link></Button>
+              <Button asChild variant="ghost" className="text-base w-full justify-start" onClick={handleLinkClick}><Link href="/summary">요약</Link></Button>
             </nav>
         </SheetContent>
       </Sheet>

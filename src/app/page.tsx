@@ -12,7 +12,7 @@ import UrlInputSection from '@/components/app/url-input-section';
 import ParsedUrlsSection from '@/components/app/parsed-urls-section';
 import SuperParametersSection from '@/components/app/super-parameters-section';
 import GeneratedUrlsSection from '@/components/app/generated-urls-section';
-import { Sidebar } from '@/components/ui/sidebar';
+import { Toaster } from "@/components/ui/toaster"
 
 export default function Home() {
   const { toast } = useToast();
@@ -92,9 +92,8 @@ export default function Home() {
   const showResults = parsedUrls.length > 0 || generatedUrls.length > 0;
 
   return (
-    <div className="flex flex-col min-h-screen bg-background text-foreground">
+    <>
       <AppHeader />
-      <Sidebar />
       <main className="flex-grow container mx-auto px-4 py-8">
          <div className="w-full max-w-xl mx-auto mb-12">
            <UrlInputSection
@@ -126,6 +125,7 @@ export default function Home() {
           )}
         </div>
       </main>
-    </div>
+      <Toaster />
+    </>
   );
 }

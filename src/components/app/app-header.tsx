@@ -1,12 +1,14 @@
-import { Link2, Menu } from 'lucide-react';
+import { Link2, Menu, HelpCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import * as React from 'react';
 import { useMobileSidebar } from '@/hooks/use-mobile-sidebar';
+import { useFloatingCard } from '@/hooks/use-floating-card';
 
 interface AppHeaderProps {}
 
 const AppHeader: React.FC<AppHeaderProps> = ({}) => {
   const { onOpen } = useMobileSidebar();
+  const { onOpen: onOpenCard } = useFloatingCard();
 
   return (
     <header className="border-b border-border/50 bg-card/50 backdrop-blur-sm sticky top-0 z-20">
@@ -32,6 +34,10 @@ const AppHeader: React.FC<AppHeaderProps> = ({}) => {
               <Button variant="ghost" className="text-base">실시간 인기</Button>
               <Button variant="ghost" className="text-base">트렌드 분석</Button>
             </nav>
+             <Button variant="outline" size="sm" onClick={onOpenCard}>
+              <HelpCircle className="h-4 w-4 mr-2" />
+              도움말
+            </Button>
           </div>
         </div>
       </div>

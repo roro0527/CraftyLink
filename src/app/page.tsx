@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { nanoid } from 'nanoid';
 import { useToast } from '@/hooks/use-toast';
 import type { ParsedUrl, SuperParam } from '@/lib/types';
@@ -15,6 +15,7 @@ import GeneratedUrlsSection from '@/components/app/generated-urls-section';
 import { Toaster } from "@/components/ui/toaster"
 import { Sidebar } from '@/components/ui/sidebar';
 import { FloatingCard } from '@/components/app/floating-card';
+import { useFloatingCard } from '@/hooks/use-floating-card';
 
 export default function Home() {
   const { toast } = useToast();
@@ -24,6 +25,15 @@ export default function Home() {
   const [generatedUrls, setGeneratedUrls] = useState<string[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isSuggesting, setIsSuggesting] = useState(false);
+  const { onClose } = useFloatingCard();
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onClose();
+    }, 5000); // Close floating card after 5 seconds on initial load
+    return () => clearTimeout(timer);
+  }, [onClose]);
+
 
   const handleAnalyze = () => {
     setIsAnalyzing(true);

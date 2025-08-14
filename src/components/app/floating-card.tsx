@@ -4,9 +4,10 @@ import * as React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
+import { useFloatingCard } from '@/hooks/use-floating-card';
 
 export function FloatingCard() {
-  const [isOpen, setIsOpen] = React.useState(true);
+  const { isOpen, onClose } = useFloatingCard();
 
   if (!isOpen) {
     return null;
@@ -17,7 +18,7 @@ export function FloatingCard() {
       <Card className="w-80 shadow-lg rounded-xl">
         <CardHeader className="flex flex-row items-center justify-between pb-2">
           <CardTitle className="text-base font-semibold">도움이 필요하신가요?</CardTitle>
-          <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full" onClick={() => setIsOpen(false)}>
+          <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full" onClick={onClose}>
             <X className="h-4 w-4" />
           </Button>
         </CardHeader>

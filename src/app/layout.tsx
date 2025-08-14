@@ -5,7 +5,7 @@ import { Sidebar } from '@/components/ui/sidebar';
 
 export const metadata: Metadata = {
   title: 'CraftyLink',
-  description: 'URL 순열을 쉽게 생성하세요.',
+  description: '키워드 기반 URL 검색',
 };
 
 export default function RootLayout({

@@ -29,7 +29,7 @@ const UrlInputSection: React.FC<UrlInputSectionProps> = ({
     <div className="flex flex-col items-center gap-4 w-full">
       <div className="w-full max-w-2xl mt-4">
         <div className="relative">
-          <div className="absolute top-4 left-4 pointer-events-none">
+          <div className="absolute top-1/2 -translate-y-1/2 left-4 pointer-events-none">
              {isAnalyzing ? (
               <LoaderCircle className="h-5 w-5 text-gray-400 animate-spin" />
             ) : (

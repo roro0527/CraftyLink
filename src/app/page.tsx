@@ -93,39 +93,41 @@ export default function Home() {
 
   return (
     <>
-      <AppHeader />
-      <main className="flex-grow container mx-auto px-4 py-8">
-         <div className="w-full max-w-xl mx-auto mb-12">
-           <UrlInputSection
-            urlsInput={urlsInput}
-            onUrlsInputChange={setUrlsInput}
-            onAnalyze={handleAnalyze}
-            isAnalyzing={isAnalyzing}
-          />
-        </div>
-        <div className="flex flex-col gap-12 max-w-4xl mx-auto">
-          {parsedUrls.length > 0 && (
-            <>
-              <ParsedUrlsSection
-                parsedUrls={parsedUrls}
-                onUpdateParsedUrl={handleUpdateParsedUrl}
-              />
-              <SuperParametersSection
-                superParams={superParams}
-                onUpdateSuperParam={handleUpdateSuperParam}
-                onSuggest={handleSuggest}
-                onGenerate={handleGenerate}
-                isSuggesting={isSuggesting}
-              />
-            </>
-          )}
+      <div className="flex flex-col min-h-screen">
+        <AppHeader />
+        <main className="flex-grow container mx-auto px-4 py-8">
+           <div className="w-full max-w-2xl mx-auto mb-12">
+             <UrlInputSection
+              urlsInput={urlsInput}
+              onUrlsInputChange={setUrlsInput}
+              onAnalyze={handleAnalyze}
+              isAnalyzing={isAnalyzing}
+            />
+          </div>
+          <div className="flex flex-col gap-12 max-w-4xl mx-auto">
+            {parsedUrls.length > 0 && (
+              <>
+                <ParsedUrlsSection
+                  parsedUrls={parsedUrls}
+                  onUpdateParsedUrl={handleUpdateParsedUrl}
+                />
+                <SuperParametersSection
+                  superParams={superParams}
+                  onUpdateSuperParam={handleUpdateSuperParam}
+                  onSuggest={handleSuggest}
+                  onGenerate={handleGenerate}
+                  isSuggesting={isSuggesting}
+                />
+              </>
+            )}
 
-          {generatedUrls.length > 0 && (
-            <GeneratedUrlsSection generatedUrls={generatedUrls} />
-          )}
-        </div>
-      </main>
-      <Toaster />
+            {generatedUrls.length > 0 && (
+              <GeneratedUrlsSection generatedUrls={generatedUrls} />
+            )}
+          </div>
+        </main>
+        <Toaster />
+      </div>
     </>
   );
 }

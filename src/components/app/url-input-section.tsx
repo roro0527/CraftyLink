@@ -38,7 +38,7 @@ const UrlInputSection: React.FC<UrlInputSectionProps> = ({
           </div>
           <Textarea
             id="urls"
-            placeholder="분석할 URL 목록을 한 줄에 하나씩 입력하세요. (예: https://example.com?a=1&b=2)"
+            placeholder="키워드를 입력하여 관련 URL을 검색하세요."
             value={urlsInput}
             onChange={(e) => onUrlsInputChange(e.target.value)}
             onKeyDown={handleKeyDown}

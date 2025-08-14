@@ -33,11 +33,10 @@ const AppHeader: React.FC<AppHeaderProps> = ({}) => {
               <Button variant="ghost" className="text-base">탐색</Button>
               <Button variant="ghost" className="text-base">실시간 인기</Button>
               <Button variant="ghost" className="text-base">트렌드 분석</Button>
+              <Button variant="ghost" className="text-base" onClick={onOpenCard}>
+                요약
+              </Button>
             </nav>
-             <Button variant="outline" size="sm" onClick={onOpenCard}>
-              <HelpCircle className="h-4 w-4 mr-2" />
-              도움말
-            </Button>
           </div>
         </div>
       </div>

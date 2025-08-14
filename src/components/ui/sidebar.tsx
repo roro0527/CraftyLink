@@ -21,9 +21,9 @@ export function Sidebar() {
             </SheetHeader>
            <nav className="flex flex-col items-start p-4 space-y-2">
               <Button variant="ghost" className="text-base w-full justify-start">홈</Button>
-              <Button variant="ghost" className="text-base w-full justify-start">탐색</Button>
-              <Button variant="ghost" className="text-base w-full justify-start">실시간 인기</Button>
-              <Button variant="ghost" className="text-base w-full justify-start">트렌드 분석</Button>
+              <Button variant="ghost" className="text-base w-full justify-start">키워드</Button>
+              <Button variant="ghost" className="text-base w-full justify-start">비교</Button>
+              <Button variant="ghost" className="text-base w-full justify-start">지역 탐색</Button>
             </nav>
         </SheetContent>
       </Sheet>

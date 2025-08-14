@@ -30,9 +30,9 @@ const AppHeader: React.FC<AppHeaderProps> = ({}) => {
           <div className="flex-grow flex justify-end items-center gap-4">
             <nav className="hidden md:flex items-center space-x-2">
               <Button variant="ghost" className="text-base">홈</Button>
-              <Button variant="ghost" className="text-base">탐색</Button>
-              <Button variant="ghost" className="text-base">실시간 인기</Button>
-              <Button variant="ghost" className="text-base">트렌드 분석</Button>
+              <Button variant="ghost" className="text-base">키워드</Button>
+              <Button variant="ghost" className="text-base">비교</Button>
+              <Button variant="ghost" className="text-base">지역 탐색</Button>
               <Button variant="ghost" className="text-base" onClick={onOpenCard}>
                 요약
               </Button>

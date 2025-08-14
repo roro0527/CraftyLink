@@ -30,8 +30,6 @@ export default function KeywordPage() {
     kpi: {
       searchVolume: '1.2M',
       frequency: '5,820',
-      subscriberGrowth: '+15K',
-      likesGrowth: '+78K',
     },
   };
 
@@ -43,7 +41,7 @@ export default function KeywordPage() {
           <h1 className="text-3xl font-bold">{keywordData.name}</h1>
           <p className="text-muted-foreground mt-1">{keywordData.description}</p>
         </div>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-4 md:mt-0 w-full md:w-auto">
+        <div className="grid grid-cols-2 gap-4 mt-4 md:mt-0 w-full md:w-auto">
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium">검색량</CardTitle>
@@ -58,22 +56,6 @@ export default function KeywordPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{keywordData.kpi.frequency}</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">구독자 증가</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{keywordData.kpi.subscriberGrowth}</div>
-            </CardContent>
-          </Card>
-           <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">좋아요 증가</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{keywordData.kpi.likesGrowth}</div>
             </CardContent>
           </Card>
         </div>
@@ -104,7 +86,7 @@ export default function KeywordPage() {
         <div className="md:col-span-2 space-y-6">
            <Card>
             <CardHeader>
-              <CardTitle>빈도 수 그래프</CardTitle>
+              <CardTitle>키워드 출현 빈도</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="h-72 bg-muted rounded-md flex items-center justify-center">

@@ -13,6 +13,7 @@ import ParsedUrlsSection from '@/components/app/parsed-urls-section';
 import SuperParametersSection from '@/components/app/super-parameters-section';
 import GeneratedUrlsSection from '@/components/app/generated-urls-section';
 import { Toaster } from "@/components/ui/toaster"
+import { Sidebar } from '@/components/ui/sidebar';
 
 export default function Home() {
   const { toast } = useToast();
@@ -93,6 +94,7 @@ export default function Home() {
 
   return (
     <>
+      <Sidebar />
       <div className="flex flex-col min-h-screen">
         <AppHeader />
         <main className="flex-grow container mx-auto px-4 py-8">

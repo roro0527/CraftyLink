@@ -13,7 +13,7 @@ export function Sidebar() {
 
   return (
       <Sheet open={isOpen} onOpenChange={onClose}>
-        <SheetContent side="top" className="p-0 pt-16 h-[calc(100vh-4rem)]">
+        <SheetContent side="left" className="p-0 pt-16">
            <nav className="flex flex-col items-start p-4 space-y-2">
               <Button variant="ghost" className="text-base w-full justify-start">홈</Button>
               <Button variant="ghost" className="text-base w-full justify-start">탐색</Button>

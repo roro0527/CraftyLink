@@ -4,7 +4,6 @@
 import { Search, LoaderCircle } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import * as React from 'react';
-import { useState, useEffect } from 'react';
 
 interface UrlInputSectionProps {
   urlsInput: string;
@@ -13,27 +12,12 @@ interface UrlInputSectionProps {
   isSearching: boolean;
 }
 
-const recommendedKeywords = ['게임', '먹방', '여행', '뷰티', 'IT'];
-
 const UrlInputSection: React.FC<UrlInputSectionProps> = ({
   urlsInput,
   onUrlsInputChange,
   onSearch,
   isSearching,
 }) => {
-  const [activeIndex, setActiveIndex] = useState(0);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setActiveIndex((prevIndex) => (prevIndex + 1) % recommendedKeywords.length);
-    }, 5000);
-    return () => clearInterval(interval);
-  }, []);
-
-  useEffect(() => {
-    onUrlsInputChange(recommendedKeywords[activeIndex]);
-  }, [activeIndex, onUrlsInputChange]);
-
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (event.key === 'Enter' && !event.shiftKey) {
@@ -46,7 +30,7 @@ const UrlInputSection: React.FC<UrlInputSectionProps> = ({
 
   return (
     <div className="flex flex-col items-center gap-4 w-full">
-      <div className="w-full max-w-2xl mt-4">
+      <div className="w-full max-w-2xl">
         <div className="relative">
           <div className="absolute top-1/2 -translate-y-1/2 left-4 pointer-events-none">
             {isSearching ? (
@@ -66,27 +50,6 @@ const UrlInputSection: React.FC<UrlInputSectionProps> = ({
             style={{ paddingTop: '14px' }}
           />
         </div>
-         <div className="flex justify-center items-center gap-3 mt-4 h-4">
-            {recommendedKeywords.map((keyword, index) => (
-              <div
-                key={keyword}
-                onClick={() => setActiveIndex(index)}
-                className={`relative h-2.5 rounded-full cursor-pointer transition-all duration-300 overflow-hidden ${
-                  activeIndex === index
-                    ? 'w-8 bg-gray-400'
-                    : 'w-2.5 bg-gray-300 hover:bg-gray-400'
-                }`}
-                title={`'${keyword}' 검색`}
-              >
-                {activeIndex === index && (
-                  <div 
-                    key={activeIndex} 
-                    className="h-full bg-primary origin-left animate-indicator-progress"
-                  ></div>
-                )}
-              </div>
-            ))}
-          </div>
       </div>
     </div>
   );

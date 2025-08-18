@@ -2,14 +2,29 @@
 'use client';
 
 import * as React from 'react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import UrlInputSection from '@/components/app/url-input-section';
+import RecommendedKeywords from '@/components/app/recommended-keywords';
+
+const recommendedKeywords = ['게임', '먹방', '여행', '뷰티', 'IT'];
 
 export default function Home() {
   const { toast } = useToast();
   const [searchInput, setSearchInput] = useState<string>('');
   const [isSearching, setIsSearching] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setActiveIndex((prevIndex) => (prevIndex + 1) % recommendedKeywords.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    setSearchInput(recommendedKeywords[activeIndex]);
+  }, [activeIndex]);
 
   const handleSearch = () => {
     if (!searchInput.trim()) {
@@ -31,13 +46,7 @@ export default function Home() {
   return (
     <>
       <main className="flex-grow container mx-auto px-4 py-8">
-        <div className="w-full max-w-4xl mx-auto mb-12">
-           <div className="h-96 bg-muted rounded-2xl flex items-center justify-center">
-            <p className="text-muted-foreground">[선 그래프 영역]</p>
-          </div>
-        </div>
-
-        <div className="w-full max-w-2xl mx-auto mb-12">
+        <div className="w-full max-w-2xl mx-auto mb-6">
           <UrlInputSection
             urlsInput={searchInput}
             onUrlsInputChange={setSearchInput}
@@ -45,6 +54,21 @@ export default function Home() {
             isSearching={isSearching}
           />
         </div>
+        
+        <div className="w-full max-w-4xl mx-auto mb-6">
+           <div className="h-96 bg-muted rounded-2xl flex items-center justify-center">
+            <p className="text-muted-foreground">[선 그래프 영역]</p>
+          </div>
+        </div>
+        
+        <div className="w-full max-w-2xl mx-auto">
+          <RecommendedKeywords 
+            keywords={recommendedKeywords}
+            activeIndex={activeIndex}
+            onKeywordClick={setActiveIndex}
+          />
+        </div>
+
         <div className="flex flex-col gap-12 max-w-4xl mx-auto">
           {/* Results will be displayed here */}
         </div>

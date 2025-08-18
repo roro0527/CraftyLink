@@ -26,6 +26,8 @@ const UrlInputSection: React.FC<UrlInputSectionProps> = ({
     }
   };
 
+  const recommendedKeywords = ['게임', '먹방', '여행', '뷰티', 'IT'];
+
   return (
     <div className="flex flex-col items-center gap-4 w-full">
       <div className="w-full max-w-2xl mt-4">
@@ -49,11 +51,14 @@ const UrlInputSection: React.FC<UrlInputSectionProps> = ({
           />
         </div>
          <div className="flex justify-center items-center gap-2 mt-2">
-            <div className="h-2.5 w-2.5 bg-gray-300 rounded-full"></div>
-            <div className="h-2.5 w-2.5 bg-gray-300 rounded-full"></div>
-            <div className="h-2.5 w-2.5 bg-gray-300 rounded-full"></div>
-            <div className="h-2.5 w-2.5 bg-gray-300 rounded-full"></div>
-            <div className="h-2.5 w-2.5 bg-gray-300 rounded-full"></div>
+            {recommendedKeywords.map((keyword) => (
+              <div
+                key={keyword}
+                onClick={() => onUrlsInputChange(keyword)}
+                className="h-2.5 w-2.5 bg-gray-300 rounded-full cursor-pointer hover:bg-gray-400 transition-colors"
+                title={`'${keyword}' 검색`}
+              ></div>
+            ))}
           </div>
       </div>
     </div>

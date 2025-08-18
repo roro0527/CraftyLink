@@ -46,18 +46,16 @@ export default function Home() {
   return (
     <>
       <main className="flex-grow container mx-auto px-4 py-8">
-        <div className="w-full max-w-2xl mx-auto mb-6">
-          <UrlInputSection
-            urlsInput={searchInput}
-            onUrlsInputChange={setSearchInput}
-            onSearch={handleSearch}
-            isSearching={isSearching}
-          />
-        </div>
-        
-        <div className="w-full mx-auto mb-6">
-           <div className="h-96 bg-muted rounded-2xl flex items-center justify-center">
-            <p className="text-muted-foreground">[선 그래프 영역]</p>
+        <div className="w-screen mb-6 ml-[-50vw] left-1/2 relative">
+          <div className="h-[30rem] bg-muted rounded-2xl flex flex-col items-center justify-center">
+            <div className="w-full max-w-2xl">
+               <UrlInputSection
+                urlsInput={searchInput}
+                onUrlsInputChange={setSearchInput}
+                onSearch={handleSearch}
+                isSearching={isSearching}
+              />
+            </div>
           </div>
         </div>
         

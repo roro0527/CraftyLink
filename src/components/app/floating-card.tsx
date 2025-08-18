@@ -15,7 +15,7 @@ export function FloatingCard() {
 
   return (
     <div className="fixed bottom-4 right-4 z-50">
-      <Card className="w-80 shadow-lg rounded-xl">
+      <Card className="w-96 shadow-lg rounded-xl">
         <CardHeader className="flex flex-row items-center justify-between pb-2">
           <CardTitle className="text-base font-semibold">도움이 필요하신가요?</CardTitle>
           <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full" onClick={onClose}>

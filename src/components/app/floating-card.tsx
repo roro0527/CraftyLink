@@ -17,7 +17,7 @@ export function FloatingCard() {
     <div className="fixed bottom-4 right-4 z-50">
       <Card className="w-96 shadow-lg rounded-xl">
         <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-base font-semibold">도움이 필요하신가요?</CardTitle>
+          <CardTitle className="text-base font-semibold">요약</CardTitle>
           <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full" onClick={onClose}>
             <X className="h-4 w-4" />
           </Button>
@@ -25,9 +25,8 @@ export function FloatingCard() {
         <CardContent>
           <div className="pb-4">
             <p className="text-sm text-muted-foreground">
-              궁금한 점이 있으시면 언제든지 문의해주세요.
+              현재 페이지의 내용에 대한 요약 정보를 제공합니다.
             </p>
-            <Button className="mt-4 w-full">문의하기</Button>
           </div>
         </CardContent>
       </Card>

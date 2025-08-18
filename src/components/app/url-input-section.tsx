@@ -37,13 +37,6 @@ const UrlInputSection: React.FC<UrlInputSectionProps> = ({
               <Search className="h-5 w-5 text-gray-400" />
             )}
           </div>
-          <div className="absolute bottom-3 left-4 pointer-events-none flex items-center gap-1.5">
-            <div className="h-2.5 w-2.5 bg-gray-300 rounded-full"></div>
-            <div className="h-2.5 w-2.5 bg-gray-300 rounded-full"></div>
-            <div className="h-2.5 w-2.5 bg-gray-300 rounded-full"></div>
-            <div className="h-2.5 w-2.5 bg-gray-300 rounded-full"></div>
-            <div className="h-2.5 w-2.5 bg-gray-300 rounded-full"></div>
-          </div>
           <Textarea
             id="urls"
             placeholder="검색할 키워드를 입력"
@@ -55,6 +48,13 @@ const UrlInputSection: React.FC<UrlInputSectionProps> = ({
             style={{ paddingTop: '14px' }}
           />
         </div>
+         <div className="flex justify-center items-center gap-2 mt-2">
+            <div className="h-2.5 w-2.5 bg-gray-300 rounded-full"></div>
+            <div className="h-2.5 w-2.5 bg-gray-300 rounded-full"></div>
+            <div className="h-2.5 w-2.5 bg-gray-300 rounded-full"></div>
+            <div className="h-2.5 w-2.5 bg-gray-300 rounded-full"></div>
+            <div className="h-2.5 w-2.5 bg-gray-300 rounded-full"></div>
+          </div>
       </div>
     </div>
   );

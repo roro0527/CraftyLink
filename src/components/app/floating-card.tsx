@@ -22,11 +22,13 @@ export function FloatingCard() {
             <X className="h-4 w-4" />
           </Button>
         </CardHeader>
-        <CardContent className="pb-10">
-          <p className="text-sm text-muted-foreground">
-            궁금한 점이 있으시면 언제든지 문의해주세요.
-          </p>
-          <Button className="mt-4 w-full">문의하기</Button>
+        <CardContent>
+          <div className="pb-4">
+            <p className="text-sm text-muted-foreground">
+              궁금한 점이 있으시면 언제든지 문의해주세요.
+            </p>
+            <Button className="mt-4 w-full">문의하기</Button>
+          </div>
         </CardContent>
       </Card>
     </div>

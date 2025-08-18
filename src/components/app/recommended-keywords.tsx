@@ -14,6 +14,14 @@ const RecommendedKeywords: React.FC<RecommendedKeywordsProps> = ({
   activeIndex,
   onKeywordClick,
 }) => {
+  const indicatorColors = [
+    'bg-red-500',
+    'bg-yellow-500',
+    'bg-green-500',
+    'bg-blue-500',
+    'bg-purple-400',
+  ];
+
   return (
     <div className="flex justify-center items-center gap-3 h-4">
       {keywords.map((keyword, index) => (
@@ -28,9 +36,9 @@ const RecommendedKeywords: React.FC<RecommendedKeywordsProps> = ({
           title={`'${keyword}' 검색`}
         >
           {activeIndex === index && (
-            <div 
-              key={activeIndex} 
-              className="h-full bg-primary origin-left animate-indicator-progress"
+            <div
+              key={activeIndex}
+              className={`h-full ${indicatorColors[activeIndex]} origin-left animate-indicator-progress`}
             ></div>
           )}
         </div>

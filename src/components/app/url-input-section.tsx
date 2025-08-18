@@ -30,13 +30,13 @@ const UrlInputSection: React.FC<UrlInputSectionProps> = ({
 
   return (
     <div className="flex flex-col items-center gap-4 w-full">
-      <div className="w-full max-w-2xl">
+      <div className="w-full max-w-[560px]">
         <div className="relative">
           <div className="absolute top-1/2 -translate-y-1/2 left-4 pointer-events-none">
             {isSearching ? (
               <LoaderCircle className="h-5 w-5 text-gray-400 animate-spin" />
             ) : (
-              <Search className="h-5 w-5 text-gray-400" />
+              <Search className="h-5 w-5 text-red-400" />
             )}
           </div>
           <Textarea

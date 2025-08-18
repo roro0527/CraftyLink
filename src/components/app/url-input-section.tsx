@@ -71,10 +71,10 @@ const UrlInputSection: React.FC<UrlInputSectionProps> = ({
               <div
                 key={keyword}
                 onClick={() => setActiveIndex(index)}
-                className={`relative h-2.5 w-2.5 rounded-full cursor-pointer transition-all duration-300 overflow-hidden ${
+                className={`relative h-2.5 rounded-full cursor-pointer transition-all duration-300 overflow-hidden ${
                   activeIndex === index
-                    ? 'bg-gray-400 transform scale-125'
-                    : 'bg-gray-300 hover:bg-gray-400'
+                    ? 'w-8 bg-gray-400'
+                    : 'w-2.5 bg-gray-300 hover:bg-gray-400'
                 }`}
                 title={`'${keyword}' 검색`}
               >

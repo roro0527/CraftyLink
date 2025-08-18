@@ -66,7 +66,7 @@ const UrlInputSection: React.FC<UrlInputSectionProps> = ({
             style={{ paddingTop: '14px' }}
           />
         </div>
-         <div className="flex justify-end items-center gap-3 mt-4 h-4">
+         <div className="flex justify-center items-center gap-3 mt-4 h-4">
             {recommendedKeywords.map((keyword, index) => (
               <div
                 key={keyword}

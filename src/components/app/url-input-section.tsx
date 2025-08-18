@@ -45,7 +45,7 @@ const UrlInputSection: React.FC<UrlInputSectionProps> = ({
             value={urlsInput}
             onChange={(e) => onUrlsInputChange(e.target.value)}
             onKeyDown={handleKeyDown}
-            className="pl-12 pr-4 h-[66px] text-2xl rounded-3xl border-input focus-visible:ring-primary focus-visible:ring-2 shadow-sm hover:shadow-md transition-shadow resize-none"
+            className="pl-12 pr-4 h-[66px] text-2xl rounded-3xl border-input focus-visible:ring-primary focus-visible:ring-2 shadow-sm hover:shadow-md transition-shadow resize-none bg-background"
             disabled={isSearching}
             style={{ paddingTop: '14px' }}
           />

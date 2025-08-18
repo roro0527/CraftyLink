@@ -2,6 +2,8 @@ import type {Metadata} from 'next';
 import './globals.css';
 import AppHeader from '@/components/app/app-header';
 import { Sidebar } from '@/components/ui/sidebar';
+import { Toaster } from '@/components/ui/toaster';
+import { FloatingCard } from '@/components/app/floating-card';
 
 export const metadata: Metadata = {
   title: 'CraftyLink',
@@ -25,6 +27,8 @@ export default function RootLayout({
           <AppHeader />
           <Sidebar />
           {children}
+          <Toaster />
+          <FloatingCard />
         </div>
       </body>
     </html>

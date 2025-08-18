@@ -1,26 +1,14 @@
 'use client';
 
 import * as React from 'react';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import UrlInputSection from '@/components/app/url-input-section';
-import { Toaster } from "@/components/ui/toaster"
-import { FloatingCard } from '@/components/app/floating-card';
-import { useFloatingCard } from '@/hooks/use-floating-card';
 
 export default function Home() {
   const { toast } = useToast();
   const [searchInput, setSearchInput] = useState<string>('');
   const [isSearching, setIsSearching] = useState(false);
-  const { onClose } = useFloatingCard();
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      onClose();
-    }, 5000); // Close floating card after 5 seconds on initial load
-    return () => clearTimeout(timer);
-  }, [onClose]);
-
 
   const handleSearch = () => {
     if (!searchInput.trim()) {
@@ -55,8 +43,6 @@ export default function Home() {
             {/* Results will be displayed here */}
           </div>
         </main>
-        <Toaster />
-        <FloatingCard />
       </div>
     </>
   );

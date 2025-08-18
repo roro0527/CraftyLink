@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -32,8 +33,8 @@ export default function Home() {
       <div className="relative flex flex-col min-h-screen">
         <div className="absolute top-0 left-0 w-full h-full -z-10 bg-background overflow-hidden">
            <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-background to-transparent" />
-          <div className="h-full w-full flex items-center justify-center">
-            <div className="w-[80%] h-1/2 bg-muted/50 rounded-lg flex items-center justify-center">
+          <div className="h-full w-full flex items-center justify-center p-4">
+            <div className="w-full max-w-4xl h-96 bg-muted rounded-2xl flex items-center justify-center">
               <p className="text-muted-foreground">[선 그래프 영역]</p>
             </div>
           </div>

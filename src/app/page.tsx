@@ -55,7 +55,7 @@ export default function Home() {
           />
         </div>
         
-        <div className="w-full max-w-4xl mx-auto mb-6">
+        <div className="w-full mx-auto mb-6">
            <div className="h-96 bg-muted rounded-2xl flex items-center justify-center">
             <p className="text-muted-foreground">[선 그래프 영역]</p>
           </div>

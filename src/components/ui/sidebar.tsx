@@ -14,14 +14,14 @@ import { useFloatingCard } from '@/hooks/use-floating-card';
 
 export function Sidebar() {
   const { isOpen, onClose } = useMobileSidebar();
-  const { onOpen: onOpenCard } = useFloatingCard();
+  const { toggle: toggleCard } = useFloatingCard();
 
   const handleLinkClick = () => {
     onClose();
   };
   
   const handleSummaryClick = () => {
-    onOpenCard();
+    toggleCard();
     onClose();
   }
 

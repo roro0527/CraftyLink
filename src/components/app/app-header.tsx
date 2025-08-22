@@ -11,7 +11,7 @@ interface AppHeaderProps {}
 
 const AppHeader: React.FC<AppHeaderProps> = ({}) => {
   const { onOpen } = useMobileSidebar();
-  const { onOpen: onOpenCard } = useFloatingCard();
+  const { toggle: toggleCard } = useFloatingCard();
 
   return (
     <header className="border-b border-border/50 bg-card/50 backdrop-blur-sm sticky top-0 z-20">
@@ -39,7 +39,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({}) => {
               <Button asChild variant="ghost" className="text-base"><Link href="/compare">비교</Link></Button>
               <Button asChild variant="ghost" className="text-base"><Link href="/region-explore">지역 탐색</Link></Button>
             </nav>
-            <Button variant="ghost" className="text-base" onClick={onOpenCard}>
+            <Button variant="ghost" className="text-base" onClick={toggleCard}>
               요약
             </Button>
           </div>

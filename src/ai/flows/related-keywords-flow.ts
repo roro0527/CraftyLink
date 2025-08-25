@@ -32,14 +32,15 @@ const getRelatedKeywordsFlow = ai.defineFlow(
         keyword: input.keyword,
       });
       const parsedResults = JSON.parse(results);
-      const rankedList = parsedResults.default.rankedKeyword;
+      const rankedLists = parsedResults.default.rankedKeyword;
 
-      if (Array.isArray(rankedList) && rankedList.length > 0) {
-        // rankedKeyword could be an array of "top" or "rising"
-        // Let's find the one that has data.
-        const listWithQueries = rankedList.find(item => item.rankedKeyword && item.rankedKeyword.length > 0);
-        if (listWithQueries) {
-             return listWithQueries.rankedKeyword.slice(0, 5).map((item: any) => item.query);
+      if (Array.isArray(rankedLists) && rankedLists.length > 0) {
+        // rankedLists usually contains two objects: one for "top" and one for "rising" queries.
+        // We will try to get queries from either of them.
+        for (const list of rankedLists) {
+          if (list && Array.isArray(list.rankedKeyword) && list.rankedKeyword.length > 0) {
+            return list.rankedKeyword.slice(0, 5).map((item: any) => item.query);
+          }
         }
       }
       

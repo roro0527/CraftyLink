@@ -11,6 +11,7 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'zod';
 import { subDays, format } from 'date-fns';
+import googleTrends from 'google-trends-api';
 
 const KeywordTrendsInputSchema = z.object({
   keyword: z.string().describe('The keyword to search for.'),
@@ -27,30 +28,6 @@ export type KeywordTrendPoint = z.infer<typeof KeywordTrendPointSchema>;
 const KeywordTrendsDataSchema = z.array(KeywordTrendPointSchema);
 export type KeywordTrendsData = z.infer<typeof KeywordTrendsDataSchema>;
 
-function generateMockTrendData(timeRange: '5d' | '1w' | '1m'): KeywordTrendsData {
-    const now = new Date();
-    let daysToGenerate;
-    switch (timeRange) {
-        case '5d':
-            daysToGenerate = 5;
-            break;
-        case '1w':
-            daysToGenerate = 7;
-            break;
-        case '1m':
-            daysToGenerate = 30;
-            break;
-    }
-
-    return Array.from({ length: daysToGenerate }).map((_, i) => {
-        const date = subDays(now, daysToGenerate - 1 - i);
-        return {
-            date: format(date, 'yyyy-MM-dd'),
-            value: Math.floor(Math.random() * 100),
-        };
-    }).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-}
-
 
 const getKeywordTrendsFlow = ai.defineFlow(
   {
@@ -59,10 +36,35 @@ const getKeywordTrendsFlow = ai.defineFlow(
     outputSchema: KeywordTrendsDataSchema,
   },
   async (input) => {
-    // In a real application, you would call the Google Trends API here.
-    // For now, we'll return mock data.
-    console.log(`Fetching trends for "${input.keyword}" over "${input.timeRange}"`);
-    return generateMockTrendData(input.timeRange);
+    const now = new Date();
+    let daysToSubtract;
+    switch (input.timeRange) {
+        case '5d':
+            daysToSubtract = 5;
+            break;
+        case '1w':
+            daysToSubtract = 7;
+            break;
+        case '1m':
+            daysToSubtract = 30;
+            break;
+    }
+    const startTime = subDays(now, daysToSubtract);
+
+    try {
+        const results = await googleTrends.interestOverTime({
+            keyword: input.keyword,
+            startTime: startTime,
+        });
+        const trendData = JSON.parse(results).default.timelineData;
+        return trendData.map((item: any) => ({
+            date: format(new Date(parseInt(item.time) * 1000), 'yyyy-MM-dd'),
+            value: item.value[0],
+        }));
+    } catch (err) {
+        console.error('Error fetching Google Trends data:', err);
+        return [];
+    }
   }
 );
 

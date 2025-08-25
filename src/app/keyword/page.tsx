@@ -80,7 +80,7 @@ export default function KeywordPage() {
       setTrendData(trendResult);
       setRelatedKeywords(relatedResult);
 
-    } catch (error) {
+    } catch (error) => {
       console.error(error);
       // Handle error with a toast or message
     } finally {
@@ -92,18 +92,14 @@ export default function KeywordPage() {
   React.useEffect(() => {
     const queryKeyword = searchParams.get('q');
     if (queryKeyword) {
-      setKeywordSearch(queryKeyword);
-      // We need to trigger search, but `handleSearch` is memoized and might hold old state.
-      // A dedicated effect for this might be better.
+      // Only set and search if the keyword from URL is different from current one
+      if(queryKeyword !== keywordSearch) {
+        setKeywordSearch(queryKeyword);
+      }
+      handleSearch();
     }
-  }, [searchParams]);
-
-  React.useEffect(() => {
-    if (keywordSearch) {
-        handleSearch();
-    }
-  }, [handleSearch, keywordSearch]);
-
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, handleSearch]);
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Enter') {

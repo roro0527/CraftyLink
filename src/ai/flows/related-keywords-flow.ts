@@ -32,7 +32,7 @@ const getRelatedKeywordsFlow = ai.defineFlow(
         keyword: input.keyword,
       });
       const parsedResults = JSON.parse(results);
-      const rankedLists = parsedResults.default.rankedKeyword;
+      const rankedLists = parsedResults.default.rankedList;
 
       if (Array.isArray(rankedLists) && rankedLists.length > 0) {
         // rankedLists usually contains two objects: one for "top" and one for "rising" queries.

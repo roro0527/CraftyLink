@@ -26,10 +26,21 @@ import {
 } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { LoaderCircle, Search } from 'lucide-react';
+import { useSearchParams } from 'next/navigation';
 
 export default function KeywordPage() {
-  const [keywordSearch, setKeywordSearch] = React.useState('특정 키워드');
+  const searchParams = useSearchParams();
+  const initialKeyword = searchParams.get('q') || '특정 키워드';
+
+  const [keywordSearch, setKeywordSearch] = React.useState(initialKeyword);
   const [isSearching, setIsSearching] = React.useState(false);
+
+  React.useEffect(() => {
+    const queryKeyword = searchParams.get('q');
+    if (queryKeyword) {
+      setKeywordSearch(queryKeyword);
+    }
+  }, [searchParams]);
   
   const keywordData = {
     name: keywordSearch,

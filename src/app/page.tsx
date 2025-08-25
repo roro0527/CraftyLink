@@ -6,11 +6,13 @@ import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import UrlInputSection from '@/components/app/url-input-section';
 import RecommendedKeywords from '@/components/app/recommended-keywords';
+import { useRouter } from 'next/navigation';
 
 const recommendedKeywords = ['게임', '먹방', '여행', '뷰티', 'IT'];
 
 export default function Home() {
   const { toast } = useToast();
+  const router = useRouter();
   const [searchInput, setSearchInput] = useState<string>('');
   const [isSearching, setIsSearching] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -36,11 +38,7 @@ export default function Home() {
       return;
     }
     setIsSearching(true);
-    console.log(`Searching for: ${searchInput}`);
-    // TODO: Implement search logic
-    setTimeout(() => {
-      setIsSearching(false);
-    }, 1000);
+    router.push(`/keyword?q=${encodeURIComponent(searchInput)}`);
   };
   
   return (

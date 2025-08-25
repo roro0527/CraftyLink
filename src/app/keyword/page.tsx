@@ -27,13 +27,14 @@ import {
 import { Input } from '@/components/ui/input';
 import { LoaderCircle, Search } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
-import { getKeywordTrendsAction } from '@/app/actions';
+import { getKeywordTrendsAction, getRelatedKeywordsAction } from '@/app/actions';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartConfig } from '@/components/ui/chart';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
 import { format, parseISO } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { Skeleton } from '@/components/ui/skeleton';
-import type { KeywordTrendPoint } from '@/ai/flows/keyword-trends-flow';
+import type { KeywordTrendPoint } from '@/lib/types';
+import { Badge } from '@/components/ui/badge';
 
 
 const chartConfig = {
@@ -51,6 +52,8 @@ export default function KeywordPage() {
   const [isSearching, setIsSearching] = React.useState(false);
   const [timeRange, setTimeRange] = React.useState<'5d' | '1w' | '1m'>('1w');
   const [trendData, setTrendData] = React.useState<KeywordTrendPoint[]>([]);
+  const [relatedKeywords, setRelatedKeywords] = React.useState<string[]>([]);
+  const [isFetchingRelated, setIsFetchingRelated] = React.useState(false);
 
   const keywordData = {
     name: keywordSearch,
@@ -64,15 +67,25 @@ export default function KeywordPage() {
   const handleSearch = React.useCallback(async () => {
     if (!keywordSearch.trim()) return;
     setIsSearching(true);
-    setTrendData([]); // Clear previous data
+    setIsFetchingRelated(true);
+    setTrendData([]); 
+    setRelatedKeywords([]);
+
     try {
-      const data = await getKeywordTrendsAction({ keyword: keywordSearch, timeRange });
-      setTrendData(data);
+      const trendAction = getKeywordTrendsAction({ keyword: keywordSearch, timeRange });
+      const relatedAction = getRelatedKeywordsAction({ keyword: keywordSearch });
+      
+      const [trendResult, relatedResult] = await Promise.all([trendAction, relatedAction]);
+      
+      setTrendData(trendResult);
+      setRelatedKeywords(relatedResult);
+
     } catch (error) {
       console.error(error);
       // Handle error with a toast or message
     } finally {
       setIsSearching(false);
+      setIsFetchingRelated(false);
     }
   }, [keywordSearch, timeRange]);
 
@@ -80,9 +93,17 @@ export default function KeywordPage() {
     const queryKeyword = searchParams.get('q');
     if (queryKeyword) {
       setKeywordSearch(queryKeyword);
-      handleSearch();
+      // We need to trigger search, but `handleSearch` is memoized and might hold old state.
+      // A dedicated effect for this might be better.
     }
-  }, [searchParams, handleSearch]);
+  }, [searchParams]);
+
+  React.useEffect(() => {
+    if (keywordSearch) {
+        handleSearch();
+    }
+  }, [handleSearch, keywordSearch]);
+
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Enter') {
@@ -237,9 +258,27 @@ export default function KeywordPage() {
               <CardTitle>연관 태그</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="h-60 bg-muted rounded-md flex items-center justify-center">
-                <p className="text-muted-foreground">[워드클라우드]</p>
-              </div>
+              {isFetchingRelated ? (
+                 <div className="space-y-2">
+                    <Skeleton className="h-8 w-full" />
+                    <Skeleton className="h-8 w-4/5" />
+                    <Skeleton className="h-8 w-full" />
+                    <Skeleton className="h-8 w-3/4" />
+                    <Skeleton className="h-8 w-5/6" />
+                 </div>
+              ) : relatedKeywords.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {relatedKeywords.map((tag) => (
+                    <Badge key={tag} variant="secondary" className="text-base">
+                      {tag}
+                    </Badge>
+                  ))}
+                </div>
+              ) : (
+                <div className="h-60 flex items-center justify-center">
+                  <p className="text-muted-foreground">연관 태그가 없습니다.</p>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>

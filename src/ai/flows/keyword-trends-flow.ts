@@ -12,6 +12,8 @@ import {ai} from '@/ai/genkit';
 import {z} from 'zod';
 import { subDays, format } from 'date-fns';
 import googleTrends from 'google-trends-api';
+import type { KeywordTrendPoint } from '@/lib/types';
+
 
 const KeywordTrendsInputSchema = z.object({
   keyword: z.string().describe('The keyword to search for.'),
@@ -23,7 +25,6 @@ const KeywordTrendPointSchema = z.object({
     date: z.string().describe('The date for the data point (YYYY-MM-DD).'),
     value: z.number().describe('The search trend value.'),
 });
-export type KeywordTrendPoint = z.infer<typeof KeywordTrendPointSchema>;
 
 const KeywordTrendsDataSchema = z.array(KeywordTrendPointSchema);
 export type KeywordTrendsData = z.infer<typeof KeywordTrendsDataSchema>;

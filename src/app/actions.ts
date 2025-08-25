@@ -4,6 +4,7 @@
 import type { SuperParam } from '@/lib/types';
 import {nanoid} from 'nanoid';
 import { getKeywordTrends, type KeywordTrendsInput, type KeywordTrendsData } from '@/ai/flows/keyword-trends-flow';
+import { getRelatedKeywords, type RelatedKeywordsInput, type RelatedKeywordsData } from '@/ai/flows/related-keywords-flow';
 
 
 export async function suggestSuperParametersAction(
@@ -32,4 +33,14 @@ export async function getKeywordTrendsAction(input: KeywordTrendsInput): Promise
     // You might want to handle this more gracefully
     throw new Error('키워드 트렌드 데이터를 가져오는데 실패했습니다.');
   }
+}
+
+export async function getRelatedKeywordsAction(input: RelatedKeywordsInput): Promise<RelatedKeywordsData> {
+    try {
+        const keywords = await getRelatedKeywords(input);
+        return keywords;
+    } catch (error) {
+        console.error('Error fetching related keywords:', error);
+        throw new Error('연관 키워드 데이터를 가져오는데 실패했습니다.');
+    }
 }

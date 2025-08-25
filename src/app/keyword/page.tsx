@@ -27,21 +27,31 @@ import {
 import { Input } from '@/components/ui/input';
 import { LoaderCircle, Search } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
+import { getKeywordTrendsAction } from '@/app/actions';
+import type { KeywordTrendPoint } from '@/lib/types';
+import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartConfig } from '@/components/ui/chart';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
+import { format, parseISO } from 'date-fns';
+import { ko } from 'date-fns/locale';
+import { Skeleton } from '@/components/ui/skeleton';
+
+
+const chartConfig = {
+  value: {
+    label: '검색량',
+    color: 'hsl(var(--chart-1))',
+  },
+} satisfies ChartConfig;
 
 export default function KeywordPage() {
   const searchParams = useSearchParams();
-  const initialKeyword = searchParams.get('q') || '특정 키워드';
+  const initialKeyword = searchParams.get('q') || '';
 
   const [keywordSearch, setKeywordSearch] = React.useState(initialKeyword);
   const [isSearching, setIsSearching] = React.useState(false);
+  const [timeRange, setTimeRange] = React.useState<'5d' | '1w' | '1m'>('1w');
+  const [trendData, setTrendData] = React.useState<KeywordTrendPoint[]>([]);
 
-  React.useEffect(() => {
-    const queryKeyword = searchParams.get('q');
-    if (queryKeyword) {
-      setKeywordSearch(queryKeyword);
-    }
-  }, [searchParams]);
-  
   const keywordData = {
     name: keywordSearch,
     description: '이 키워드에 대한 간단한 설명입니다.',
@@ -50,16 +60,29 @@ export default function KeywordPage() {
       frequency: '5,820',
     },
   };
-
-  const handleSearch = () => {
+  
+  const handleSearch = React.useCallback(async () => {
     if (!keywordSearch.trim()) return;
     setIsSearching(true);
-    console.log(`Searching for: ${keywordSearch}`);
-    // TODO: Implement search logic
-    setTimeout(() => {
+    setTrendData([]); // Clear previous data
+    try {
+      const data = await getKeywordTrendsAction({ keyword: keywordSearch, timeRange });
+      setTrendData(data);
+    } catch (error) {
+      console.error(error);
+      // Handle error with a toast or message
+    } finally {
       setIsSearching(false);
-    }, 1000);
-  }
+    }
+  }, [keywordSearch, timeRange]);
+
+  React.useEffect(() => {
+    const queryKeyword = searchParams.get('q');
+    if (queryKeyword) {
+      setKeywordSearch(queryKeyword);
+      handleSearch();
+    }
+  }, [searchParams, handleSearch]);
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Enter') {
@@ -121,7 +144,7 @@ export default function KeywordPage() {
 
       {/* 시간 범위 선택 + 액션 버튼 */}
       <div className="flex flex-col md:flex-row justify-between items-center mb-4 gap-4">
-        <Select defaultValue="1w">
+        <Select value={timeRange} onValueChange={(value) => setTimeRange(value as '5d' | '1w' | '1m')}>
           <SelectTrigger className="w-full md:w-[180px]">
             <SelectValue placeholder="시간 범위 선택" />
           </SelectTrigger>
@@ -147,8 +170,39 @@ export default function KeywordPage() {
               <CardTitle>키워드 출현 빈도</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="h-72 bg-muted rounded-md flex items-center justify-center">
-                <p className="text-muted-foreground">차트 데이터가 없습니다.</p>
+              <div className="h-72">
+                {isSearching ? (
+                  <Skeleton className="w-full h-full" />
+                ) : trendData.length > 0 ? (
+                  <ChartContainer config={chartConfig} className="w-full h-full">
+                    <LineChart data={trendData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
+                      <CartesianGrid vertical={false} />
+                      <XAxis
+                        dataKey="date"
+                        tickLine={false}
+                        axisLine={false}
+                        tickMargin={8}
+                        tickFormatter={(value) => format(parseISO(value), 'M/d', { locale: ko })}
+                      />
+                      <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
+                       <ChartTooltip
+                        cursor={false}
+                        content={<ChartTooltipContent indicator="dot" />}
+                      />
+                      <Line
+                        dataKey="value"
+                        type="monotone"
+                        stroke="var(--color-value)"
+                        strokeWidth={2}
+                        dot={true}
+                      />
+                    </LineChart>
+                  </ChartContainer>
+                ) : (
+                  <div className="h-full bg-muted rounded-md flex items-center justify-center">
+                    <p className="text-muted-foreground">차트 데이터가 없습니다.</p>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>

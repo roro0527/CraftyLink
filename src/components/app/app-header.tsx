@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Link2, Menu, HelpCircle } from 'lucide-react';
@@ -40,7 +41,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({}) => {
               <Button asChild variant="ghost" className="text-base"><Link href="/compare">비교</Link></Button>
               <Button asChild variant="ghost" className="text-base"><Link href="/region-explore">지역 탐색</Link></Button>
             </nav>
-            <Button variant="ghost" className="text-base" onClick={toggleCard}>
+            <Button variant="ghost" className="text-base hidden md:block" onClick={toggleCard}>
               요약
             </Button>
           </div>

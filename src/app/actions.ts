@@ -5,6 +5,7 @@ import type { SuperParam } from '@/lib/types';
 import {nanoid} from 'nanoid';
 import { getKeywordTrends, type KeywordTrendsInput, type KeywordTrendsData } from '@/ai/flows/keyword-trends-flow';
 import { getRelatedKeywords, type RelatedKeywordsInput, type RelatedKeywordsData } from '@/ai/flows/related-keywords-flow';
+import { getYoutubeVideos, type YoutubeVideosInput, type YoutubeVideosData } from '@/ai/flows/youtube-videos-flow';
 
 
 export async function suggestSuperParametersAction(
@@ -42,5 +43,15 @@ export async function getRelatedKeywordsAction(input: RelatedKeywordsInput): Pro
     } catch (error) {
         console.error('Error fetching related keywords:', error);
         throw new Error('연관 키워드 데이터를 가져오는데 실패했습니다.');
+    }
+}
+
+export async function getYoutubeVideosAction(input: YoutubeVideosInput): Promise<YoutubeVideosData> {
+    try {
+        const videos = await getYoutubeVideos(input);
+        return videos;
+    } catch (error) {
+        console.error('Error fetching YouTube videos:', error);
+        throw new Error('유튜브 영상 데이터를 가져오는데 실패했습니다.');
     }
 }

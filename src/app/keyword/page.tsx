@@ -27,13 +27,13 @@ import {
 import { Input } from '@/components/ui/input';
 import { LoaderCircle, Search } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
-import { getKeywordTrendsAction, getRelatedKeywordsAction } from '@/app/actions';
+import { getKeywordTrendsAction, getRelatedKeywordsAction, getYoutubeVideosAction } from '@/app/actions';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartConfig } from '@/components/ui/chart';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
 import { format, parseISO } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { Skeleton } from '@/components/ui/skeleton';
-import type { KeywordTrendPoint } from '@/lib/types';
+import type { KeywordTrendPoint, YoutubeVideo } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 
 
@@ -54,6 +54,8 @@ export default function KeywordPage() {
   const [trendData, setTrendData] = React.useState<KeywordTrendPoint[]>([]);
   const [relatedKeywords, setRelatedKeywords] = React.useState<string[]>([]);
   const [isFetchingRelated, setIsFetchingRelated] = React.useState(false);
+  const [youtubeVideos, setYoutubeVideos] = React.useState<YoutubeVideo[]>([]);
+  const [isFetchingVideos, setIsFetchingVideos] = React.useState(false);
 
   const keywordData = {
     name: keywordSearch,
@@ -68,17 +70,21 @@ export default function KeywordPage() {
     if (!keywordSearch.trim()) return;
     setIsSearching(true);
     setIsFetchingRelated(true);
+    setIsFetchingVideos(true);
     setTrendData([]); 
     setRelatedKeywords([]);
+    setYoutubeVideos([]);
 
     try {
       const trendAction = getKeywordTrendsAction({ keyword: keywordSearch, timeRange });
       const relatedAction = getRelatedKeywordsAction({ keyword: keywordSearch });
+      const videoAction = getYoutubeVideosAction({ keyword: keywordSearch });
       
-      const [trendResult, relatedResult] = await Promise.all([trendAction, relatedAction]);
+      const [trendResult, relatedResult, videoResult] = await Promise.all([trendAction, relatedAction, videoAction]);
       
       setTrendData(trendResult);
       setRelatedKeywords(relatedResult);
+      setYoutubeVideos(videoResult);
 
     } catch (error) {
       console.error(error);
@@ -86,20 +92,20 @@ export default function KeywordPage() {
     } finally {
       setIsSearching(false);
       setIsFetchingRelated(false);
+      setIsFetchingVideos(false);
     }
   }, [keywordSearch, timeRange]);
 
   React.useEffect(() => {
     const queryKeyword = searchParams.get('q');
     if (queryKeyword) {
-      // Only set and search if the keyword from URL is different from current one
-      if(queryKeyword !== keywordSearch) {
         setKeywordSearch(queryKeyword);
-      }
-      handleSearch();
+        // Trigger search automatically when arriving from another page with a query
+        handleSearch();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams]);
+  }, [searchParams.get('q')]); // Depend only on the query string value
+
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Enter') {
@@ -113,6 +119,15 @@ export default function KeywordPage() {
       <div className="flex flex-col md:flex-row justify-between items-start mb-6">
         <div className="w-full md:w-auto md:max-w-md">
            <div className="relative">
+             <Input
+              type="text"
+              placeholder="키워드 검색..."
+              value={keywordSearch}
+              onChange={(e) => setKeywordSearch(e.target.value)}
+              onKeyDown={handleKeyDown}
+              className="pl-14 pr-4 h-14 text-3xl font-bold rounded-lg border-2 border-transparent hover:border-border focus:border-primary transition-colors bg-card"
+              disabled={isSearching}
+            />
             <Button
                 variant="ghost"
                 size="icon"
@@ -127,15 +142,6 @@ export default function KeywordPage() {
                 )}
                  <span className="sr-only">검색</span>
               </Button>
-            <Input
-              type="text"
-              placeholder="키워드 검색..."
-              value={keywordSearch}
-              onChange={(e) => setKeywordSearch(e.target.value)}
-              onKeyDown={handleKeyDown}
-              className="pl-14 pr-4 h-14 text-3xl font-bold rounded-lg border-2 border-transparent hover:border-border focus:border-primary transition-colors bg-card"
-              disabled={isSearching}
-            />
           </div>
           <p className="text-muted-foreground mt-2 ml-2">{keywordData.description}</p>
         </div>
@@ -234,15 +240,35 @@ export default function KeywordPage() {
                     <TableHead>제목</TableHead>
                     <TableHead>업로드일</TableHead>
                     <TableHead>조회수</TableHead>
-                    <TableHead>구독자 증가</TableHead>
+                    <TableHead>채널</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                   <TableRow>
-                    <TableCell colSpan={4} className="text-center h-24">
-                      데이터가 없습니다.
-                    </TableCell>
-                  </TableRow>
+                   {isFetchingVideos ? (
+                    Array.from({ length: 5 }).map((_, i) => (
+                      <TableRow key={`skel-${i}`}>
+                        <TableCell><Skeleton className="h-5 w-48" /></TableCell>
+                        <TableCell><Skeleton className="h-5 w-24" /></TableCell>
+                        <TableCell><Skeleton className="h-5 w-20" /></TableCell>
+                        <TableCell><Skeleton className="h-5 w-28" /></TableCell>
+                      </TableRow>
+                    ))
+                  ) : youtubeVideos.length > 0 ? (
+                    youtubeVideos.map((video, index) => (
+                      <TableRow key={index}>
+                        <TableCell className="font-medium">{video.title}</TableCell>
+                        <TableCell>{format(parseISO(video.publishedAt), 'yyyy-MM-dd')}</TableCell>
+                        <TableCell>{parseInt(video.viewCount).toLocaleString()}</TableCell>
+                        <TableCell>{video.channelTitle}</TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={4} className="text-center h-24">
+                        데이터가 없습니다.
+                      </TableCell>
+                    </TableRow>
+                  )}
                 </TableBody>
               </Table>
             </CardContent>

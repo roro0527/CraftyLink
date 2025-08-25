@@ -11,3 +11,10 @@ export interface KeywordTrendPoint {
     date: string; // "YYYY-MM-DD"
     value: number;
 }
+
+export interface YoutubeVideo {
+    title: string;
+    publishedAt: string;
+    viewCount: string;
+    channelTitle: string;
+}

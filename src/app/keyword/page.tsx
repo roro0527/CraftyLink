@@ -73,21 +73,12 @@ export default function KeywordPage() {
       <div className="flex flex-col md:flex-row justify-between items-start mb-6">
         <div className="w-full md:w-auto md:max-w-md">
            <div className="relative">
-            <Input
-              type="text"
-              placeholder="키워드 검색..."
-              value={keywordSearch}
-              onChange={(e) => setKeywordSearch(e.target.value)}
-              onKeyDown={handleKeyDown}
-              className="pl-4 pr-14 h-14 text-3xl font-bold rounded-lg border-2 border-transparent hover:border-border focus:border-primary transition-colors bg-card"
-              disabled={isSearching}
-            />
-             <Button
+            <Button
                 variant="ghost"
                 size="icon"
                 onClick={handleSearch}
                 disabled={isSearching || !keywordSearch.trim()}
-                className="absolute right-2 top-1/2 -translate-y-1/2 h-10 w-10"
+                className="absolute left-2 top-1/2 -translate-y-1/2 h-10 w-10"
               >
                 {isSearching ? (
                   <LoaderCircle className="h-6 w-6 text-gray-400 animate-spin" />
@@ -96,6 +87,15 @@ export default function KeywordPage() {
                 )}
                  <span className="sr-only">검색</span>
               </Button>
+            <Input
+              type="text"
+              placeholder="키워드 검색..."
+              value={keywordSearch}
+              onChange={(e) => setKeywordSearch(e.target.value)}
+              onKeyDown={handleKeyDown}
+              className="pl-14 pr-4 h-14 text-3xl font-bold rounded-lg border-2 border-transparent hover:border-border focus:border-primary transition-colors bg-card"
+              disabled={isSearching}
+            />
           </div>
           <p className="text-muted-foreground mt-2 ml-2">{keywordData.description}</p>
         </div>

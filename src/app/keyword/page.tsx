@@ -28,12 +28,12 @@ import { Input } from '@/components/ui/input';
 import { LoaderCircle, Search } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { getKeywordTrendsAction } from '@/app/actions';
-import type { KeywordTrendPoint } from '@/lib/types';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartConfig } from '@/components/ui/chart';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
 import { format, parseISO } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { Skeleton } from '@/components/ui/skeleton';
+import type { KeywordTrendPoint } from '@/ai/flows/keyword-trends-flow';
 
 
 const chartConfig = {
@@ -167,7 +167,7 @@ export default function KeywordPage() {
         <div className="md:col-span-2 space-y-6">
            <Card>
             <CardHeader>
-              <CardTitle>키워드 출현 빈도</CardTitle>
+              <CardTitle>키워드 검색 빈도</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="h-72">

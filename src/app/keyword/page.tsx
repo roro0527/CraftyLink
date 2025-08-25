@@ -66,7 +66,7 @@ export default function KeywordPage() {
     },
   };
   
-  const handleSearch = React.useCallback(async () => {
+  const handleSearch = async () => {
     if (!keywordSearch.trim()) return;
     
     setIsSearching(true);
@@ -89,7 +89,7 @@ export default function KeywordPage() {
     setIsSearching(false);
     setIsFetchingRelated(false);
     setIsFetchingVideos(false);
-  }, [keywordSearch, timeRange]);
+  };
 
   React.useEffect(() => {
     // On initial load, if there's a keyword from the URL, perform a search.

@@ -68,6 +68,7 @@ export default function KeywordPage() {
   
   const handleSearch = React.useCallback(async () => {
     if (!keywordSearch.trim()) return;
+    
     setIsSearching(true);
     setIsFetchingRelated(true);
     setIsFetchingVideos(true);
@@ -91,14 +92,22 @@ export default function KeywordPage() {
   }, [keywordSearch, timeRange]);
 
   React.useEffect(() => {
+    // This effect runs when the page is loaded with a search query from another page.
     const queryKeyword = searchParams.get('q');
     if (queryKeyword) {
-        setKeywordSearch(queryKeyword);
-        // Trigger search automatically when arriving from another page with a query
+      setKeywordSearch(queryKeyword);
+      // We need to call handleSearch here, but it depends on keywordSearch.
+      // A separate effect will trigger the search once the state is updated.
+    }
+  }, [searchParams]);
+
+  React.useEffect(() => {
+    // This effect triggers the search if a keyword is present (either from initial load or state update).
+    if (initialKeyword && keywordSearch === initialKeyword) {
         handleSearch();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams]); // Depend only on the query string value
+  }, [initialKeyword, handleSearch]);
 
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {

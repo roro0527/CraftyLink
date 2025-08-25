@@ -31,8 +31,7 @@ export async function getKeywordTrendsAction(input: KeywordTrendsInput): Promise
     return trends;
   } catch (error) {
     console.error('Error fetching keyword trends:', error);
-    // You might want to handle this more gracefully
-    throw new Error('키워드 트렌드 데이터를 가져오는데 실패했습니다.');
+    return [];
   }
 }
 
@@ -42,7 +41,7 @@ export async function getRelatedKeywordsAction(input: RelatedKeywordsInput): Pro
         return keywords;
     } catch (error) {
         console.error('Error fetching related keywords:', error);
-        throw new Error('연관 키워드 데이터를 가져오는데 실패했습니다.');
+        return [];
     }
 }
 
@@ -52,6 +51,6 @@ export async function getYoutubeVideosAction(input: YoutubeVideosInput): Promise
         return videos;
     } catch (error) {
         console.error('Error fetching YouTube videos:', error);
-        throw new Error('유튜브 영상 데이터를 가져오는데 실패했습니다.');
+        return [];
     }
 }

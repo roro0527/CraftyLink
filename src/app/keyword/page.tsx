@@ -75,25 +75,19 @@ export default function KeywordPage() {
     setRelatedKeywords([]);
     setYoutubeVideos([]);
 
-    try {
-      const trendAction = getKeywordTrendsAction({ keyword: keywordSearch, timeRange });
-      const relatedAction = getRelatedKeywordsAction({ keyword: keywordSearch });
-      const videoAction = getYoutubeVideosAction({ keyword: keywordSearch });
-      
-      const [trendResult, relatedResult, videoResult] = await Promise.all([trendAction, relatedAction, videoAction]);
-      
-      setTrendData(trendResult);
-      setRelatedKeywords(relatedResult);
-      setYoutubeVideos(videoResult);
+    const trendAction = getKeywordTrendsAction({ keyword: keywordSearch, timeRange });
+    const relatedAction = getRelatedKeywordsAction({ keyword: keywordSearch });
+    const videoAction = getYoutubeVideosAction({ keyword: keywordSearch });
+    
+    const [trendResult, relatedResult, videoResult] = await Promise.all([trendAction, relatedAction, videoAction]);
+    
+    setTrendData(trendResult);
+    setRelatedKeywords(relatedResult);
+    setYoutubeVideos(videoResult);
 
-    } catch (error) {
-      console.error(error);
-      // Handle error with a toast or message
-    } finally {
-      setIsSearching(false);
-      setIsFetchingRelated(false);
-      setIsFetchingVideos(false);
-    }
+    setIsSearching(false);
+    setIsFetchingRelated(false);
+    setIsFetchingVideos(false);
   }, [keywordSearch, timeRange]);
 
   React.useEffect(() => {
@@ -104,7 +98,7 @@ export default function KeywordPage() {
         handleSearch();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams.get('q')]); // Depend only on the query string value
+  }, [searchParams]); // Depend only on the query string value
 
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {

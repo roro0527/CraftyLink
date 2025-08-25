@@ -32,10 +32,10 @@ export function Sidebar() {
               <SheetTitle className="sr-only">Menu</SheetTitle>
             </SheetHeader>
            <nav className="flex flex-col items-start p-4 space-y-2">
-              <Button asChild variant="ghost" className="text-base w-full justify-start" onClick={handleLinkClick}><Link href="/">홈</Link></Button>
-              <Button asChild variant="ghost" className="text-base w-full justify-start" onClick={handleLinkClick}><Link href="/keyword">키워드</Link></Button>
-              <Button asChild variant="ghost" className="text-base w-full justify-start" onClick={handleLinkClick}><Link href="/compare">비교</Link></Button>
-              <Button asChild variant="ghost" className="text-base w-full justify-start" onClick={handleLinkClick}><Link href="/region-explore">지역 탐색</Link></Button>
+              <Button asChild variant="ghost" className="text-base w-full justify-start"><Link href="/" onClick={handleLinkClick}>홈</Link></Button>
+              <Button asChild variant="ghost" className="text-base w-full justify-start"><Link href="/keyword" onClick={handleLinkClick}>키워드</Link></Button>
+              <Button asChild variant="ghost" className="text-base w-full justify-start"><Link href="/compare" onClick={handleLinkClick}>비교</Link></Button>
+              <Button asChild variant="ghost" className="text-base w-full justify-start"><Link href="/region-explore" onClick={handleLinkClick}>지역 탐색</Link></Button>
               <Button variant="ghost" className="text-base w-full justify-start" onClick={handleSummaryClick}>요약</Button>
             </nav>
         </SheetContent>

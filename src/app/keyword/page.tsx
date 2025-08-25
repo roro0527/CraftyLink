@@ -80,7 +80,7 @@ export default function KeywordPage() {
       setTrendData(trendResult);
       setRelatedKeywords(relatedResult);
 
-    } catch (error) => {
+    } catch (error) {
       console.error(error);
       // Handle error with a toast or message
     } finally {
@@ -99,7 +99,7 @@ export default function KeywordPage() {
       handleSearch();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams, handleSearch]);
+  }, [searchParams]);
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Enter') {

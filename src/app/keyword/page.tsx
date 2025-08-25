@@ -92,22 +92,13 @@ export default function KeywordPage() {
   }, [keywordSearch, timeRange]);
 
   React.useEffect(() => {
-    // This effect runs when the page is loaded with a search query from another page.
-    const queryKeyword = searchParams.get('q');
-    if (queryKeyword) {
-      setKeywordSearch(queryKeyword);
-      // We need to call handleSearch here, but it depends on keywordSearch.
-      // A separate effect will trigger the search once the state is updated.
-    }
-  }, [searchParams]);
-
-  React.useEffect(() => {
-    // This effect triggers the search if a keyword is present (either from initial load or state update).
-    if (initialKeyword && keywordSearch === initialKeyword) {
+    // On initial load, if there's a keyword from the URL, perform a search.
+    if (initialKeyword) {
         handleSearch();
     }
+    // We only want this to run once on mount if initialKeyword exists.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialKeyword, handleSearch]);
+  }, []);
 
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {

@@ -36,7 +36,7 @@ const UrlInputSection: React.FC<UrlInputSectionProps> = ({
             {isSearching ? (
               <LoaderCircle className="h-5 w-5 text-gray-400 animate-spin" />
             ) : (
-              <Search className="h-5 w-5 text-red-400" />
+              <Search className="h-5 w-5 text-black-400" />
             )}
           </div>
           <Textarea

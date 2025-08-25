@@ -1,4 +1,6 @@
 
+'use client';
+
 import * as React from 'react';
 import {
   Select,
@@ -22,10 +24,15 @@ import {
   TableBody,
   TableCell,
 } from '@/components/ui/table';
+import { Input } from '@/components/ui/input';
+import { LoaderCircle, Search } from 'lucide-react';
 
 export default function KeywordPage() {
+  const [keywordSearch, setKeywordSearch] = React.useState('특정 키워드');
+  const [isSearching, setIsSearching] = React.useState(false);
+  
   const keywordData = {
-    name: '특정 키워드',
+    name: keywordSearch,
     description: '이 키워드에 대한 간단한 설명입니다.',
     kpi: {
       searchVolume: '1.2M',
@@ -33,13 +40,46 @@ export default function KeywordPage() {
     },
   };
 
+  const handleSearch = () => {
+    if (!keywordSearch.trim()) return;
+    setIsSearching(true);
+    console.log(`Searching for: ${keywordSearch}`);
+    // TODO: Implement search logic
+    setTimeout(() => {
+      setIsSearching(false);
+    }, 1000);
+  }
+
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter') {
+      handleSearch();
+    }
+  };
+
   return (
     <div id="keyword-page" className="p-6">
       {/* 상단: 키워드 개요 + KPI */}
       <div className="flex flex-col md:flex-row justify-between items-start mb-6">
-        <div>
-          <h1 className="text-3xl font-bold">{keywordData.name}</h1>
-          <p className="text-muted-foreground mt-1">{keywordData.description}</p>
+        <div className="w-full md:w-auto md:max-w-md">
+           <div className="relative">
+            <div className="absolute top-1/2 -translate-y-1/2 left-4 pointer-events-none">
+              {isSearching ? (
+                <LoaderCircle className="h-5 w-5 text-gray-400 animate-spin" />
+              ) : (
+                <Search className="h-5 w-5 text-gray-500" />
+              )}
+            </div>
+            <Input
+              type="text"
+              placeholder="키워드 검색..."
+              value={keywordSearch}
+              onChange={(e) => setKeywordSearch(e.target.value)}
+              onKeyDown={handleKeyDown}
+              className="pl-12 pr-4 h-14 text-3xl font-bold rounded-lg border-2 border-transparent hover:border-border focus:border-primary transition-colors bg-card"
+              disabled={isSearching}
+            />
+          </div>
+          <p className="text-muted-foreground mt-2 ml-2">{keywordData.description}</p>
         </div>
         <div className="grid grid-cols-2 gap-4 mt-4 md:mt-0 w-full md:w-auto">
           <Card>

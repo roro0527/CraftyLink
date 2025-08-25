@@ -31,9 +31,20 @@ const getRelatedKeywordsFlow = ai.defineFlow(
       const results = await googleTrends.relatedQueries({
         keyword: input.keyword,
       });
-      const relatedData = JSON.parse(results).default.rankedKeyword;
-      // We'll take the top 5 related queries.
-      return relatedData.slice(0, 5).map((item: any) => item.query);
+      const parsedResults = JSON.parse(results);
+      const rankedList = parsedResults.default.rankedKeyword;
+
+      if (Array.isArray(rankedList) && rankedList.length > 0) {
+        // rankedKeyword could be an array of "top" or "rising"
+        // Let's find the one that has data.
+        const listWithQueries = rankedList.find(item => item.rankedKeyword && item.rankedKeyword.length > 0);
+        if (listWithQueries) {
+             return listWithQueries.rankedKeyword.slice(0, 5).map((item: any) => item.query);
+        }
+      }
+      
+      return [];
+
     } catch (err) {
       console.error('Error fetching related keywords from Google Trends:', err);
       return [];

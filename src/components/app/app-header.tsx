@@ -21,6 +21,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({}) => {
             variant="ghost"
             size="icon"
             onClick={onOpen}
+            className="md:hidden"
           >
             <Menu className="h-6 w-6" />
           </Button>

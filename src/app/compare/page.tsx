@@ -13,7 +13,7 @@ import {
   TableCell,
 } from '@/components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, X } from 'lucide-react';
 import { getKeywordTrendsAction } from '@/app/actions';
 import type { KeywordTrendPoint } from '@/lib/types';
 import {
@@ -44,7 +44,7 @@ const chartColors = [
 export default function ComparePage() {
   const [keywords, setKeywords] = React.useState<string[]>([]);
   const [inputValue, setInputValue] = React.useState('');
-  const [timeRange, setTimeRange] = React.useState<'1w' | '1m' | '3m'>('1w');
+  const [timeRange, setTimeRange] = React.useState<'1w' | '1m' | '5d'>('1w');
   const [trendData, setTrendData] = React.useState<TrendData>({});
   const [summaryData, setSummaryData] = React.useState<SummaryData>({});
   const [isLoading, setIsLoading] = React.useState(false);
@@ -142,14 +142,14 @@ export default function ComparePage() {
           <Button onClick={handleClearKeywords} variant="outline">
             <Trash2 className="mr-2 h-4 w-4" /> 초기화
           </Button>
-          <Select value={timeRange} onValueChange={(value) => setTimeRange(value as '1w' | '1m' | '3m')}>
+          <Select value={timeRange} onValueChange={(value) => setTimeRange(value as '1w' | '1m' | '5d')}>
               <SelectTrigger className="w-full md:w-[180px]">
                 <SelectValue placeholder="시간 범위 선택" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="5d">최근 5일</SelectItem>
                 <SelectItem value="1w">최근 1주</SelectItem>
                 <SelectItem value="1m">최근 1개월</SelectItem>
-                <SelectItem value="3m">최근 3개월</SelectItem>
               </SelectContent>
             </Select>
         </div>

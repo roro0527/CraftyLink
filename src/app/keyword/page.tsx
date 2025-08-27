@@ -50,6 +50,7 @@ export default function KeywordPage() {
 
   const [keywordSearch, setKeywordSearch] = React.useState(initialKeyword);
   const [isSearching, setIsSearching] = React.useState(false);
+  const [isSearchingTrends, setIsSearchingTrends] = React.useState(false);
   const [timeRange, setTimeRange] = React.useState<'5d' | '1w' | '1m'>('1w');
   const [trendData, setTrendData] = React.useState<KeywordTrendPoint[]>([]);
   const [relatedKeywords, setRelatedKeywords] = React.useState<string[]>([]);
@@ -70,6 +71,7 @@ export default function KeywordPage() {
     if (!keywordSearch.trim()) return;
     
     setIsSearching(true);
+    setIsSearchingTrends(true);
     setIsFetchingRelated(true);
     setIsFetchingVideos(true);
     setTrendData([]); 
@@ -87,6 +89,7 @@ export default function KeywordPage() {
     setYoutubeVideos(videoResult);
 
     setIsSearching(false);
+    setIsSearchingTrends(false);
     setIsFetchingRelated(false);
     setIsFetchingVideos(false);
   };
@@ -96,10 +99,21 @@ export default function KeywordPage() {
     if (initialKeyword) {
         handleSearch();
     }
-    // We only want this to run once on mount if initialKeyword exists.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  React.useEffect(() => {
+    // Refetch trend data when timeRange changes, but only if there's a keyword.
+    if (keywordSearch.trim()) {
+      const fetchTrends = async () => {
+        setIsSearchingTrends(true);
+        const trendResult = await getKeywordTrendsAction({ keyword: keywordSearch, timeRange });
+        setTrendData(trendResult);
+        setIsSearchingTrends(false);
+      };
+      fetchTrends();
+    }
+  }, [timeRange, keywordSearch]);
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Enter') {
@@ -188,7 +202,7 @@ export default function KeywordPage() {
             </CardHeader>
             <CardContent>
               <div className="h-72">
-                {isSearching ? (
+                {isSearching || isSearchingTrends ? (
                   <Skeleton className="w-full h-full" />
                 ) : trendData.length > 0 ? (
                   <ChartContainer config={chartConfig} className="w-full h-full">

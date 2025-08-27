@@ -73,8 +73,8 @@ export default function Home() {
   
   return (
     <>
-      <main className="flex-grow container mx-auto px-4 py-8">
-        <div className="w-full max-w-4xl mx-auto">
+      <main className="flex-grow flex flex-col items-center px-4 py-8">
+        <div className="w-full max-w-4xl">
           <div className="bg-muted rounded-2xl flex flex-col items-center justify-center p-8 md:p-12">
             <div className="w-full max-w-2xl">
                <UrlInputSection
@@ -93,7 +93,7 @@ export default function Home() {
           </div>
         </div>
         
-        <div className="w-full max-w-2xl mx-auto mt-6">
+        <div className="w-full max-w-2xl mt-6">
           <RecommendedKeywords 
             keywords={recommendedKeywords}
             activeIndex={activeIndex}

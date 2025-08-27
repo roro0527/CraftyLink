@@ -35,6 +35,7 @@ import { ko } from 'date-fns/locale';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { KeywordTrendPoint, YoutubeVideo } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
+import { useToast } from '@/hooks/use-toast';
 
 
 const chartConfig = {
@@ -47,6 +48,7 @@ const chartConfig = {
 export default function KeywordPage() {
   const searchParams = useSearchParams();
   const initialKeyword = searchParams.get('q') || '';
+  const { toast } = useToast();
 
   const [keywordSearch, setKeywordSearch] = React.useState(initialKeyword);
   const [isSearching, setIsSearching] = React.useState(false);
@@ -137,6 +139,48 @@ export default function KeywordPage() {
     }
   };
 
+  const handleExportCsv = () => {
+    if (trendData.length === 0 && youtubeVideos.length === 0) {
+      toast({
+        variant: 'destructive',
+        title: '내보낼 데이터가 없습니다.',
+        description: '먼저 키워드를 검색해주세요.',
+      });
+      return;
+    }
+
+    let csvContent = '\uFEFF'; // BOM for UTF-8
+
+    // Add Trend Data
+    csvContent += '키워드 검색 빈도\n';
+    csvContent += '날짜,검색량\n';
+    trendData.forEach(item => {
+      csvContent += `${item.date},${item.value}\n`;
+    });
+    csvContent += '\n';
+
+    // Add YouTube Video Data
+    csvContent += '관련 영상 목록\n';
+    csvContent += '제목,업로드일,조회수,채널\n';
+    youtubeVideos.forEach(video => {
+      const title = video.title.replace(/"/g, '""'); // Escape double quotes
+      csvContent += `"${title}",${format(parseISO(video.publishedAt), 'yyyy-MM-dd')},${video.viewCount},${video.channelTitle}\n`;
+    });
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    if (link.href) {
+      URL.revokeObjectURL(link.href);
+    }
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'craftylink_data.csv');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+
   return (
     <div id="keyword-page" className="p-6">
       {/* 상단: 키워드 개요 + KPI */}
@@ -215,9 +259,7 @@ export default function KeywordPage() {
         </Select>
         <div className="flex gap-2 flex-wrap">
           <Button variant="outline">저장</Button>
-          <Button variant="outline">비교</Button>
-          <Button variant="outline">경보</Button>
-          <Button>CSV 내보내기</Button>
+          <Button onClick={handleExportCsv}>CSV 내보내기</Button>
         </div>
       </div>
 

@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Plus, Trash2, X } from 'lucide-react';
-import { getKeywordTrendsAction, analyzeKeywordTrendsAction } from '@/app/actions';
+import { getKeywordTrendsAction } from '@/app/actions';
 import type { KeywordTrendPoint } from '@/lib/types';
 import {
   Select,
@@ -28,12 +28,10 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Legend } from 'recharts';
 import { format, parseISO } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Badge } from '@/components/ui/badge';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import type { TrendAnalysisData } from '@/ai/flows/trend-analysis-flow';
 
 type TrendData = Record<string, KeywordTrendPoint[]>;
 type SummaryData = Record<string, { total: number; average: number }>;
+type AnalysisData = Record<string, { dominanceScore: number }>;
 type ChartableData = { date: string; [keyword: string]: number | string };
 
 const chartColors = [
@@ -51,7 +49,7 @@ export default function ComparePage() {
   const [trendData, setTrendData] = React.useState<TrendData>({});
   const [summaryData, setSummaryData] = React.useState<SummaryData>({});
   const [isLoading, setIsLoading] = React.useState(false);
-  const [analysisData, setAnalysisData] = React.useState<TrendAnalysisData | null>(null);
+  const [analysisData, setAnalysisData] = React.useState<AnalysisData>({});
   const [isAnalyzing, setIsAnalyzing] = React.useState(false);
 
   React.useEffect(() => {
@@ -59,13 +57,13 @@ export default function ComparePage() {
       if (keywords.length === 0) {
         setTrendData({});
         setSummaryData({});
-        setAnalysisData(null);
+        setAnalysisData({});
         return;
       }
 
       setIsLoading(true);
       setIsAnalyzing(true);
-      setAnalysisData(null);
+      
       const newTrendData: TrendData = {};
       const newSummaryData: SummaryData = {};
 
@@ -85,8 +83,45 @@ export default function ComparePage() {
       
       // After fetching trends, perform analysis
       if (Object.keys(newTrendData).length > 0) {
-        const analysisResult = await analyzeKeywordTrendsAction({ trendData: newTrendData });
-        setAnalysisData(analysisResult);
+        const newAnalysisData: AnalysisData = {};
+
+        const allAverages = Object.values(newSummaryData).map(s => s.average);
+        const maxAverage = Math.max(...allAverages);
+
+        for (const keyword of keywords) {
+            const Ktrends = newTrendData[keyword];
+            if (!Ktrends || Ktrends.length === 0) {
+                newAnalysisData[keyword] = { dominanceScore: 0 };
+                continue;
+            }
+
+            // 1. Average Volume Score (50 points)
+            const average = newSummaryData[keyword].average;
+            const avgScore = maxAverage > 0 ? (average / maxAverage) * 50 : 0;
+
+            // 2. Trend Score (50 points)
+            let trendScore = 0;
+            if (Ktrends.length > 1) {
+                const midPoint = Math.ceil(Ktrends.length / 2);
+                const firstHalf = Ktrends.slice(0, midPoint);
+                const secondHalf = Ktrends.slice(midPoint);
+
+                const firstHalfAvg = firstHalf.reduce((sum, p) => sum + p.value, 0) / firstHalf.length;
+                const secondHalfAvg = secondHalf.length > 0 ? secondHalf.reduce((sum, p) => sum + p.value, 0) / secondHalf.length : 0;
+                
+                const growthRate = firstHalfAvg > 0 ? (secondHalfAvg - firstHalfAvg) / firstHalfAvg : secondHalfAvg > 0 ? 1 : 0; // Cap growth at 100% if first half is 0
+                
+                // Normalize growth rate to a 0-50 score. Let's say 100% growth (growthRate=1) is 50 points.
+                const normalizedGrowth = Math.max(-1, Math.min(1, growthRate)); // Clamp between -100% and +100%
+                trendScore = (normalizedGrowth + 1) / 2 * 50; // Map [-1, 1] to [0, 50]
+            }
+            
+            newAnalysisData[keyword] = {
+                dominanceScore: Math.round(avgScore + trendScore)
+            };
+        }
+
+        setAnalysisData(newAnalysisData);
       }
       setIsAnalyzing(false);
     };
@@ -239,7 +274,7 @@ export default function ComparePage() {
                   <TableHead>키워드</TableHead>
                   <TableHead>총 검색량</TableHead>
                   <TableHead>평균 검색량</TableHead>
-                  <TableHead>우세 여부</TableHead>
+                  <TableHead>우세 점수</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -254,23 +289,8 @@ export default function ComparePage() {
                          {isLoading ? <Skeleton className="h-5 w-20" /> : (summaryData[keyword] ? summaryData[keyword].average.toLocaleString() : '데이터 없음')}
                       </TableCell>
                       <TableCell>
-                         {isAnalyzing ? <Skeleton className="h-5 w-24" /> : (
-                          analysisData && analysisData[keyword] ? (
-                            analysisData[keyword].isDominant ? (
-                              <TooltipProvider>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Badge>우세</Badge>
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    <p>{analysisData[keyword].reason}</p>
-                                  </TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
-                            ) : (
-                               <span className="text-muted-foreground">-</span>
-                            )
-                          ) : '분석중...'
+                         {isAnalyzing || isLoading ? <Skeleton className="h-5 w-24" /> : (
+                          analysisData[keyword] ? analysisData[keyword].dominanceScore : '-'
                         )}
                       </TableCell>
                     </TableRow>

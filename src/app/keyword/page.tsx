@@ -58,18 +58,22 @@ export default function KeywordPage() {
   const [isFetchingRelated, setIsFetchingRelated] = React.useState(false);
   const [youtubeVideos, setYoutubeVideos] = React.useState<YoutubeVideo[]>([]);
   const [isFetchingVideos, setIsFetchingVideos] = React.useState(false);
+  const [maxViewCount, setMaxViewCount] = React.useState<number | null>(null);
+
 
   const keywordData = {
     name: keywordSearch,
     description: '이 키워드에 대한 간단한 설명입니다.',
-    kpi: {
-      frequency: '5,820',
-    },
   };
 
   const calculateTotalVolume = (data: KeywordTrendPoint[]) => {
     if (!data || data.length === 0) return 0;
     return data.reduce((sum, point) => sum + point.value, 0);
+  };
+
+  const findMaxViewCount = (videos: YoutubeVideo[]) => {
+    if (!videos || videos.length === 0) return 0;
+    return Math.max(...videos.map(video => parseInt(video.viewCount, 10) || 0));
   };
   
   const handleSearch = async () => {
@@ -83,6 +87,8 @@ export default function KeywordPage() {
     setTotalSearchVolume(null);
     setRelatedKeywords([]);
     setYoutubeVideos([]);
+    setMaxViewCount(null);
+
 
     const trendAction = getKeywordTrendsAction({ keyword: keywordSearch, timeRange });
     const relatedAction = getRelatedKeywordsAction({ keyword: keywordSearch });
@@ -94,6 +100,7 @@ export default function KeywordPage() {
     setTotalSearchVolume(calculateTotalVolume(trendResult));
     setRelatedKeywords(relatedResult);
     setYoutubeVideos(videoResult);
+    setMaxViewCount(findMaxViewCount(videoResult));
 
     setIsSearching(false);
     setIsSearchingTrends(false);
@@ -179,10 +186,16 @@ export default function KeywordPage() {
           </Card>
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">조회수</CardTitle>
+              <CardTitle className="text-sm font-medium">최고 조회수</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{keywordData.kpi.frequency}</div>
+               {isSearching || isFetchingVideos ? (
+                <Skeleton className="h-8 w-24" />
+              ) : (
+                <div className="text-2xl font-bold">
+                  {maxViewCount !== null ? maxViewCount.toLocaleString() : 'N/A'}
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>

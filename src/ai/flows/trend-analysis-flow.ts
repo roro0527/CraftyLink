@@ -70,33 +70,41 @@ const analyzeKeywordTrendsFlow = ai.defineFlow(
     // If there's only one keyword, AI analysis for dominance is not meaningful.
     // We can just calculate the surge rate directly.
     const keywords = Object.keys(input.trendData);
-    if (keywords.length <= 1) {
+    if (keywords.length === 1) {
         const result: TrendAnalysisData = {};
-        for (const keyword of keywords) {
-            const trends = input.trendData[keyword];
-            let surgeRate = 0;
-            if (trends && trends.length > 1) {
-                const midPoint = Math.floor(trends.length / 2);
-                const firstHalf = trends.slice(0, midPoint);
-                const secondHalf = trends.slice(midPoint);
-                
-                const firstHalfAvg = firstHalf.reduce((sum, p) => sum + p.value, 0) / (firstHalf.length || 1);
-                const secondHalfAvg = secondHalf.reduce((sum, p) => sum + p.value, 0) / (secondHalf.length || 1);
+        const keyword = keywords[0];
+        const trends = input.trendData[keyword] || [];
+        let surgeRate = 0;
+        
+        if (trends.length > 1) {
+            const sortedTrends = [...trends].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+            const midPoint = Math.floor(sortedTrends.length / 2);
+            const firstHalf = sortedTrends.slice(0, midPoint);
+            const secondHalf = sortedTrends.slice(midPoint);
+            
+            const firstHalfAvg = firstHalf.length > 0 ? firstHalf.reduce((sum, p) => sum + p.value, 0) / firstHalf.length : 0;
+            const secondHalfAvg = secondHalf.length > 0 ? secondHalf.reduce((sum, p) => sum + p.value, 0) / secondHalf.length : 0;
 
-                const divisor = firstHalfAvg || 1; // Avoid division by zero
-                surgeRate = ((secondHalfAvg - firstHalfAvg) / divisor) * 100;
-            }
-            result[keyword] = {
-                surgeRate: Math.round(surgeRate),
-                isDominant: true,
-                reason: '단일 키워드는 항상 우세합니다.'
-            };
+            const divisor = firstHalfAvg === 0 ? 1 : firstHalfAvg;
+            surgeRate = ((secondHalfAvg - firstHalfAvg) / divisor) * 100;
         }
+
+        result[keyword] = {
+            surgeRate: Math.round(surgeRate),
+            isDominant: true,
+            reason: '단일 키워드는 항상 우세합니다.'
+        };
         return result;
     }
 
-    const { output } = await analysisPrompt(input);
-    return output!;
+    // For multiple keywords, use the AI prompt
+    if (keywords.length > 1) {
+        const { output } = await analysisPrompt(input);
+        return output!;
+    }
+    
+    // If no keywords, return empty object
+    return {};
   }
 );
 

@@ -67,7 +67,8 @@ const getKeywordTrendsFlow = ai.defineFlow(
         }));
     } catch (err) {
         console.error('Error fetching Google Trends data:', err);
-        throw new Error('Failed to fetch Google Trends data.');
+        // Return an empty array on error to prevent app crashes
+        return [];
     }
   }
 );

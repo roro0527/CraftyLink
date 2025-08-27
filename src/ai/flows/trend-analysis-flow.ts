@@ -24,7 +24,6 @@ const TrendAnalysisInputSchema = z.object({
 export type TrendAnalysisInput = z.infer<typeof TrendAnalysisInputSchema>;
 
 const KeywordAnalysisSchema = z.object({
-  surgeRate: z.number().describe('The percentage growth from the first to the last data point. Can be negative.'),
   isDominant: z.boolean().describe('Whether this keyword is considered the most dominant among the compared keywords.'),
   reason: z.string().describe('A brief (one-sentence) explanation for the dominance assessment.'),
 });
@@ -67,31 +66,15 @@ const analyzeKeywordTrendsFlow = ai.defineFlow(
     const keywords = Object.keys(input.trendData);
     const result: TrendAnalysisData = {};
 
-    // 1. Calculate surgeRate for all keywords in code
+    // Initialize result with default values
     for (const keyword of keywords) {
-      const trends = input.trendData[keyword] || [];
-      let surgeRate = 0;
-      
-      if (trends.length > 1) {
-          const sortedTrends = [...trends].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-          const midPoint = Math.floor(sortedTrends.length / 2);
-          const firstHalf = sortedTrends.slice(0, midPoint);
-          const secondHalf = sortedTrends.slice(midPoint);
-          
-          const firstHalfAvg = firstHalf.length > 0 ? firstHalf.reduce((sum, p) => sum + p.value, 0) / firstHalf.length : 0;
-          const secondHalfAvg = secondHalf.length > 0 ? secondHalf.reduce((sum, p) => sum + p.value, 0) / secondHalf.length : 0;
-
-          const divisor = firstHalfAvg === 0 ? 1 : firstHalfAvg;
-          surgeRate = ((secondHalfAvg - firstHalfAvg) / divisor) * 100;
-      }
       result[keyword] = {
-        surgeRate: Math.round(surgeRate),
-        isDominant: false, // Default value
-        reason: '', // Default value
+        isDominant: false,
+        reason: '',
       }
     }
 
-    // 2. If there's only one keyword, set it as dominant.
+    // 1. If there's only one keyword, set it as dominant.
     if (keywords.length === 1) {
         const keyword = keywords[0];
         if(result[keyword]) {
@@ -101,7 +84,7 @@ const analyzeKeywordTrendsFlow = ai.defineFlow(
         return result;
     }
 
-    // 3. For multiple keywords, use the AI for dominance analysis.
+    // 2. For multiple keywords, use the AI for dominance analysis.
     if (keywords.length > 1) {
         const { output } = await analysisPrompt({ trendData: input.trendData });
         if (output?.analysis) {

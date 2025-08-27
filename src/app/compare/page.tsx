@@ -239,7 +239,6 @@ export default function ComparePage() {
                   <TableHead>키워드</TableHead>
                   <TableHead>총 검색량</TableHead>
                   <TableHead>평균 검색량</TableHead>
-                  <TableHead>급증률</TableHead>
                   <TableHead>우세 여부</TableHead>
                 </TableRow>
               </TableHeader>
@@ -253,11 +252,6 @@ export default function ComparePage() {
                       </TableCell>
                       <TableCell>
                          {isLoading ? <Skeleton className="h-5 w-20" /> : (summaryData[keyword] ? summaryData[keyword].average.toLocaleString() : '데이터 없음')}
-                      </TableCell>
-                      <TableCell>
-                        {isAnalyzing ? <Skeleton className="h-5 w-16" /> : (
-                          analysisData && analysisData[keyword] ? `${analysisData[keyword].surgeRate.toFixed(0)}%` : '분석중...'
-                        )}
                       </TableCell>
                       <TableCell>
                          {isAnalyzing ? <Skeleton className="h-5 w-24" /> : (
@@ -283,7 +277,7 @@ export default function ComparePage() {
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center h-24">
+                    <TableCell colSpan={4} className="text-center h-24">
                       비교할 키워드를 추가해주세요.
                     </TableCell>
                   </TableRow>

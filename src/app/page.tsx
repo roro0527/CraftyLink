@@ -6,9 +6,16 @@ import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import UrlInputSection from '@/components/app/url-input-section';
 import RecommendedKeywords from '@/components/app/recommended-keywords';
+import HomeTrendChart from '@/components/app/home-trend-chart';
 import { useRouter } from 'next/navigation';
+import { getKeywordTrendsAction } from '@/app/actions';
+import type { KeywordTrendPoint } from '@/lib/types';
 
 const recommendedKeywords = ['게임', '먹방', '여행', '뷰티', 'IT'];
+
+type TrendData = {
+  [keyword: string]: KeywordTrendPoint[];
+};
 
 export default function Home() {
   const { toast } = useToast();
@@ -16,6 +23,29 @@ export default function Home() {
   const [searchInput, setSearchInput] = useState<string>('');
   const [isSearching, setIsSearching] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [trendData, setTrendData] = useState<TrendData>({});
+  const [isLoadingTrends, setIsLoadingTrends] = useState(true);
+
+  useEffect(() => {
+    const fetchAllTrends = async () => {
+      setIsLoadingTrends(true);
+      const allTrendData: TrendData = {};
+      await Promise.all(
+        recommendedKeywords.map(async (keyword) => {
+          try {
+            const trends = await getKeywordTrendsAction({ keyword, timeRange: '2w' });
+            allTrendData[keyword] = trends;
+          } catch (error) {
+            console.error(`Failed to fetch trends for ${keyword}`, error);
+            allTrendData[keyword] = []; // Set empty array on error
+          }
+        })
+      );
+      setTrendData(allTrendData);
+      setIsLoadingTrends(false);
+    };
+    fetchAllTrends();
+  }, []);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -44,8 +74,8 @@ export default function Home() {
   return (
     <>
       <main className="flex-grow container mx-auto px-4 py-8">
-        <div className="w-screen mb-6 ml-[-50vw] left-1/2 relative">
-          <div className="h-[30rem] bg-muted rounded-2xl flex flex-col items-center justify-center">
+        <div className="w-full max-w-4xl mx-auto">
+          <div className="bg-muted rounded-2xl flex flex-col items-center justify-center p-8 md:p-12">
             <div className="w-full max-w-2xl">
                <UrlInputSection
                 urlsInput={searchInput}
@@ -54,10 +84,16 @@ export default function Home() {
                 isSearching={isSearching}
               />
             </div>
+            <div className="w-full mt-8 h-60">
+              <HomeTrendChart 
+                data={trendData[recommendedKeywords[activeIndex]]} 
+                isLoading={isLoadingTrends}
+              />
+            </div>
           </div>
         </div>
         
-        <div className="w-full max-w-2xl mx-auto">
+        <div className="w-full max-w-2xl mx-auto mt-6">
           <RecommendedKeywords 
             keywords={recommendedKeywords}
             activeIndex={activeIndex}
@@ -65,9 +101,6 @@ export default function Home() {
           />
         </div>
 
-        <div className="flex flex-col gap-12 max-w-4xl mx-auto">
-          {/* Results will be displayed here */}
-        </div>
       </main>
     </>
   );

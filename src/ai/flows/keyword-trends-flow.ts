@@ -17,7 +17,7 @@ import type { KeywordTrendPoint } from '@/lib/types';
 
 const KeywordTrendsInputSchema = z.object({
   keyword: z.string().describe('The keyword to search for.'),
-  timeRange: z.enum(['5d', '1w', '1m']).default('1w').describe('The time range for the trend data.'),
+  timeRange: z.enum(['5d', '1w', '2w', '1m']).default('1w').describe('The time range for the trend data.'),
 });
 export type KeywordTrendsInput = z.infer<typeof KeywordTrendsInputSchema>;
 
@@ -46,6 +46,9 @@ const getKeywordTrendsFlow = ai.defineFlow(
         case '1w':
             daysToSubtract = 7;
             break;
+        case '2w':
+            daysToSubtract = 14;
+            break;
         case '1m':
             daysToSubtract = 30;
             break;
@@ -64,7 +67,7 @@ const getKeywordTrendsFlow = ai.defineFlow(
         }));
     } catch (err) {
         console.error('Error fetching Google Trends data:', err);
-        return [];
+        throw new Error('Failed to fetch Google Trends data.');
     }
   }
 );

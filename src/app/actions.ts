@@ -31,7 +31,8 @@ export async function getKeywordTrendsAction(input: KeywordTrendsInput): Promise
     return trends;
   } catch (error) {
     console.error('Error fetching keyword trends:', error);
-    return [];
+    // Let the calling function handle the error.
+    throw error;
   }
 }
 
@@ -51,6 +52,7 @@ export async function getYoutubeVideosAction(input: YoutubeVideosInput): Promise
         return videos;
     } catch (error) {
         console.error('Error fetching YouTube videos:', error);
+        // In case of API errors (e.g., quota exceeded), return an empty array.
         return [];
     }
 }

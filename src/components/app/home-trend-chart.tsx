@@ -36,7 +36,7 @@ const HomeTrendChart: React.FC<HomeTrendChartProps> = ({ data, isLoading }) => {
 
   return (
     <ChartContainer config={chartConfig} className="w-full h-full">
-      <LineChart data={data} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
+      <LineChart data={data} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
         <CartesianGrid vertical={false} strokeDasharray="3 3" strokeOpacity={0.5} />
         <XAxis
           dataKey="date"
@@ -45,6 +45,7 @@ const HomeTrendChart: React.FC<HomeTrendChartProps> = ({ data, isLoading }) => {
           tickMargin={8}
           tickFormatter={(value) => format(parseISO(value), 'M/d', { locale: ko })}
           fontSize={12}
+          hide
         />
         <YAxis 
           stroke="hsl(var(--muted-foreground))" 
@@ -52,6 +53,7 @@ const HomeTrendChart: React.FC<HomeTrendChartProps> = ({ data, isLoading }) => {
           tickLine={false} 
           axisLine={false} 
           width={30}
+          hide
         />
         <ChartTooltip
           cursor={true}

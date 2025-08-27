@@ -44,7 +44,13 @@ Analyze the following data:
   - Data: {{json this}}
 {{/each}}
 
-For each keyword, calculate the 'surgeRate', which is the percentage change from the first data point's value to the last data point's value. If the initial value is 0, the surge rate should be calculated as if it was 1 to avoid division by zero.
+For each keyword, calculate the 'surgeRate'. The surgeRate is the percentage change from the average of the first half of the data points to the average of the second half.
+To calculate it:
+1. Sort the data points by date.
+2. Split the data points into a first half and a second half. If there's an odd number of points, the extra point goes to the second half.
+3. Calculate the average search value for each half.
+4. The surgeRate is ((second_half_average - first_half_average) / first_half_average) * 100.
+5. If the first_half_average is 0, treat it as 1 to avoid division by zero.
 
 Then, determine which single keyword is 'dominant'. A dominant keyword typically has the highest average search volume and has been the top keyword for the most number of days. Set 'isDominant' to true for only one keyword, and false for all others.
 
@@ -70,9 +76,15 @@ const analyzeKeywordTrendsFlow = ai.defineFlow(
             const trends = input.trendData[keyword];
             let surgeRate = 0;
             if (trends && trends.length > 1) {
-                const startValue = trends[0].value || 1; // Avoid division by zero
-                const endValue = trends[trends.length - 1].value;
-                surgeRate = ((endValue - startValue) / startValue) * 100;
+                const midPoint = Math.floor(trends.length / 2);
+                const firstHalf = trends.slice(0, midPoint);
+                const secondHalf = trends.slice(midPoint);
+                
+                const firstHalfAvg = firstHalf.reduce((sum, p) => sum + p.value, 0) / (firstHalf.length || 1);
+                const secondHalfAvg = secondHalf.reduce((sum, p) => sum + p.value, 0) / (secondHalf.length || 1);
+
+                const divisor = firstHalfAvg || 1; // Avoid division by zero
+                surgeRate = ((secondHalfAvg - firstHalfAvg) / divisor) * 100;
             }
             result[keyword] = {
                 surgeRate: Math.round(surgeRate),

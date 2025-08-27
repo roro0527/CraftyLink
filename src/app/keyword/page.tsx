@@ -179,7 +179,7 @@ export default function KeywordPage() {
           </Card>
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">등장 빈도</CardTitle>
+              <CardTitle className="text-sm font-medium">조회수</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{keywordData.kpi.frequency}</div>

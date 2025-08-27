@@ -53,6 +53,7 @@ export default function KeywordPage() {
   const [isSearchingTrends, setIsSearchingTrends] = React.useState(false);
   const [timeRange, setTimeRange] = React.useState<'5d' | '1w' | '1m'>('1w');
   const [trendData, setTrendData] = React.useState<KeywordTrendPoint[]>([]);
+  const [totalSearchVolume, setTotalSearchVolume] = React.useState<number | null>(null);
   const [relatedKeywords, setRelatedKeywords] = React.useState<string[]>([]);
   const [isFetchingRelated, setIsFetchingRelated] = React.useState(false);
   const [youtubeVideos, setYoutubeVideos] = React.useState<YoutubeVideo[]>([]);
@@ -62,9 +63,13 @@ export default function KeywordPage() {
     name: keywordSearch,
     description: '이 키워드에 대한 간단한 설명입니다.',
     kpi: {
-      searchVolume: '1.2M',
       frequency: '5,820',
     },
+  };
+
+  const calculateTotalVolume = (data: KeywordTrendPoint[]) => {
+    if (!data || data.length === 0) return 0;
+    return data.reduce((sum, point) => sum + point.value, 0);
   };
   
   const handleSearch = async () => {
@@ -74,7 +79,8 @@ export default function KeywordPage() {
     setIsSearchingTrends(true);
     setIsFetchingRelated(true);
     setIsFetchingVideos(true);
-    setTrendData([]); 
+    setTrendData([]);
+    setTotalSearchVolume(null);
     setRelatedKeywords([]);
     setYoutubeVideos([]);
 
@@ -85,6 +91,7 @@ export default function KeywordPage() {
     const [trendResult, relatedResult, videoResult] = await Promise.all([trendAction, relatedAction, videoAction]);
     
     setTrendData(trendResult);
+    setTotalSearchVolume(calculateTotalVolume(trendResult));
     setRelatedKeywords(relatedResult);
     setYoutubeVideos(videoResult);
 
@@ -109,11 +116,13 @@ export default function KeywordPage() {
         setIsSearchingTrends(true);
         const trendResult = await getKeywordTrendsAction({ keyword: keywordSearch, timeRange });
         setTrendData(trendResult);
+        setTotalSearchVolume(calculateTotalVolume(trendResult));
         setIsSearchingTrends(false);
       };
       fetchTrends();
     }
-  }, [timeRange, keywordSearch]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [timeRange]);
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Enter') {
@@ -159,7 +168,13 @@ export default function KeywordPage() {
               <CardTitle className="text-sm font-medium">검색량</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{keywordData.kpi.searchVolume}</div>
+              {isSearching || isSearchingTrends ? (
+                <Skeleton className="h-8 w-24" />
+              ) : (
+                <div className="text-2xl font-bold">
+                  {totalSearchVolume !== null ? totalSearchVolume.toLocaleString() : 'N/A'}
+                </div>
+              )}
             </CardContent>
           </Card>
           <Card>
@@ -175,7 +190,7 @@ export default function KeywordPage() {
 
       {/* 시간 범위 선택 + 액션 버튼 */}
       <div className="flex flex-col md:flex-row justify-between items-center mb-4 gap-4">
-        <Select value={timeRange} onValueChange={(value) => setTimeRange(value as '5d' | '1w' | '1m')}>
+        <Select value={timeRange} onValueChange={(value) => setTimeRange(value as '5d' | '1w' | '1m')} disabled={isSearching || !keywordSearch.trim()}>
           <SelectTrigger className="w-full md:w-[180px]">
             <SelectValue placeholder="시간 범위 선택" />
           </SelectTrigger>

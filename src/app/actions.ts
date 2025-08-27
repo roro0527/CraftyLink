@@ -6,6 +6,7 @@ import {nanoid} from 'nanoid';
 import { getKeywordTrends, type KeywordTrendsInput, type KeywordTrendsData } from '@/ai/flows/keyword-trends-flow';
 import { getRelatedKeywords, type RelatedKeywordsInput, type RelatedKeywordsData } from '@/ai/flows/related-keywords-flow';
 import { getYoutubeVideos, type YoutubeVideosInput, type YoutubeVideosData } from '@/ai/flows/youtube-videos-flow';
+import { analyzeKeywordTrends, type TrendAnalysisInput, type TrendAnalysisData } from '@/ai/flows/trend-analysis-flow';
 
 
 export async function suggestSuperParametersAction(
@@ -52,5 +53,15 @@ export async function getYoutubeVideosAction(input: YoutubeVideosInput): Promise
     } catch (error) {
         console.error('Error fetching YouTube videos:', error);
         return [];
+    }
+}
+
+export async function analyzeKeywordTrendsAction(input: TrendAnalysisInput): Promise<TrendAnalysisData | null> {
+    try {
+        const analysis = await analyzeKeywordTrends(input);
+        return analysis;
+    } catch (error) {
+        console.error('Error analyzing keyword trends:', error);
+        return null;
     }
 }

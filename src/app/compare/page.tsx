@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Plus, Trash2, X } from 'lucide-react';
-import { getKeywordTrendsAction } from '@/app/actions';
+import { getKeywordTrendsAction, analyzeKeywordTrendsAction } from '@/app/actions';
 import type { KeywordTrendPoint } from '@/lib/types';
 import {
   Select,
@@ -28,6 +28,9 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Legend } from 'recharts';
 import { format, parseISO } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Badge } from '@/components/ui/badge';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import type { TrendAnalysisData } from '@/ai/flows/trend-analysis-flow';
 
 type TrendData = Record<string, KeywordTrendPoint[]>;
 type SummaryData = Record<string, { total: number; average: number }>;
@@ -48,16 +51,21 @@ export default function ComparePage() {
   const [trendData, setTrendData] = React.useState<TrendData>({});
   const [summaryData, setSummaryData] = React.useState<SummaryData>({});
   const [isLoading, setIsLoading] = React.useState(false);
+  const [analysisData, setAnalysisData] = React.useState<TrendAnalysisData | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = React.useState(false);
 
   React.useEffect(() => {
     const fetchAllTrends = async () => {
       if (keywords.length === 0) {
         setTrendData({});
         setSummaryData({});
+        setAnalysisData(null);
         return;
       }
 
       setIsLoading(true);
+      setIsAnalyzing(true);
+      setAnalysisData(null);
       const newTrendData: TrendData = {};
       const newSummaryData: SummaryData = {};
 
@@ -74,6 +82,13 @@ export default function ComparePage() {
       setTrendData(newTrendData);
       setSummaryData(newSummaryData);
       setIsLoading(false);
+      
+      // After fetching trends, perform analysis
+      if (Object.keys(newTrendData).length > 0) {
+        const analysisResult = await analyzeKeywordTrendsAction({ trendData: newTrendData });
+        setAnalysisData(analysisResult);
+      }
+      setIsAnalyzing(false);
     };
 
     fetchAllTrends();
@@ -95,9 +110,9 @@ export default function ComparePage() {
   };
 
   const { chartConfig, chartData } = React.useMemo(() => {
-    const chartConfig: ChartConfig = {};
+    const config: ChartConfig = {};
     keywords.forEach((keyword, index) => {
-      chartConfig[keyword] = {
+      config[keyword] = {
         label: keyword,
         color: chartColors[index % chartColors.length],
       };
@@ -109,7 +124,7 @@ export default function ComparePage() {
     });
     const sortedDates = Array.from(allDates).sort();
     
-    const chartData: ChartableData[] = sortedDates.map(date => {
+    const data: ChartableData[] = sortedDates.map(date => {
       const dataPoint: ChartableData = { date };
       keywords.forEach(keyword => {
         const trendPoint = trendData[keyword]?.find(p => p.date === date);
@@ -118,7 +133,7 @@ export default function ComparePage() {
       return dataPoint;
     });
 
-    return { chartConfig, chartData };
+    return { chartConfig: config, chartData: data };
   }, [keywords, trendData]);
 
   return (
@@ -233,10 +248,37 @@ export default function ComparePage() {
                   keywords.map((keyword) => (
                     <TableRow key={keyword}>
                       <TableCell className="font-semibold" style={{color: chartConfig[keyword]?.color}}>{keyword}</TableCell>
-                      <TableCell>{summaryData[keyword] ? summaryData[keyword].total.toLocaleString() : '데이터 없음'}</TableCell>
-                      <TableCell>{summaryData[keyword] ? summaryData[keyword].average.toLocaleString() : '데이터 없음'}</TableCell>
-                      <TableCell>데이터 없음</TableCell>
-                      <TableCell>데이터 없음</TableCell>
+                      <TableCell>
+                        {isLoading ? <Skeleton className="h-5 w-20" /> : (summaryData[keyword] ? summaryData[keyword].total.toLocaleString() : '데이터 없음')}
+                      </TableCell>
+                      <TableCell>
+                         {isLoading ? <Skeleton className="h-5 w-20" /> : (summaryData[keyword] ? summaryData[keyword].average.toLocaleString() : '데이터 없음')}
+                      </TableCell>
+                      <TableCell>
+                        {isAnalyzing ? <Skeleton className="h-5 w-16" /> : (
+                          analysisData && analysisData[keyword] ? `${analysisData[keyword].surgeRate.toFixed(0)}%` : '분석중...'
+                        )}
+                      </TableCell>
+                      <TableCell>
+                         {isAnalyzing ? <Skeleton className="h-5 w-24" /> : (
+                          analysisData && analysisData[keyword] ? (
+                            analysisData[keyword].isDominant ? (
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Badge>우세</Badge>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p>{analysisData[keyword].reason}</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            ) : (
+                               <span className="text-muted-foreground">-</span>
+                            )
+                          ) : '분석중...'
+                        )}
+                      </TableCell>
                     </TableRow>
                   ))
                 ) : (

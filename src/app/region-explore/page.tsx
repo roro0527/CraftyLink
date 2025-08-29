@@ -53,7 +53,7 @@ function RegionExplorePage() {
   
   const displayMap = React.useMemo(
     () => {
-        // Dynamically import leaflet components here
+        // Dynamically import leaflet components here to ensure they are client-side only
         const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), { ssr: false });
         const TileLayer = dynamic(() => import('react-leaflet').then(mod => mod.TileLayer), { ssr: false });
         const FeatureGroup = dynamic(() => import('react-leaflet').then(mod => mod.FeatureGroup), { ssr: false });
@@ -148,7 +148,8 @@ function RegionExplorePage() {
   );
 }
 
-// Dynamically import the entire page to prevent SSR issues with Leaflet
+// We still wrap the entire page in dynamic import to be absolutely sure
+// it's only rendered on the client side, which is a common practice for pages with Leaflet.
 export default dynamic(() => Promise.resolve(RegionExplorePage), {
   ssr: false,
 });

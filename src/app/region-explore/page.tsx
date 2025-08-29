@@ -2,6 +2,9 @@
 'use client';
 
 import * as React from 'react';
+import 'leaflet/dist/leaflet.css';
+import 'leaflet-draw/dist/leaflet.draw.css';
+
 import {
   Card,
   CardContent,
@@ -17,6 +20,14 @@ import {
 } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
 import dynamic from 'next/dynamic';
+import type { LatLngExpression } from 'leaflet';
+
+// Leaflet과 react-leaflet-draw는 window 객체를 사용하므로 dynamic import를 사용합니다.
+const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), { ssr: false });
+const TileLayer = dynamic(() => import('react-leaflet').then(mod => mod.TileLayer), { ssr: false });
+const FeatureGroup = dynamic(() => import('react-leaflet').then(mod => mod.FeatureGroup), { ssr: false });
+const EditControl = dynamic(() => import('react-leaflet-draw').then(mod => mod.EditControl), { ssr: false });
+
 
 const keywordRegionalData = {
   times: ["8월 10일", "8월 11일", "8월 12일"],
@@ -36,14 +47,22 @@ const keywordRegionalData = {
   }
 };
 
-const RegionMap = dynamic(() => import('@/components/app/region-map'), {
-  ssr: false,
-  loading: () => <div className="h-full w-full bg-muted animate-pulse" />,
-});
 
 function RegionExplorePage() {
   const [region, setRegion] = React.useState('KR');
   const [timeIndex, setTimeIndex] = React.useState(0);
+  const [showMap, setShowMap] = React.useState(false);
+
+  React.useEffect(() => {
+    // 컴포넌트가 마운트된 후 짧은 지연을 주어 지도를 렌더링합니다.
+    // 이는 React.StrictMode에서의 이중 호출로 인한 초기화 오류를 회피하기 위함입니다.
+    const timer = setTimeout(() => {
+      setShowMap(true);
+    }, 1);
+
+    return () => clearTimeout(timer);
+  }, []);
+
 
   const _onCreated = (e: any) => {
     console.log('Polygon created:', e.layer.toGeoJSON());
@@ -54,13 +73,37 @@ function RegionExplorePage() {
     console.log('Polygon deleted:', e.layers);
   };
 
+  const center: LatLngExpression = [37.5665, 126.9780];
+
   return (
     <div className="flex h-[calc(100vh-65px)]">
       <div className="flex-grow p-6">
         <h1 className="text-2xl font-bold mb-4">지역 탐색</h1>
         <Card className="h-[calc(100%-48px)]">
           <CardContent className="p-0 h-full">
-            <RegionMap onCreated={_onCreated} onDeleted={_onDeleted} />
+             {showMap && (
+                 <MapContainer center={center} zoom={5} scrollWheelZoom={true} style={{ height: '100%', width: '100%' }}>
+                    <TileLayer
+                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    />
+                    <FeatureGroup>
+                        <EditControl
+                            position="topright"
+                            onCreated={_onCreated}
+                            onDeleted={_onDeleted}
+                            draw={{
+                                rectangle: false,
+                                circlemarker: false,
+                                circle: false,
+                                marker: false,
+                                polyline: false,
+                                polygon: true,
+                            }}
+                        />
+                    </FeatureGroup>
+                </MapContainer>
+            )}
           </CardContent>
         </Card>
       </div>

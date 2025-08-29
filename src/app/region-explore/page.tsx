@@ -16,10 +16,14 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
-import { MapContainer, TileLayer, FeatureGroup } from 'react-leaflet';
+import { FeatureGroup } from 'react-leaflet';
 import { EditControl } from 'react-leaflet-draw';
 import type { LatLngExpression } from 'leaflet';
 import dynamic from 'next/dynamic';
+
+const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), { ssr: false });
+const TileLayer = dynamic(() => import('react-leaflet').then(mod => mod.TileLayer), { ssr: false });
+
 
 const keywordRegionalData = {
   times: ["8월 10일", "8월 11일", "8월 12일"],
@@ -59,7 +63,7 @@ function RegionExplorePage() {
         <h1 className="text-2xl font-bold mb-4">지역 탐색</h1>
         <Card className="h-[calc(100%-48px)]">
           <CardContent className="p-0 h-full">
-            <MapContainer center={center} zoom={5} scrollWheelZoom={true}>
+            <MapContainer center={center} zoom={5} scrollWheelZoom={true} style={{ height: '100%', width: '100%' }}>
               <TileLayer
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"

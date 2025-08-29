@@ -16,7 +16,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
-import Image from 'next/image';
 
 export default function RegionExplorePage() {
   const [region, setRegion] = React.useState('KR');
@@ -40,6 +39,8 @@ export default function RegionExplorePage() {
     }
   };
 
+  const mapUrl = `https://www.google.com/maps/embed/v1/view?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&center=37.5665,126.9780&zoom=4`;
+
 
   return (
     <div className="p-6">
@@ -50,13 +51,16 @@ export default function RegionExplorePage() {
            <div 
             className="relative h-[400px] bg-muted rounded-xl flex items-center justify-center overflow-hidden"
           >
-            <Image 
-              src="https://picsum.photos/1200/800"
-              alt="World Map"
-              fill
-              className="object-cover"
-              data-ai-hint="world map"
-            />
+            <iframe
+              width="100%"
+              height="100%"
+              style={{ border: 0 }}
+              loading="lazy"
+              allowFullScreen
+              referrerPolicy="no-referrer-when-downgrade"
+              src={mapUrl}
+            >
+            </iframe>
           </div>
         </CardContent>
       </Card>

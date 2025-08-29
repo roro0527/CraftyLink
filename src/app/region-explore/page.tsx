@@ -17,8 +17,7 @@ import {
 } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
 import type { LatLngExpression } from 'leaflet';
-import { MapContainer, TileLayer, FeatureGroup } from 'react-leaflet';
-import { EditControl } from 'react-leaflet-draw';
+import dynamic from 'next/dynamic';
 
 const keywordRegionalData = {
   times: ["8월 10일", "8월 11일", "8월 12일"],
@@ -38,7 +37,7 @@ const keywordRegionalData = {
   }
 };
 
-export default function RegionExplorePage() {
+function RegionExplorePage() {
   const [region, setRegion] = React.useState('KR');
   const [timeIndex, setTimeIndex] = React.useState(0);
   const center: LatLngExpression = [37.5665, 126.9780];
@@ -52,30 +51,40 @@ export default function RegionExplorePage() {
     console.log('Polygon deleted:', e.layers);
   };
   
+  const Map = React.useMemo(() => dynamic(() => import('@/components/app/region-map'), { ssr: false }), []);
+  
   const displayMap = React.useMemo(
-    () => (
-        <MapContainer center={center} zoom={5} scrollWheelZoom={true} style={{ height: '100%', width: '100%' }}>
-          <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
-          <FeatureGroup>
-            <EditControl
-              position="topright"
-              onCreated={_onCreated}
-              onDeleted={_onDeleted}
-              draw={{
-                rectangle: false,
-                circlemarker: false,
-                circle: false,
-                marker: false,
-                polyline: false,
-                polygon: true,
-              }}
-            />
-          </FeatureGroup>
-        </MapContainer>
-    ),
+    () => {
+        // Dynamically import leaflet components here
+        const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), { ssr: false });
+        const TileLayer = dynamic(() => import('react-leaflet').then(mod => mod.TileLayer), { ssr: false });
+        const FeatureGroup = dynamic(() => import('react-leaflet').then(mod => mod.FeatureGroup), { ssr: false });
+        const EditControl = dynamic(() => import('react-leaflet-draw').then(mod => mod.EditControl), { ssr: false });
+        
+        return (
+            <MapContainer center={center} zoom={5} scrollWheelZoom={true} style={{ height: '100%', width: '100%' }}>
+              <TileLayer
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              />
+              <FeatureGroup>
+                <EditControl
+                  position="topright"
+                  onCreated={_onCreated}
+                  onDeleted={_onDeleted}
+                  draw={{
+                    rectangle: false,
+                    circlemarker: false,
+                    circle: false,
+                    marker: false,
+                    polyline: false,
+                    polygon: true,
+                  }}
+                />
+              </FeatureGroup>
+            </MapContainer>
+        )
+    },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     []
   );
@@ -140,3 +149,8 @@ export default function RegionExplorePage() {
     </div>
   );
 }
+
+// Dynamically import the entire page to prevent SSR issues with Leaflet
+export default dynamic(() => Promise.resolve(RegionExplorePage), {
+  ssr: false,
+});

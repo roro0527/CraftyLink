@@ -41,14 +41,15 @@ const keywordRegionalData = {
 };
 
 
+// The RegionMap component is dynamically imported to ensure it's only client-side rendered.
+const RegionMap = dynamic(() => import('@/components/app/region-map'), { 
+    ssr: false,
+    loading: () => <Skeleton className="h-full w-full" />
+});
+
 function RegionExplorePage() {
   const [region, setRegion] = React.useState('KR');
   const [timeIndex, setTimeIndex] = React.useState(0);
-  
-  const RegionMap = React.useMemo(() => dynamic(() => import('@/components/app/region-map'), { 
-    ssr: false,
-    loading: () => <Skeleton className="h-full w-full" />
-  }), []);
 
   const _onCreated = (e: any) => {
     console.log('Polygon created:', e.layer.toGeoJSON());

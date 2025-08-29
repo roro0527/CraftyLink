@@ -132,7 +132,7 @@ export default function Home() {
 
           <div className="w-full mt-6">
             {isLoadingNews ? (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-4">
                     {Array.from({ length: 3 }).map((_, i) => (
                         <Card key={i}>
                             <CardHeader>
@@ -146,9 +146,9 @@ export default function Home() {
                     ))}
                 </div>
             ) : newsData[currentKeyword] && newsData[currentKeyword].length > 0 ? (
-                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                 <div className="flex flex-col gap-4">
                     {newsData[currentKeyword].map((article, index) => (
-                        <Card key={index}>
+                        <Card key={index} className="transition-shadow hover:shadow-lg">
                             <CardHeader>
                                 <CardTitle className="text-lg">{article.title}</CardTitle>
                             </CardHeader>

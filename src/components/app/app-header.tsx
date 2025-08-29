@@ -1,18 +1,16 @@
 
 'use client';
 
-import { Link2, Menu, HelpCircle } from 'lucide-react';
+import { Link2, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import * as React from 'react';
 import { useMobileSidebar } from '@/hooks/use-mobile-sidebar';
-import { useFloatingCard } from '@/hooks/use-floating-card';
 import Link from 'next/link';
 
 interface AppHeaderProps {}
 
 const AppHeader: React.FC<AppHeaderProps> = ({}) => {
   const { onOpen } = useMobileSidebar();
-  const { toggle: toggleCard } = useFloatingCard();
 
   return (
     <header className="border-b border-border/50 bg-card/50 backdrop-blur-sm sticky top-0 z-20">
@@ -41,9 +39,6 @@ const AppHeader: React.FC<AppHeaderProps> = ({}) => {
               <Button asChild variant="ghost" className="text-base"><Link href="/compare">비교</Link></Button>
               <Button asChild variant="ghost" className="text-base"><Link href="/region-explore">지역 탐색</Link></Button>
             </nav>
-            <Button variant="ghost" className="text-base hidden md:block" onClick={toggleCard}>
-              요약
-            </Button>
           </div>
         </div>
       </div>

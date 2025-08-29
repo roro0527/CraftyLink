@@ -16,57 +16,75 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
+import { MapContainer, TileLayer, FeatureGroup } from 'react-leaflet';
+import { EditControl } from 'react-leaflet-draw';
+import type { LatLngExpression } from 'leaflet';
+import dynamic from 'next/dynamic';
 
-export default function RegionExplorePage() {
+const keywordRegionalData = {
+  times: ["8월 10일", "8월 11일", "8월 12일"],
+  regions: {
+    "KR": {
+      name: "대한민국",
+      topVideos: ["게임 플레이 영상 A", "게임 뉴스 B", "게임 공략 C"]
+    },
+    "US": {
+      name: "미국",
+      topVideos: ["Game Review A", "Game Trailer B"]
+    },
+    "JP": {
+      name: "일본",
+      topVideos: ["ゲーム実況A", "新作レビューB"]
+    }
+  }
+};
+
+function RegionExplorePage() {
   const [region, setRegion] = React.useState('KR');
   const [timeIndex, setTimeIndex] = React.useState(0);
+  const center: LatLngExpression = [37.5665, 126.9780];
 
-  const keywordRegionalData = {
-    times: ["8월 10일", "8월 11일", "8월 12일"],
-    regions: {
-      "KR": {
-        name: "대한민국",
-        topVideos: ["게임 플레이 영상 A", "게임 뉴스 B", "게임 공략 C"]
-      },
-      "US": {
-        name: "미국",
-        topVideos: ["Game Review A", "Game Trailer B"]
-      },
-      "JP": {
-        name: "일본",
-        topVideos: ["ゲーム実況A", "新作レビューB"]
-      }
-    }
+  const _onCreated = (e: any) => {
+    console.log('Polygon created:', e.layer.toGeoJSON());
+    // 여기서 폴리곤 영역 내 데이터 필터링 로직을 추가할 수 있습니다.
   };
 
-  const mapUrl = `https://www.google.com/maps/embed/v1/view?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&center=37.5665,126.9780&zoom=4`;
-
+  const _onDeleted = (e: any) => {
+    console.log('Polygon deleted:', e.layers);
+  };
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">지역 탐색</h1>
-
-      <Card className="mb-6">
-        <CardContent className="p-4">
-           <div 
-            className="relative h-[400px] bg-muted rounded-xl flex items-center justify-center overflow-hidden"
-          >
-            <iframe
-              width="100%"
-              height="100%"
-              style={{ border: 0 }}
-              loading="lazy"
-              allowFullScreen
-              referrerPolicy="no-referrer-when-downgrade"
-              src={mapUrl}
-            >
-            </iframe>
-          </div>
-        </CardContent>
-      </Card>
+    <div className="flex h-[calc(100vh-65px)]">
+      <div className="flex-grow p-6">
+        <h1 className="text-2xl font-bold mb-4">지역 탐색</h1>
+        <Card className="h-[calc(100%-48px)]">
+          <CardContent className="p-0 h-full">
+            <MapContainer center={center} zoom={5} scrollWheelZoom={true}>
+              <TileLayer
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              />
+              <FeatureGroup>
+                <EditControl
+                  position="topright"
+                  onCreated={_onCreated}
+                  onDeleted={_onDeleted}
+                  draw={{
+                    rectangle: false,
+                    circlemarker: false,
+                    circle: false,
+                    marker: false,
+                    polyline: false,
+                    polygon: true,
+                  }}
+                />
+              </FeatureGroup>
+            </MapContainer>
+          </CardContent>
+        </Card>
+      </div>
       
-
-      <div className="grid md:grid-cols-2 gap-6">
+      <aside className="w-96 p-6 space-y-6 overflow-auto">
         <Card>
           <CardHeader>
             <CardTitle className="text-lg font-semibold">지역별 인기 동영상</CardTitle>
@@ -111,7 +129,12 @@ export default function RegionExplorePage() {
             </div>
           </CardContent>
         </Card>
-      </div>
+      </aside>
     </div>
   );
 }
+
+// Dynamically import the page to ensure Leaflet only runs on the client-side.
+export default dynamic(() => Promise.resolve(RegionExplorePage), {
+  ssr: false,
+});

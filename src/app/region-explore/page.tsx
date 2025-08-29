@@ -51,8 +51,6 @@ function RegionExplorePage() {
     console.log('Polygon deleted:', e.layers);
   };
   
-  const Map = React.useMemo(() => dynamic(() => import('@/components/app/region-map'), { ssr: false }), []);
-  
   const displayMap = React.useMemo(
     () => {
         // Dynamically import leaflet components here

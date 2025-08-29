@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -17,7 +16,8 @@ import {
 } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
 import type { LatLngExpression } from 'leaflet';
-import dynamic from 'next/dynamic';
+import { MapContainer, TileLayer, FeatureGroup } from 'react-leaflet';
+import { EditControl } from 'react-leaflet-draw';
 
 const keywordRegionalData = {
   times: ["8월 10일", "8월 11일", "8월 12일"],
@@ -37,13 +37,15 @@ const keywordRegionalData = {
   }
 };
 
-function RegionExplorePage() {
-  const { MapContainer, TileLayer, FeatureGroup } = require('react-leaflet');
-  const { EditControl } = require('react-leaflet-draw');
-
+export default function RegionExplorePage() {
+  const [isMounted, setIsMounted] = React.useState(false);
   const [region, setRegion] = React.useState('KR');
   const [timeIndex, setTimeIndex] = React.useState(0);
   const center: LatLngExpression = [37.5665, 126.9780];
+
+  React.useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const _onCreated = (e: any) => {
     console.log('Polygon created:', e.layer.toGeoJSON());
@@ -53,6 +55,10 @@ function RegionExplorePage() {
   const _onDeleted = (e: any) => {
     console.log('Polygon deleted:', e.layers);
   };
+
+  if (!isMounted) {
+    return null; // 또는 로딩 스피너를 표시할 수 있습니다.
+  }
 
   return (
     <div className="flex h-[calc(100vh-65px)]">
@@ -134,8 +140,3 @@ function RegionExplorePage() {
     </div>
   );
 }
-
-// Dynamically import the page to ensure Leaflet only runs on the client-side.
-export default dynamic(() => Promise.resolve(RegionExplorePage), {
-  ssr: false,
-});

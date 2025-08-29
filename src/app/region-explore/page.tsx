@@ -2,9 +2,6 @@
 'use client';
 
 import * as React from 'react';
-import 'leaflet/dist/leaflet.css';
-import 'leaflet-draw/dist/leaflet.draw.css';
-
 import {
   Card,
   CardContent,
@@ -21,12 +18,6 @@ import {
 import { Slider } from '@/components/ui/slider';
 import dynamic from 'next/dynamic';
 import type { LatLngExpression } from 'leaflet';
-
-const RegionMap = dynamic(() => import('@/components/app/region-map'), {
-  ssr: false,
-  loading: () => <div className="h-full w-full bg-muted animate-pulse" />,
-});
-
 
 const keywordRegionalData = {
   times: ["8월 10일", "8월 11일", "8월 12일"],
@@ -53,7 +44,6 @@ function RegionExplorePage() {
 
   const _onCreated = (e: any) => {
     console.log('Polygon created:', e.layer.toGeoJSON());
-    // 여기서 폴리곤 영역 내 데이터 필터링 로직을 추가할 수 있습니다.
   };
 
   const _onDeleted = (e: any) => {
@@ -62,13 +52,21 @@ function RegionExplorePage() {
 
   const center: LatLngExpression = [37.5665, 126.9780];
 
+  const Map = React.useMemo(() => 
+    dynamic(() => import('@/components/app/region-map'), {
+      ssr: false,
+      loading: () => <div className="h-full w-full bg-muted animate-pulse" />,
+    }),
+    []
+  );
+
   return (
     <div className="flex h-[calc(100vh-65px)]">
       <div className="flex-grow p-6">
         <h1 className="text-2xl font-bold mb-4">지역 탐색</h1>
         <Card className="h-[calc(100%-48px)]">
           <CardContent className="p-0 h-full">
-            <RegionMap
+            <Map
               center={center}
               zoom={5}
               onCreated={_onCreated}

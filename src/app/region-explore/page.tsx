@@ -16,6 +16,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
+import Image from 'next/image';
 
 export default function RegionExplorePage() {
   const [region, setRegion] = React.useState('KR');
@@ -47,10 +48,15 @@ export default function RegionExplorePage() {
       <Card className="mb-6">
         <CardContent className="p-4">
            <div 
-            className="h-[400px] bg-muted rounded-xl flex items-center justify-center"
-            data-ai-hint="world map"
+            className="relative h-[400px] bg-muted rounded-xl flex items-center justify-center overflow-hidden"
           >
-            <p className="text-muted-foreground">[지도 표시 영역]</p>
+            <Image 
+              src="https://picsum.photos/1200/800"
+              alt="World Map"
+              fill
+              className="object-cover"
+              data-ai-hint="world map"
+            />
           </div>
         </CardContent>
       </Card>

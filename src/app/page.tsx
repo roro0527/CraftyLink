@@ -8,13 +8,20 @@ import UrlInputSection from '@/components/app/url-input-section';
 import RecommendedKeywords from '@/components/app/recommended-keywords';
 import HomeTrendChart from '@/components/app/home-trend-chart';
 import { useRouter } from 'next/navigation';
-import { getKeywordTrendsAction } from '@/app/actions';
+import { getKeywordTrendsAction, getRelatedNewsAction } from '@/app/actions';
 import type { KeywordTrendPoint } from '@/lib/types';
+import type { RelatedNewsData } from '@/ai/flows/related-news-flow';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const recommendedKeywords = ['게임', '먹방', '여행', '뷰티', 'IT'];
 
 type TrendData = {
   [keyword: string]: KeywordTrendPoint[];
+};
+
+type NewsData = {
+  [keyword: string]: RelatedNewsData;
 };
 
 export default function Home() {
@@ -25,26 +32,47 @@ export default function Home() {
   const [activeIndex, setActiveIndex] = useState(0);
   const [trendData, setTrendData] = useState<TrendData>({});
   const [isLoadingTrends, setIsLoadingTrends] = useState(true);
+  const [newsData, setNewsData] = useState<NewsData>({});
+  const [isLoadingNews, setIsLoadingNews] = useState(true);
 
   useEffect(() => {
-    const fetchAllTrends = async () => {
+    const fetchAllData = async () => {
       setIsLoadingTrends(true);
-      const allTrendData: TrendData = {};
-      await Promise.all(
-        recommendedKeywords.map(async (keyword) => {
-          try {
-            const trends = await getKeywordTrendsAction({ keyword, timeRange: '2w' });
-            allTrendData[keyword] = trends;
-          } catch (error) {
-            console.error(`Failed to fetch trends for ${keyword}`, error);
-            allTrendData[keyword] = []; // Set empty array on error
-          }
+      setIsLoadingNews(true);
+
+      const trendPromises = recommendedKeywords.map(keyword => 
+        getKeywordTrendsAction({ keyword, timeRange: '2w' }).catch(e => {
+          console.error(`Failed to fetch trends for ${keyword}`, e);
+          return []; // Return empty array on error
         })
       );
+      
+      const newsPromises = recommendedKeywords.map(keyword =>
+        getRelatedNewsAction({ keyword }).catch(e => {
+            console.error(`Failed to fetch news for ${keyword}`, e);
+            return [];
+        })
+      );
+
+      const [trendResults, newsResults] = await Promise.all([
+        Promise.all(trendPromises),
+        Promise.all(newsPromises),
+      ]);
+
+      const allTrendData: TrendData = {};
+      const allNewsData: NewsData = {};
+
+      recommendedKeywords.forEach((keyword, index) => {
+        allTrendData[keyword] = trendResults[index];
+        allNewsData[keyword] = newsResults[index];
+      });
+
       setTrendData(allTrendData);
+      setNewsData(allNewsData);
       setIsLoadingTrends(false);
+      setIsLoadingNews(false);
     };
-    fetchAllTrends();
+    fetchAllData();
   }, []);
 
   useEffect(() => {
@@ -53,10 +81,12 @@ export default function Home() {
     }, 5000);
     return () => clearInterval(interval);
   }, []);
+  
+  const currentKeyword = recommendedKeywords[activeIndex];
 
   useEffect(() => {
-    setSearchInput(recommendedKeywords[activeIndex]);
-  }, [activeIndex]);
+    setSearchInput(currentKeyword);
+  }, [currentKeyword]);
 
   const handleSearch = () => {
     if (!searchInput.trim()) {
@@ -86,21 +116,55 @@ export default function Home() {
             </div>
             <div className="w-full mt-8 h-60">
               <HomeTrendChart 
-                data={trendData[recommendedKeywords[activeIndex]]} 
+                data={trendData[currentKeyword]} 
                 isLoading={isLoadingTrends}
               />
             </div>
           </div>
         </div>
         
-        <div className="w-full max-w-2xl mt-6 flex flex-col items-center">
+        <div className="w-full max-w-4xl mt-6 flex flex-col items-center">
           <RecommendedKeywords 
             keywords={recommendedKeywords}
             activeIndex={activeIndex}
             onKeywordClick={setActiveIndex}
           />
-        </div>
 
+          <div className="w-full mt-6">
+            {isLoadingNews ? (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {Array.from({ length: 3 }).map((_, i) => (
+                        <Card key={i}>
+                            <CardHeader>
+                                <Skeleton className="h-6 w-3/4" />
+                            </CardHeader>
+                            <CardContent>
+                                <Skeleton className="h-4 w-full mb-2" />
+                                <Skeleton className="h-4 w-5/6" />
+                            </CardContent>
+                        </Card>
+                    ))}
+                </div>
+            ) : newsData[currentKeyword] && newsData[currentKeyword].length > 0 ? (
+                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {newsData[currentKeyword].map((article, index) => (
+                        <Card key={index}>
+                            <CardHeader>
+                                <CardTitle className="text-lg">{article.title}</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <p className="text-sm text-muted-foreground">{article.summary}</p>
+                            </CardContent>
+                        </Card>
+                    ))}
+                </div>
+            ) : (
+                <div className="text-center py-10">
+                    <p className="text-muted-foreground">관련 뉴스를 찾을 수 없습니다.</p>
+                </div>
+            )}
+          </div>
+        </div>
       </main>
     </>
   );

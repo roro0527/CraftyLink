@@ -6,6 +6,7 @@ import {nanoid} from 'nanoid';
 import { getKeywordTrends, type KeywordTrendsInput, type KeywordTrendsData } from '@/ai/flows/keyword-trends-flow';
 import { getRelatedKeywords, type RelatedKeywordsInput, type RelatedKeywordsData } from '@/ai/flows/related-keywords-flow';
 import { getYoutubeVideos, type YoutubeVideosInput, type YoutubeVideosData } from '@/ai/flows/youtube-videos-flow';
+import { getRelatedNews, type RelatedNewsInput, type RelatedNewsData } from '@/ai/flows/related-news-flow';
 
 
 export async function suggestSuperParametersAction(
@@ -53,6 +54,16 @@ export async function getYoutubeVideosAction(input: YoutubeVideosInput): Promise
     } catch (error) {
         console.error('Error fetching YouTube videos:', error);
         // In case of API errors (e.g., quota exceeded), return an empty array.
+        return [];
+    }
+}
+
+export async function getRelatedNewsAction(input: RelatedNewsInput): Promise<RelatedNewsData> {
+    try {
+        const news = await getRelatedNews(input);
+        return news;
+    } catch (error) {
+        console.error('Error fetching related news:', error);
         return [];
     }
 }

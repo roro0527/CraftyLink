@@ -2,6 +2,8 @@
 'use client';
 
 import * as React from 'react';
+import 'leaflet/dist/leaflet.css';
+import 'leaflet-draw/dist/leaflet.draw.css';
 import {
   Card,
   CardContent,
@@ -18,6 +20,12 @@ import {
 import { Slider } from '@/components/ui/slider';
 import type { LatLngExpression } from 'leaflet';
 import dynamic from 'next/dynamic';
+
+const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), { ssr: false });
+const TileLayer = dynamic(() => import('react-leaflet').then(mod => mod.TileLayer), { ssr: false });
+const FeatureGroup = dynamic(() => import('react-leaflet').then(mod => mod.FeatureGroup), { ssr: false });
+const EditControl = dynamic(() => import('react-leaflet-draw').then(mod => mod.EditControl), { ssr: false });
+
 
 const keywordRegionalData = {
   times: ["8월 10일", "8월 11일", "8월 12일"],
@@ -50,16 +58,13 @@ function RegionExplorePage() {
   const _onDeleted = (e: any) => {
     console.log('Polygon deleted:', e.layers);
   };
-  
-  const displayMap = React.useMemo(
-    () => {
-        // Dynamically import leaflet components here to ensure they are client-side only
-        const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), { ssr: false });
-        const TileLayer = dynamic(() => import('react-leaflet').then(mod => mod.TileLayer), { ssr: false });
-        const FeatureGroup = dynamic(() => import('react-leaflet').then(mod => mod.FeatureGroup), { ssr: false });
-        const EditControl = dynamic(() => import('react-leaflet-draw').then(mod => mod.EditControl), { ssr: false });
-        
-        return (
+
+  return (
+    <div className="flex h-[calc(100vh-65px)]">
+      <div className="flex-grow p-6">
+        <h1 className="text-2xl font-bold mb-4">지역 탐색</h1>
+        <Card className="h-[calc(100%-48px)]">
+          <CardContent className="p-0 h-full">
             <MapContainer center={center} zoom={5} scrollWheelZoom={true} style={{ height: '100%', width: '100%' }}>
               <TileLayer
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -81,19 +86,6 @@ function RegionExplorePage() {
                 />
               </FeatureGroup>
             </MapContainer>
-        )
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    []
-  );
-
-  return (
-    <div className="flex h-[calc(100vh-65px)]">
-      <div className="flex-grow p-6">
-        <h1 className="text-2xl font-bold mb-4">지역 탐색</h1>
-        <Card className="h-[calc(100%-48px)]">
-          <CardContent className="p-0 h-full">
-            {displayMap}
           </CardContent>
         </Card>
       </div>
@@ -148,8 +140,4 @@ function RegionExplorePage() {
   );
 }
 
-// We still wrap the entire page in dynamic import to be absolutely sure
-// it's only rendered on the client side, which is a common practice for pages with Leaflet.
-export default dynamic(() => Promise.resolve(RegionExplorePage), {
-  ssr: false,
-});
+export default RegionExplorePage;

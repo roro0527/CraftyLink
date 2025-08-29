@@ -20,12 +20,7 @@ import {
 import { Slider } from '@/components/ui/slider';
 import type { LatLngExpression } from 'leaflet';
 import dynamic from 'next/dynamic';
-
-const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), { ssr: false });
-const TileLayer = dynamic(() => import('react-leaflet').then(mod => mod.TileLayer), { ssr: false });
-const FeatureGroup = dynamic(() => import('react-leaflet').then(mod => mod.FeatureGroup), { ssr: false });
-const EditControl = dynamic(() => import('react-leaflet-draw').then(mod => mod.EditControl), { ssr: false });
-
+import { Skeleton } from '@/components/ui/skeleton';
 
 const keywordRegionalData = {
   times: ["8월 10일", "8월 11일", "8월 12일"],
@@ -49,11 +44,11 @@ const keywordRegionalData = {
 function RegionExplorePage() {
   const [region, setRegion] = React.useState('KR');
   const [timeIndex, setTimeIndex] = React.useState(0);
-  const [isClient, setIsClient] = React.useState(false);
-
-  React.useEffect(() => {
-    setIsClient(true);
-  }, []);
+  
+  const RegionMap = React.useMemo(() => dynamic(() => import('@/components/app/region-map'), { 
+    ssr: false,
+    loading: () => <Skeleton className="h-full w-full" />
+  }), []);
 
   const _onCreated = (e: any) => {
     console.log('Polygon created:', e.layer.toGeoJSON());
@@ -71,31 +66,12 @@ function RegionExplorePage() {
         <h1 className="text-2xl font-bold mb-4">지역 탐색</h1>
         <Card className="h-[calc(100%-48px)]">
           <CardContent className="p-0 h-full">
-            {isClient ? (
-              <MapContainer center={center} zoom={5} scrollWheelZoom={true} style={{ height: '100%', width: '100%' }}>
-                <TileLayer
-                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                />
-                <FeatureGroup>
-                  <EditControl
-                    position="topright"
-                    onCreated={_onCreated}
-                    onDeleted={_onDeleted}
-                    draw={{
-                      rectangle: false,
-                      circlemarker: false,
-                      circle: false,
-                      marker: false,
-                      polyline: false,
-                      polygon: true,
-                    }}
-                  />
-                </FeatureGroup>
-              </MapContainer>
-            ) : (
-              <div className="h-full w-full bg-muted animate-pulse" />
-            )}
+            <RegionMap
+                center={center}
+                zoom={5}
+                onCreated={_onCreated}
+                onDeleted={_onDeleted}
+            />
           </CardContent>
         </Card>
       </div>

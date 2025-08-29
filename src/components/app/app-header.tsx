@@ -24,21 +24,21 @@ const AppHeader: React.FC<AppHeaderProps> = ({}) => {
           >
             <Menu className="h-6 w-6" />
           </Button>
-          <div className='flex items-center gap-8'>
+          <div className="flex items-center">
             <Link href="/" className="flex items-center">
               <Link2 className="h-7 w-7 text-primary" />
               <h1 className="ml-3 text-2xl font-bold text-foreground">
                 CraftyLink
               </h1>
             </Link>
+          </div>
+          <div className="flex-grow flex justify-end items-center gap-4">
             <nav className="hidden md:flex items-center space-x-2">
               <Button asChild variant="ghost" className="text-base"><Link href="/">홈</Link></Button>
               <Button asChild variant="ghost" className="text-base"><Link href="/keyword">키워드</Link></Button>
               <Button asChild variant="ghost" className="text-base"><Link href="/compare">비교</Link></Button>
               <Button asChild variant="ghost" className="text-base"><Link href="/region-explore">지역 탐색</Link></Button>
             </nav>
-          </div>
-          <div className="flex-grow flex justify-end items-center gap-4">
           </div>
         </div>
       </div>

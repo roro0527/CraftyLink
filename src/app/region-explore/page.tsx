@@ -16,14 +16,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
-import { FeatureGroup } from 'react-leaflet';
-import { EditControl } from 'react-leaflet-draw';
 import type { LatLngExpression } from 'leaflet';
 import dynamic from 'next/dynamic';
-
-const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), { ssr: false });
-const TileLayer = dynamic(() => import('react-leaflet').then(mod => mod.TileLayer), { ssr: false });
-
 
 const keywordRegionalData = {
   times: ["8월 10일", "8월 11일", "8월 12일"],
@@ -44,6 +38,9 @@ const keywordRegionalData = {
 };
 
 function RegionExplorePage() {
+  const { MapContainer, TileLayer, FeatureGroup } = require('react-leaflet');
+  const { EditControl } = require('react-leaflet-draw');
+
   const [region, setRegion] = React.useState('KR');
   const [timeIndex, setTimeIndex] = React.useState(0);
   const center: LatLngExpression = [37.5665, 126.9780];

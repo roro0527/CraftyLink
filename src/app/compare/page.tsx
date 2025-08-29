@@ -63,7 +63,7 @@ export default function ComparePage() {
 
       setIsLoading(true);
       setIsAnalyzing(true);
-      
+
       const newTrendData: TrendData = {};
       const newSummaryData: SummaryData = {};
 
@@ -77,52 +77,64 @@ export default function ComparePage() {
         })
       );
 
-      setTrendData(newTrendData);
-      setSummaryData(newSummaryData);
-      setIsLoading(false);
-      
-      // After fetching trends, perform analysis
+      // Perform analysis after fetching trends
+      const newAnalysisData: AnalysisData = {};
       if (Object.keys(newTrendData).length > 0) {
-        const newAnalysisData: AnalysisData = {};
-
-        const allAverages = Object.values(newSummaryData).map(s => s.average);
+        const allAverages = Object.values(newSummaryData).map(
+          (s) => s.average
+        );
         const maxAverage = Math.max(...allAverages);
 
         for (const keyword of keywords) {
-            const Ktrends = newTrendData[keyword];
-            if (!Ktrends || Ktrends.length === 0) {
-                newAnalysisData[keyword] = { dominanceScore: 0 };
-                continue;
-            }
+          const Ktrends = newTrendData[keyword];
+          if (!Ktrends || Ktrends.length === 0) {
+            newAnalysisData[keyword] = { dominanceScore: 0 };
+            continue;
+          }
 
-            // 1. Average Volume Score (50 points)
-            const average = newSummaryData[keyword].average;
-            const avgScore = maxAverage > 0 ? (average / maxAverage) * 50 : 0;
+          // 1. Average Volume Score (50 points)
+          const average = newSummaryData[keyword].average;
+          const avgScore = maxAverage > 0 ? (average / maxAverage) * 50 : 0;
 
-            // 2. Trend Score (50 points)
-            let trendScore = 0;
-            if (Ktrends.length > 1) {
-                const midPoint = Math.ceil(Ktrends.length / 2);
-                const firstHalf = Ktrends.slice(0, midPoint);
-                const secondHalf = Ktrends.slice(midPoint);
+          // 2. Trend Score (50 points)
+          let trendScore = 0;
+          if (Ktrends.length > 1) {
+            const midPoint = Math.ceil(Ktrends.length / 2);
+            const firstHalf = Ktrends.slice(0, midPoint);
+            const secondHalf = Ktrends.slice(midPoint);
 
-                const firstHalfAvg = firstHalf.reduce((sum, p) => sum + p.value, 0) / firstHalf.length;
-                const secondHalfAvg = secondHalf.length > 0 ? secondHalf.reduce((sum, p) => sum + p.value, 0) / secondHalf.length : 0;
-                
-                const growthRate = firstHalfAvg > 0 ? (secondHalfAvg - firstHalfAvg) / firstHalfAvg : secondHalfAvg > 0 ? 1 : 0; // Cap growth at 100% if first half is 0
-                
-                // Normalize growth rate to a 0-50 score. Let's say 100% growth (growthRate=1) is 50 points.
-                const normalizedGrowth = Math.max(-1, Math.min(1, growthRate)); // Clamp between -100% and +100%
-                trendScore = (normalizedGrowth + 1) / 2 * 50; // Map [-1, 1] to [0, 50]
-            }
-            
-            newAnalysisData[keyword] = {
-                dominanceScore: Math.round(avgScore + trendScore)
-            };
+            const firstHalfAvg =
+              firstHalf.reduce((sum, p) => sum + p.value, 0) /
+              firstHalf.length;
+            const secondHalfAvg =
+              secondHalf.length > 0
+                ? secondHalf.reduce((sum, p) => sum + p.value, 0) /
+                  secondHalf.length
+                : 0;
+
+            const growthRate =
+              firstHalfAvg > 0
+                ? (secondHalfAvg - firstHalfAvg) / firstHalfAvg
+                : secondHalfAvg > 0
+                ? 1
+                : 0; // Cap growth at 100% if first half is 0
+
+            // Normalize growth rate to a 0-50 score. Let's say 100% growth (growthRate=1) is 50 points.
+            const normalizedGrowth = Math.max(-1, Math.min(1, growthRate)); // Clamp between -100% and +100%
+            trendScore = ((normalizedGrowth + 1) / 2) * 50; // Map [-1, 1] to [0, 50]
+          }
+
+          newAnalysisData[keyword] = {
+            dominanceScore: Math.round(avgScore + trendScore),
+          };
         }
-
-        setAnalysisData(newAnalysisData);
       }
+      
+      // Set all states at once after all data processing is complete
+      setTrendData(newTrendData);
+      setSummaryData(newSummaryData);
+      setAnalysisData(newAnalysisData);
+      setIsLoading(false);
       setIsAnalyzing(false);
     };
 
@@ -233,7 +245,18 @@ export default function ComparePage() {
                         tickLine={false}
                         axisLine={false}
                         tickMargin={8}
-                        tickFormatter={(value) => format(parseISO(value), 'M/d', { locale: ko })}
+                        tickFormatter={(value) => {
+                            try {
+                                // Use new Date() for more lenient parsing than parseISO
+                                const date = new Date(value);
+                                // Check if the date is valid
+                                if (isNaN(date.getTime())) return value;
+                                return format(date, 'M/d', { locale: ko });
+                            } catch (error) {
+                                // In case of any unexpected error, return the original value
+                                return value;
+                            }
+                        }}
                       />
                       <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
                        <ChartTooltip

@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -38,14 +39,9 @@ const keywordRegionalData = {
 };
 
 export default function RegionExplorePage() {
-  const [isMounted, setIsMounted] = React.useState(false);
   const [region, setRegion] = React.useState('KR');
   const [timeIndex, setTimeIndex] = React.useState(0);
   const center: LatLngExpression = [37.5665, 126.9780];
-
-  React.useEffect(() => {
-    setIsMounted(true);
-  }, []);
 
   const _onCreated = (e: any) => {
     console.log('Polygon created:', e.layer.toGeoJSON());
@@ -55,10 +51,34 @@ export default function RegionExplorePage() {
   const _onDeleted = (e: any) => {
     console.log('Polygon deleted:', e.layers);
   };
-
-  if (!isMounted) {
-    return null; // 또는 로딩 스피너를 표시할 수 있습니다.
-  }
+  
+  const displayMap = React.useMemo(
+    () => (
+        <MapContainer center={center} zoom={5} scrollWheelZoom={true} style={{ height: '100%', width: '100%' }}>
+          <TileLayer
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          />
+          <FeatureGroup>
+            <EditControl
+              position="topright"
+              onCreated={_onCreated}
+              onDeleted={_onDeleted}
+              draw={{
+                rectangle: false,
+                circlemarker: false,
+                circle: false,
+                marker: false,
+                polyline: false,
+                polygon: true,
+              }}
+            />
+          </FeatureGroup>
+        </MapContainer>
+    ),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
+  );
 
   return (
     <div className="flex h-[calc(100vh-65px)]">
@@ -66,27 +86,7 @@ export default function RegionExplorePage() {
         <h1 className="text-2xl font-bold mb-4">지역 탐색</h1>
         <Card className="h-[calc(100%-48px)]">
           <CardContent className="p-0 h-full">
-            <MapContainer center={center} zoom={5} scrollWheelZoom={true} style={{ height: '100%', width: '100%' }}>
-              <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              />
-              <FeatureGroup>
-                <EditControl
-                  position="topright"
-                  onCreated={_onCreated}
-                  onDeleted={_onDeleted}
-                  draw={{
-                    rectangle: false,
-                    circlemarker: false,
-                    circle: false,
-                    marker: false,
-                    polyline: false,
-                    polygon: true,
-                  }}
-                />
-              </FeatureGroup>
-            </MapContainer>
+            {displayMap}
           </CardContent>
         </Card>
       </div>

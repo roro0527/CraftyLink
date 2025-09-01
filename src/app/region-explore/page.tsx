@@ -44,18 +44,21 @@ export default function RegionExplorePage() {
     try {
       const trendingKeywords = await getRegionalTrendsAction({ geoCode: `KR-${regionCode}` });
       
-      if (trendingKeywords.length === 0) {
-        throw new Error('No trending keywords found.');
+      let videoPromises: Promise<YoutubeVideo[]>;
+
+      if (trendingKeywords.length > 0) {
+        // 트렌드 키워드가 있으면, 첫 번째 키워드로 영상을 검색
+        videoPromises = getYoutubeVideosAction({ keyword: trendingKeywords[0] });
+      } else {
+        // 트렌드 키워드가 없으면, 지역 이름으로 영상을 검색
+        videoPromises = getYoutubeVideosAction({ keyword: regionName });
       }
       
-      const videoPromises = trendingKeywords.map(keyword => getYoutubeVideosAction({ keyword }));
-      const videoResults = await Promise.all(videoPromises);
-      
-      const combinedVideos = videoResults.flat().slice(0, 2);
+      const videos = await videoPromises;
 
       setTrendResult({
         keywords: trendingKeywords,
-        videos: combinedVideos,
+        videos: videos.slice(0, 3), // 최대 3개의 영상만 표시
       });
 
     } catch (e) {
@@ -129,9 +132,11 @@ export default function RegionExplorePage() {
                 <div>
                   <h3 className="font-semibold mb-2">인기 검색어</h3>
                   <div className="flex flex-wrap gap-2">
-                    {trendResult.keywords.map(keyword => (
+                    {trendResult.keywords.length > 0 ? trendResult.keywords.map(keyword => (
                       <Badge key={keyword} variant="secondary" className="text-sm">{keyword}</Badge>
-                    ))}
+                    )) : (
+                       <p className="text-sm text-muted-foreground">인기 검색어가 없습니다.</p>
+                    )}
                   </div>
                 </div>
                 <div>

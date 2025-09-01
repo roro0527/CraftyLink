@@ -16,7 +16,6 @@ import { getRegionalTrendsAction, getYoutubeVideosAction } from '../actions';
 import type { YoutubeVideo } from '@/lib/types';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
-// Dynamically import the RegionMap component to ensure it only runs on the client-side
 const RegionMap = dynamic(() => import('@/components/app/region-map'), {
     ssr: false,
     loading: () => <Skeleton className="w-full h-full" />
@@ -32,7 +31,7 @@ export default function RegionExplorePage() {
   const [regionalTrends, setRegionalTrends] = React.useState<TrendWithVideos[]>([]);
   const [isLoading, setIsLoading] = React.useState(false);
 
-  const handleRegionClick = async (region: { name: string; code: string }) => {
+  const handleRegionClick = React.useCallback(async (region: { name: string; code: string }) => {
     if (isLoading) return;
 
     setSelectedRegion(region);
@@ -58,7 +57,7 @@ export default function RegionExplorePage() {
     } finally {
         setIsLoading(false);
     }
-  };
+  }, [isLoading]);
 
   const center: LatLngExpression = [36.5, 127.5];
 

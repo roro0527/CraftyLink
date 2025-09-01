@@ -15,19 +15,16 @@ interface RegionMapProps {
     onRegionClick: (region: { name: string; code: string }) => void;
 }
 
-// Define a type for our feature properties
 interface RegionProperties {
     CTP_KOR_NM: string;
     CTPRVN_CD: string;
 }
 
-// Extend leaflet's Feature type
 type RegionFeature = GeoJSONFeature<GeoJSON.Point, RegionProperties>;
 
 
 const RegionMap: React.FC<RegionMapProps> = ({ center, zoom, onRegionClick }) => {
     
-    // Memoize the map component to prevent re-initialization on re-renders
     const displayMap = React.useMemo(
         () => {
             const style = (feature?: RegionFeature) => {
@@ -54,7 +51,6 @@ const RegionMap: React.FC<RegionMapProps> = ({ center, zoom, onRegionClick }) =>
             };
 
             const resetHighlight = (e: L.LeafletMouseEvent) => {
-                // Access the GeoJSON layer instance from the event target to reset its style
                 (e.target as any)._map.eachLayer((layer: any) => {
                     if (layer.feature && layer.feature.properties.CTPRVN_CD === e.target.feature.properties.CTPRVN_CD) {
                         (layer as L.GeoJSON).resetStyle(e.target);
@@ -95,4 +91,4 @@ const RegionMap: React.FC<RegionMapProps> = ({ center, zoom, onRegionClick }) =>
     return displayMap;
 };
 
-export default RegionMap;
+export default React.memo(RegionMap);

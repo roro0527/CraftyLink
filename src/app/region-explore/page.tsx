@@ -19,7 +19,7 @@ import { format, parseISO } from 'date-fns';
 
 const RegionMap = dynamic(() => import('@/components/app/region-map'), {
   ssr: false,
-  loading: () => <Skeleton className="w-full h-full" />,
+  loading: () => <Skeleton className="w-full h-[70vh]" />,
 });
 
 interface TrendResult {
@@ -70,17 +70,17 @@ export default function RegionExplorePage() {
   }, []);
 
   return (
-    <div className="flex h-[calc(100vh-65px)]">
+    <div className="flex flex-col md:flex-row">
       <div className="flex-grow p-6 flex flex-col">
         <h1 className="text-2xl font-bold mb-4">지역별 트렌드 탐색</h1>
-        <Card className="flex-grow bg-muted/30">
+        <Card className="flex-grow bg-muted/30 min-h-[70vh]">
           <CardContent className="p-0 h-full">
             <RegionMap center={initialCenter} zoom={initialZoom} onRegionClick={handleRegionClick} />
           </CardContent>
         </Card>
       </div>
       
-      <aside className="w-96 p-6 space-y-6 overflow-auto bg-muted/30">
+      <aside className="w-full md:w-96 p-6 space-y-6">
         <Card className="sticky top-6">
           <CardHeader>
             <CardTitle className="text-lg font-semibold">
@@ -105,7 +105,6 @@ export default function RegionExplorePage() {
                   <h3 className="font-semibold mb-2">관련 영상</h3>
                   <div className="space-y-4">
                     <div className="flex gap-4">
-                      <Skeleton className="h-16 w-24" />
                       <div className="space-y-2 flex-1">
                         <Skeleton className="h-4 w-full" />
                         <Skeleton className="h-4 w-5/6" />
@@ -113,7 +112,6 @@ export default function RegionExplorePage() {
                       </div>
                     </div>
                     <div className="flex gap-4">
-                      <Skeleton className="h-16 w-24" />
                       <div className="space-y-2 flex-1">
                         <Skeleton className="h-4 w-full" />
                         <Skeleton className="h-4 w-5/6" />

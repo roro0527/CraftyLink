@@ -42,7 +42,7 @@ export default function RegionExplorePage() {
     setTrendResult(null);
 
     try {
-      const trendingKeywords = await getRegionalTrendsAction({ geoCode: `KR-${regionCode}` });
+      const trendingKeywords = await getRegionalTrendsAction({ geoCode: regionCode });
       
       let videoPromises: Promise<YoutubeVideo[]>;
 
@@ -144,6 +144,7 @@ export default function RegionExplorePage() {
                   <div className="space-y-4">
                     {trendResult.videos.length > 0 ? trendResult.videos.map((video, index) => (
                       <div key={index} className="flex gap-3 items-start">
+                         <div className="text-lg font-bold text-muted-foreground w-6 text-center">{index + 1}</div>
                          <div className="flex-1">
                            <p className="font-semibold text-sm leading-tight line-clamp-2">{video.title}</p>
                            <p className="text-xs text-muted-foreground mt-1">{video.channelTitle} · {format(parseISO(video.publishedAt), 'yyyy.MM.dd')}</p>

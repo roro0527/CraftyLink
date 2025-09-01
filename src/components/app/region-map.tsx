@@ -1,0 +1,109 @@
+
+'use client';
+
+import 'leaflet/dist/leaflet.css';
+import * as React from 'react';
+import { GeoJSON, TileLayer } from 'react-leaflet';
+import L, { type LatLngExpression, type Layer, type Feature, type GeoJsonObject } from 'leaflet';
+import geoJsonData from '@/lib/korea-regions.geo.json';
+
+const regionColors: { [key: string]: string } = {
+  "서울특별시": "#b4d379",
+  "경기도": "#e0e567",
+  "인천광역시": "#c7d99f",
+  "강원도": "#96c457",
+  "충청북도": "#9ac28f",
+  "세종특별자치시": "#79b4a9",
+  "대전광역시": "#79b4a9",
+  "충청남도": "#93d4ca",
+  "경상북도": "#4e98b3",
+  "대구광역시": "#4c8a98",
+  "울산광역시": "#547fec",
+  "부산광역시": "#335be3",
+  "경상남도": "#e68b8b",
+  "전라북도": "#f9c859",
+  "광주광역시": "#f9c859",
+  "전라남도": "#f9a96b",
+  "제주특별자치도": "#c999d9",
+};
+
+interface RegionMapProps {
+  center: LatLngExpression;
+  zoom: number;
+  onRegionClick: (regionName: string, regionCode: string) => void;
+}
+
+const RegionMap: React.FC<RegionMapProps> = ({ center, zoom, onRegionClick }) => {
+  const mapInstanceRef = React.useRef<L.Map | null>(null);
+  const geoJsonLayerRef = React.useRef<L.GeoJSON | null>(null);
+  const mapRef = React.useRef<HTMLDivElement>(null);
+  const [selectedRegion, setSelectedRegion] = React.useState<Layer | null>(null);
+
+  React.useEffect(() => {
+    if (mapRef.current && !mapInstanceRef.current) {
+        const map = L.map(mapRef.current, {
+            center: center,
+            zoom: zoom,
+            zoomControl: true,
+            scrollWheelZoom: true,
+        });
+        mapInstanceRef.current = map;
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        const geoJsonLayer = L.geoJSON(geoJsonData as GeoJsonObject, {
+            style: (feature) => {
+                const regionName = feature?.properties.CTP_KOR_NM;
+                return {
+                    fillColor: regionColors[regionName] || '#9e9e9e',
+                    weight: 1,
+                    opacity: 1,
+                    color: 'white',
+                    fillOpacity: 0.7,
+                };
+            },
+            onEachFeature: (feature, layer) => {
+                layer.on({
+                    mouseover: (e) => {
+                        const targetLayer = e.target;
+                        targetLayer.setStyle({
+                            weight: 2,
+                            color: '#666',
+                            fillOpacity: 0.9,
+                        });
+                        if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
+                            targetLayer.bringToFront();
+                        }
+                    },
+                    mouseout: (e) => {
+                         if (selectedRegion !== e.target) {
+                             geoJsonLayer.resetStyle(e.target);
+                         }
+                    },
+                    click: (e) => {
+                        if (selectedRegion) {
+                            geoJsonLayer.resetStyle(selectedRegion as Layer);
+                        }
+                        const targetLayer = e.target;
+                        targetLayer.setStyle({
+                             weight: 3,
+                             color: '#333',
+                             fillOpacity: 1,
+                        });
+                        setSelectedRegion(targetLayer);
+                        const { CTP_KOR_NM, CTPRVN_CD } = feature.properties;
+                        onRegionClick(CTP_KOR_NM, CTPRVN_CD);
+                    },
+                });
+            }
+        }).addTo(map);
+        geoJsonLayerRef.current = geoJsonLayer;
+    }
+  }, [center, zoom, onRegionClick, selectedRegion]);
+
+  return <div ref={mapRef} style={{ height: '100%', width: '100%' }} />;
+};
+
+export default RegionMap;

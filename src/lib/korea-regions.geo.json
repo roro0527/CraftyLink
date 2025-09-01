@@ -1,0 +1,23 @@
+
+{
+  "type": "FeatureCollection",
+  "features": [
+    { "type": "Feature", "properties": { "CTPRVN_CD": "11", "CTP_KOR_NM": "서울특별시" }, "geometry": { "type": "Polygon", "coordinates": [ [ [ 126.9780, 37.5665 ], [ 127.03, 37.49 ], [ 127.11, 37.58 ], [ 126.85, 37.66 ], [ 126.79, 37.53 ], [ 126.9780, 37.5665 ] ] ] } },
+    { "type": "Feature", "properties": { "CTPRVN_CD": "26", "CTP_KOR_NM": "부산광역시" }, "geometry": { "type": "Polygon", "coordinates": [ [ [ 129.0756, 35.1796 ], [ 129.15, 35.1 ], [ 129.22, 35.19 ], [ 129.04, 35.25 ], [ 129.0756, 35.1796 ] ] ] } },
+    { "type": "Feature", "properties": { "CTPRVN_CD": "27", "CTP_KOR_NM": "대구광역시" }, "geometry": { "type": "Polygon", "coordinates": [ [ [ 128.6023, 35.8714 ], [ 128.7, 35.8 ], [ 128.65, 35.95 ], [ 128.5, 35.9 ], [ 128.6023, 35.8714 ] ] ] } },
+    { "type": "Feature", "properties": { "CTPRVN_CD": "28", "CTP_KOR_NM": "인천광역시" }, "geometry": { "type": "Polygon", "coordinates": [ [ [ 126.7052, 37.4563 ], [ 126.6, 37.4 ], [ 126.65, 37.55 ], [ 126.8, 37.5 ], [ 126.7052, 37.4563 ] ] ] } },
+    { "type": "Feature", "properties": { "CTPRVN_CD": "29", "CTP_KOR_NM": "광주광역시" }, "geometry": { "type": "Polygon", "coordinates": [ [ [ 126.8514, 35.1600 ], [ 126.92, 35.1 ], [ 126.9, 35.22 ], [ 126.8, 35.2 ], [ 126.8514, 35.1600 ] ] ] } },
+    { "type": "Feature", "properties": { "CTPRVN_CD": "30", "CTP_KOR_NM": "대전광역시" }, "geometry": { "type": "Polygon", "coordinates": [ [ [ 127.3845, 36.3504 ], [ 127.45, 36.3 ], [ 127.4, 36.42 ], [ 127.3, 36.38 ], [ 127.3845, 36.3504 ] ] ] } },
+    { "type": "Feature", "properties": { "CTPRVN_CD": "31", "CTP_KOR_NM": "울산광역시" }, "geometry": { "type": "Polygon", "coordinates": [ [ [ 129.3113, 35.5384 ], [ 129.4, 35.5 ], [ 129.35, 35.62 ], [ 129.22, 35.55 ], [ 129.3113, 35.5384 ] ] ] } },
+    { "type": "Feature", "properties": { "CTPRVN_CD": "36", "CTP_KOR_NM": "세종특별자치시" }, "geometry": { "type": "Polygon", "coordinates": [ [ [ 127.2890, 36.4800 ], [ 127.35, 36.45 ], [ 127.3, 36.55 ], [ 127.22, 36.5 ], [ 127.2890, 36.4800 ] ] ] } },
+    { "type": "Feature", "properties": { "CTPRVN_CD": "41", "CTP_KOR_NM": "경기도" }, "geometry": { "type": "Polygon", "coordinates": [ [ [ 127.0, 37.2750 ], [ 127.5, 37.1 ], [ 127.8, 37.6 ], [ 127.0, 38.0 ], [ 126.5, 37.8 ], [ 126.6, 37.2 ], [ 127.0, 37.2750 ] ] ] } },
+    { "type": "Feature", "properties": { "CTPRVN_CD": "42", "CTP_KOR_NM": "강원도" }, "geometry": { "type": "Polygon", "coordinates": [ [ [ 127.7342, 37.8861 ], [ 128.5, 37.5 ], [ 129.0, 38.0 ], [ 128.2, 38.5 ], [ 127.5, 38.2 ], [ 127.7342, 37.8861 ] ] ] } },
+    { "type": "Feature", "properties": { "CTPRVN_CD": "43", "CTP_KOR_NM": "충청북도" }, "geometry": { "type": "Polygon", "coordinates": [ [ [ 127.9833, 36.6359 ], [ 128.2, 36.5 ], [ 128.0, 37.0 ], [ 127.5, 36.9 ], [ 127.4, 36.3 ], [ 127.9833, 36.6359 ] ] ] } },
+    { "type": "Feature", "properties": { "CTPRVN_CD": "44", "CTP_KOR_NM": "충청남도" }, "geometry": { "type": "Polygon", "coordinates": [ [ [ 126.6633, 36.5184 ], [ 127.2, 36.2 ], [ 127.0, 36.8 ], [ 126.3, 36.9 ], [ 126.2, 36.4 ], [ 126.6633, 36.5184 ] ] ] } },
+    { "type": "Feature", "properties": { "CTPRVN_CD": "45", "CTP_KOR_NM": "전라북도" }, "geometry": { "type": "Polygon", "coordinates": [ [ [ 127.1022, 35.8204 ], [ 127.5, 35.6 ], [ 127.3, 36.2 ], [ 126.7, 36.0 ], [ 126.5, 35.5 ], [ 127.1022, 35.8204 ] ] ] } },
+    { "type": "Feature", "properties": { "CTPRVN_CD": "46", "CTP_KOR_NM": "전라남도" }, "geometry": { "type": "Polygon", "coordinates": [ [ [ 126.9916, 34.8164 ], [ 127.3, 34.5 ], [ 127.0, 35.3 ], [ 126.3, 35.0 ], [ 126.5, 34.3 ], [ 126.9916, 34.8164 ] ] ] } },
+    { "type": "Feature", "properties": { "CTPRVN_CD": "47", "CTP_KOR_NM": "경상북도" }, "geometry": { "type": "Polygon", "coordinates": [ [ [ 128.8759, 36.4919 ], [ 129.4, 36.0 ], [ 129.5, 37.0 ], [ 128.5, 37.2 ], [ 128.0, 36.5 ], [ 128.8759, 36.4919 ] ] ] } },
+    { "type": "Feature", "properties": { "CTPRVN_CD": "48", "CTP_KOR_NM": "경상남도" }, "geometry": { "type": "Polygon", "coordinates": [ [ [ 128.4922, 35.2383 ], [ 129.0, 35.0 ], [ 128.8, 35.6 ], [ 128.0, 35.5 ], [ 127.8, 35.1 ], [ 128.4922, 35.2383 ] ] ] } },
+    { "type": "Feature", "properties": { "CTPRVN_CD": "50", "CTP_KOR_NM": "제주특별자치도" }, "geometry": { "type": "Polygon", "coordinates": [ [ [ 126.5312, 33.4996 ], [ 126.9, 33.4 ], [ 126.8, 33.6 ], [ 126.2, 33.3 ], [ 126.5312, 33.4996 ] ] ] } }
+  ]
+}

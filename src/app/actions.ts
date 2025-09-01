@@ -7,6 +7,7 @@ import { getKeywordTrends, type KeywordTrendsInput, type KeywordTrendsData } fro
 import { getRelatedKeywords, type RelatedKeywordsInput, type RelatedKeywordsData } from '@/ai/flows/related-keywords-flow';
 import { getYoutubeVideos, type YoutubeVideosInput, type YoutubeVideosData } from '@/ai/flows/youtube-videos-flow';
 import { getRelatedNews, type RelatedNewsInput, type RelatedNewsData } from '@/ai/flows/related-news-flow';
+import { getRegionalTrends, type RegionalTrendsInput, type RegionalTrendsData } from '@/ai/flows/regional-trends-flow';
 
 
 export async function suggestSuperParametersAction(
@@ -64,6 +65,16 @@ export async function getRelatedNewsAction(input: RelatedNewsInput): Promise<Rel
         return news;
     } catch (error) {
         console.error('Error fetching related news:', error);
+        return [];
+    }
+}
+
+export async function getRegionalTrendsAction(input: RegionalTrendsInput): Promise<RegionalTrendsData> {
+    try {
+        const trends = await getRegionalTrends(input);
+        return trends;
+    } catch (error) {
+        console.error('Error fetching regional trends:', error);
         return [];
     }
 }

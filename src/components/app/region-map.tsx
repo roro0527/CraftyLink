@@ -2,76 +2,72 @@
 'use client';
 
 import * as React from 'react';
-import L, { LatLngExpression } from 'leaflet';
-import 'leaflet-draw';
+import { MapContainer, TileLayer, GeoJSON } from 'react-leaflet';
+import type { LatLngExpression, Layer, Feature } from 'leaflet';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+import regionsData from '@/lib/korea-regions.geo.json';
 
 interface RegionMapProps {
     center: LatLngExpression;
     zoom: number;
-    onCreated: (e: any) => void;
-    onDeleted: (e: any) => void;
+    onRegionClick: (region: { name: string; code: string }) => void;
 }
 
-const RegionMap: React.FC<RegionMapProps> = ({ center, zoom, onCreated, onDeleted }) => {
-    const mapRef = React.useRef<HTMLDivElement>(null);
-    const mapInstanceRef = React.useRef<L.Map | null>(null);
+const RegionMap: React.FC<RegionMapProps> = ({ center, zoom, onRegionClick }) => {
+    
+    const style = {
+        fillColor: '#3388ff',
+        weight: 2,
+        opacity: 1,
+        color: 'white',
+        dashArray: '3',
+        fillOpacity: 0.5
+    };
 
-    React.useEffect(() => {
-        if (mapRef.current && !mapInstanceRef.current) {
-            // Check if map is already initialized on the container
-            if ((mapRef.current as any)._leaflet_id) {
-                return;
-            }
-
-            const map = L.map(mapRef.current).setView(center, zoom);
-            mapInstanceRef.current = map;
-
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            }).addTo(map);
-
-            const drawnItems = new L.FeatureGroup();
-            map.addLayer(drawnItems);
-
-            const drawControl = new L.Control.Draw({
-                position: 'topright',
-                draw: {
-                    polygon: true,
-                    rectangle: false,
-                    circle: false,
-                    circlemarker: false,
-                    marker: false,
-                    polyline: false,
-                },
-                edit: {
-                    featureGroup: drawnItems
-                }
-            });
-            map.addControl(drawControl);
-
-            map.on(L.Draw.Event.CREATED, (event: any) => {
-                const layer = event.layer;
-                drawnItems.addLayer(layer);
-                onCreated(event);
-            });
-            
-            map.on('draw:deleted', (event: any) => {
-                onDeleted(event);
-            });
+    const highlightFeature = (e: L.LeafletMouseEvent) => {
+        const layer = e.target;
+        layer.setStyle({
+            weight: 3,
+            color: '#005cbf',
+            fillOpacity: 0.7
+        });
+        if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
+            layer.bringToFront();
         }
-        
-        // Cleanup function to destroy the map instance
-        return () => {
-            if (mapInstanceRef.current) {
-                mapInstanceRef.current.remove();
-                mapInstanceRef.current = null;
-            }
-        };
-    }, [center, zoom, onCreated, onDeleted]);
+    };
 
-  return (
-    <div ref={mapRef} style={{ height: '100%', width: '100%' }}></div>
-  );
+    const resetHighlight = (e: L.LeafletMouseEvent) => {
+        (e.target.getGeoJSON() as L.GeoJSON).resetStyle(e.target);
+    };
+
+    const onEachFeature = (feature: Feature, layer: Layer) => {
+        layer.on({
+            mouseover: highlightFeature,
+            mouseout: resetHighlight,
+            click: (e) => {
+                const properties = feature.properties;
+                if (properties && properties.CTP_KOR_NM && properties.CTPRVN_CD) {
+                   onRegionClick({ name: properties.CTP_KOR_NM, code: `KR-${properties.CTPRVN_CD}`});
+                   // zoomToFeature(e);
+                }
+            }
+        });
+    };
+
+    return (
+        <MapContainer center={center} zoom={zoom} scrollWheelZoom={true} style={{ height: '100%', width: '100%' }}>
+            <TileLayer
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            />
+            <GeoJSON 
+                data={regionsData as any} 
+                style={style} 
+                onEachFeature={onEachFeature} 
+            />
+        </MapContainer>
+    );
 };
 
 export default RegionMap;

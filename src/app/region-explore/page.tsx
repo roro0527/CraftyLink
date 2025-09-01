@@ -2,124 +2,131 @@
 'use client';
 
 import * as React from 'react';
-import 'leaflet/dist/leaflet.css';
-import 'leaflet-draw/dist/leaflet.draw.css';
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
+  CardDescription
 } from '@/components/ui/card';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Slider } from '@/components/ui/slider';
 import type { LatLngExpression } from 'leaflet';
 import dynamic from 'next/dynamic';
 import { Skeleton } from '@/components/ui/skeleton';
+import { getRegionalTrendsAction, getYoutubeVideosAction } from '../actions';
+import type { YoutubeVideo } from '@/lib/types';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
-const keywordRegionalData = {
-  times: ["8월 10일", "8월 11일", "8월 12일"],
-  regions: {
-    "KR": {
-      name: "대한민국",
-      topVideos: ["게임 플레이 영상 A", "게임 뉴스 B", "게임 공략 C"]
-    },
-    "US": {
-      name: "미국",
-      topVideos: ["Game Review A", "Game Trailer B"]
-    },
-    "JP": {
-      name: "일본",
-      topVideos: ["ゲーム実況A", "新作レビューB"]
-    }
-  }
-};
-
-
-// The RegionMap component is dynamically imported to ensure it's only client-side rendered.
 const RegionMap = dynamic(() => import('@/components/app/region-map'), { 
     ssr: false,
     loading: () => <Skeleton className="h-full w-full" />
 });
 
+interface TrendWithVideos {
+    keyword: string;
+    videos: YoutubeVideo[];
+}
+
 function RegionExplorePage() {
-  const [region, setRegion] = React.useState('KR');
-  const [timeIndex, setTimeIndex] = React.useState(0);
+  const [selectedRegion, setSelectedRegion] = React.useState<{ name: string; code: string } | null>(null);
+  const [regionalTrends, setRegionalTrends] = React.useState<TrendWithVideos[]>([]);
+  const [isLoading, setIsLoading] = React.useState(false);
 
-  const _onCreated = (e: any) => {
-    console.log('Polygon created:', e.layer.toGeoJSON());
+  const handleRegionClick = async (region: { name: string; code: string }) => {
+    if (isLoading) return;
+
+    setSelectedRegion(region);
+    setIsLoading(true);
+    setRegionalTrends([]);
+
+    try {
+        const trends = await getRegionalTrendsAction({ geoCode: region.code });
+
+        const trendsWithVideos = await Promise.all(
+            trends.slice(0, 3).map(async (keyword) => {
+                const videos = await getYoutubeVideosAction({ keyword });
+                return {
+                    keyword: keyword,
+                    videos: videos.slice(0, 2)
+                };
+            })
+        );
+        setRegionalTrends(trendsWithVideos);
+
+    } catch (error) {
+        console.error("Failed to fetch regional data:", error);
+    } finally {
+        setIsLoading(false);
+    }
   };
 
-  const _onDeleted = (e: any) => {
-    console.log('Polygon deleted:', e.layers);
-  };
-
-  const center: LatLngExpression = [37.5665, 126.9780];
+  const center: LatLngExpression = [36.5, 127.5];
 
   return (
     <div className="flex h-[calc(100vh-65px)]">
       <div className="flex-grow p-6">
-        <h1 className="text-2xl font-bold mb-4">지역 탐색</h1>
+        <h1 className="text-2xl font-bold mb-4">지역별 트렌드 탐색</h1>
         <Card className="h-[calc(100%-48px)]">
           <CardContent className="p-0 h-full">
             <RegionMap
                 center={center}
-                zoom={5}
-                onCreated={_onCreated}
-                onDeleted={_onDeleted}
+                zoom={7}
+                onRegionClick={handleRegionClick}
             />
           </CardContent>
         </Card>
       </div>
       
-      <aside className="w-96 p-6 space-y-6 overflow-auto">
-        <Card>
+      <aside className="w-96 p-6 space-y-6 overflow-auto bg-muted/30">
+        <Card className="sticky top-6">
           <CardHeader>
-            <CardTitle className="text-lg font-semibold">지역별 인기 동영상</CardTitle>
+            <CardTitle className="text-lg font-semibold">
+                {selectedRegion ? `${selectedRegion.name} 트렌드` : "지역을 선택하세요"}
+            </CardTitle>
+            <CardDescription>
+                지도에서 지역을 클릭하여 인기 검색어와 관련 영상을 확인하세요.
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <Select value={region} onValueChange={setRegion}>
-              <SelectTrigger className="mb-4">
-                <SelectValue placeholder="지역 선택" />
-              </SelectTrigger>
-              <SelectContent>
-                {Object.entries(keywordRegionalData.regions).map(([key, value]) => (
-                   <SelectItem key={key} value={key}>{value.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <ul className="list-disc pl-5 text-sm space-y-2">
-              {(keywordRegionalData.regions[region as keyof typeof keywordRegionalData.regions]?.topVideos || []).map((video, index) => (
-                <li key={index}>{video}</li>
-              ))}
-            </ul>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg font-semibold">시간대별 확산 패턴</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Slider
-              value={[timeIndex]}
-              onValueChange={(value) => setTimeIndex(value[0])}
-              min={0}
-              max={2}
-              step={1}
-              className="w-full mb-2"
-            />
-            <p className="text-sm text-muted-foreground mb-4 text-center">
-              시간: {keywordRegionalData.times[timeIndex]}
-            </p>
-             <div className="h-40 bg-muted rounded-md flex items-center justify-center mt-4">
-              <p className="text-muted-foreground">차트 데이터가 없습니다.</p>
-            </div>
+            {isLoading ? (
+                <div className="space-y-4">
+                    <Skeleton className="h-12 w-full" />
+                    <Skeleton className="h-24 w-full" />
+                    <Skeleton className="h-12 w-full" />
+                    <Skeleton className="h-24 w-full" />
+                    <Skeleton className="h-12 w-full" />
+                    <Skeleton className="h-24 w-full" />
+                </div>
+            ) : regionalTrends.length > 0 ? (
+                <Accordion type="single" collapsible className="w-full" defaultValue="item-0">
+                    {regionalTrends.map((trend, index) => (
+                        <AccordionItem value={`item-${index}`} key={trend.keyword}>
+                            <AccordionTrigger className="text-base font-medium">{index + 1}. {trend.keyword}</AccordionTrigger>
+                            <AccordionContent>
+                                {trend.videos.length > 0 ? (
+                                    <div className="space-y-3">
+                                        {trend.videos.map((video) => (
+                                            <div key={video.title}>
+                                                <p className="font-semibold text-sm truncate">{video.title}</p>
+                                                <p className="text-xs text-muted-foreground">{video.channelTitle}</p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <p className="text-sm text-muted-foreground">관련 영상을 찾을 수 없습니다.</p>
+                                )}
+                            </AccordionContent>
+                        </AccordionItem>
+                    ))}
+                </Accordion>
+            ) : selectedRegion && !isLoading ? (
+                 <div className="text-center py-10">
+                    <p className="text-muted-foreground">이 지역의 트렌드 데이터를 불러올 수 없습니다.</p>
+                </div>
+            ) : (
+                 <div className="text-center py-10">
+                    <p className="text-muted-foreground">지도에서 지역을 선택해주세요.</p>
+                </div>
+            )}
           </CardContent>
         </Card>
       </aside>

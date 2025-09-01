@@ -3,8 +3,8 @@
 
 import 'leaflet/dist/leaflet.css';
 import * as React from 'react';
-import { GeoJSON, TileLayer } from 'react-leaflet';
-import L, { type LatLngExpression, type Layer, type Feature, type GeoJsonObject } from 'leaflet';
+import { GeoJSON } from 'react-leaflet';
+import L, { type LatLngExpression, type Layer, type GeoJsonObject } from 'leaflet';
 import geoJsonData from '@/lib/korea-regions.geo.json';
 
 const regionColors: { [key: string]: string } = {
@@ -27,6 +27,27 @@ const regionColors: { [key: string]: string } = {
   "제주특별자치도": "#c999d9",
 };
 
+
+const defaultStyle = {
+  weight: 2,
+  opacity: 1,
+  color: 'white',
+  fillOpacity: 0.9,
+};
+
+const hoverStyle = {
+  weight: 3,
+  color: '#FFF',
+  fillOpacity: 1,
+};
+
+const clickStyle = {
+    weight: 4,
+    color: '#333',
+    fillOpacity: 1,
+};
+
+
 interface RegionMapProps {
   center: LatLngExpression;
   zoom: number;
@@ -34,9 +55,9 @@ interface RegionMapProps {
 }
 
 const RegionMap: React.FC<RegionMapProps> = ({ center, zoom, onRegionClick }) => {
+  const mapRef = React.useRef<HTMLDivElement>(null);
   const mapInstanceRef = React.useRef<L.Map | null>(null);
   const geoJsonLayerRef = React.useRef<L.GeoJSON | null>(null);
-  const mapRef = React.useRef<HTMLDivElement>(null);
   const [selectedRegion, setSelectedRegion] = React.useState<Layer | null>(null);
 
   React.useEffect(() => {
@@ -49,32 +70,27 @@ const RegionMap: React.FC<RegionMapProps> = ({ center, zoom, onRegionClick }) =>
         });
         mapInstanceRef.current = map;
 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        }).addTo(map);
-
         const geoJsonLayer = L.geoJSON(geoJsonData as GeoJsonObject, {
             style: (feature) => {
                 const regionName = feature?.properties.CTP_KOR_NM;
                 return {
+                    ...defaultStyle,
                     fillColor: regionColors[regionName] || '#9e9e9e',
-                    weight: 1,
-                    opacity: 1,
-                    color: 'white',
-                    fillOpacity: 0.7,
                 };
             },
             onEachFeature: (feature, layer) => {
+                layer.bindTooltip(feature.properties.CTP_KOR_NM, {
+                  permanent: true,
+                  direction: 'center',
+                  className: 'region-label',
+                  offset: [0, 0],
+                });
+
                 layer.on({
                     mouseover: (e) => {
                         const targetLayer = e.target;
-                        targetLayer.setStyle({
-                            weight: 2,
-                            color: '#666',
-                            fillOpacity: 0.9,
-                        });
-                        if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
-                            targetLayer.bringToFront();
+                        if (targetLayer !== selectedRegion) {
+                            targetLayer.setStyle(hoverStyle);
                         }
                     },
                     mouseout: (e) => {
@@ -87,11 +103,10 @@ const RegionMap: React.FC<RegionMapProps> = ({ center, zoom, onRegionClick }) =>
                             geoJsonLayer.resetStyle(selectedRegion as Layer);
                         }
                         const targetLayer = e.target;
-                        targetLayer.setStyle({
-                             weight: 3,
-                             color: '#333',
-                             fillOpacity: 1,
-                        });
+                        targetLayer.setStyle(clickStyle);
+                        if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
+                            targetLayer.bringToFront();
+                        }
                         setSelectedRegion(targetLayer);
                         const { CTP_KOR_NM, CTPRVN_CD } = feature.properties;
                         onRegionClick(CTP_KOR_NM, CTPRVN_CD);
@@ -106,4 +121,4 @@ const RegionMap: React.FC<RegionMapProps> = ({ center, zoom, onRegionClick }) =>
   return <div ref={mapRef} style={{ height: '100%', width: '100%' }} />;
 };
 
-export default RegionMap;
+export default React.memo(RegionMap);

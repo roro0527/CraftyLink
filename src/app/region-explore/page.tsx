@@ -32,7 +32,7 @@ export default function RegionExplorePage() {
   const [isLoading, setIsLoading] = React.useState(false);
   const [trendResult, setTrendResult] = React.useState<TrendResult | null>(null);
   const [error, setError] = React.useState<string | null>(null);
-  const [initialCenter] = React.useState<[number, number]>([36.5, 127.5]);
+  const [initialCenter] = React.useState<[number, number]>([36.3, 127.8]);
   const [initialZoom] = React.useState(7);
 
   const handleRegionClick = React.useCallback(async (regionName: string, regionCode: string) => {
@@ -70,7 +70,7 @@ export default function RegionExplorePage() {
     <div className="flex h-[calc(100vh-65px)]">
       <div className="flex-grow p-6 flex flex-col">
         <h1 className="text-2xl font-bold mb-4">지역별 트렌드 탐색</h1>
-        <Card className="flex-grow">
+        <Card className="flex-grow bg-muted/30">
           <CardContent className="p-0 h-full">
             <RegionMap center={initialCenter} zoom={initialZoom} onRegionClick={handleRegionClick} />
           </CardContent>

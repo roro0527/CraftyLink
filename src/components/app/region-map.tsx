@@ -75,10 +75,6 @@ const RegionMap: React.FC<RegionMapProps> = ({ center, zoom, onRegionClick }) =>
             scrollWheelZoom: true,
         });
         mapInstanceRef.current = map;
-        
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        }).addTo(map);
 
         const geoJsonLayer = L.geoJSON(geoJsonData as GeoJsonObject, {
             style: (feature) => {

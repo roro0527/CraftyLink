@@ -39,13 +39,13 @@ const defaultStyle = {
   weight: 2,
   opacity: 1,
   color: 'white',
-  fillOpacity: 0.9,
+  fillOpacity: 0.7,
 };
 
 const hoverStyle = {
   weight: 3,
   color: '#FFF',
-  fillOpacity: 1,
+  fillOpacity: 0.9,
 };
 
 const clickStyle = {
@@ -75,6 +75,10 @@ const RegionMap: React.FC<RegionMapProps> = ({ center, zoom, onRegionClick }) =>
             scrollWheelZoom: true,
         });
         mapInstanceRef.current = map;
+        
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
 
         const geoJsonLayer = L.geoJSON(geoJsonData as GeoJsonObject, {
             style: (feature) => {
@@ -115,7 +119,7 @@ const RegionMap: React.FC<RegionMapProps> = ({ center, zoom, onRegionClick }) =>
                         }
                         setSelectedRegion(targetLayer);
                         const { CTP_KOR_NM, CTPRVN_CD } = feature.properties;
-                        onRegionClick(CTP_KOR_NM, CTPRVN_CD);
+                        onRegionClick(CTP_KOR_NM, `KR-${CTPRVN_CD}`);
                     },
                 });
             }

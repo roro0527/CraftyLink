@@ -22,11 +22,11 @@ type RegionFeature = GeoJSONFeature<GeoJSON.Point, RegionProperties>;
 
 const RegionMap: React.FC<RegionMapProps> = ({ center, zoom, onRegionClick }) => {
     const mapRef = React.useRef<HTMLDivElement>(null);
+    const mapInstanceRef = React.useRef<L.Map | null>(null);
 
     React.useEffect(() => {
-        let map: L.Map;
-        if (mapRef.current && !mapRef.current.hasAttribute('_leaflet_id')) {
-            map = L.map(mapRef.current, {
+        if (mapRef.current && !mapInstanceRef.current) {
+            const map = L.map(mapRef.current, {
                 center: center,
                 zoom: zoom,
                 zoomControl: false,
@@ -37,6 +37,7 @@ const RegionMap: React.FC<RegionMapProps> = ({ center, zoom, onRegionClick }) =>
                 boxZoom: false,
                 keyboard: false,
             });
+            mapInstanceRef.current = map;
 
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -52,6 +53,7 @@ const RegionMap: React.FC<RegionMapProps> = ({ center, zoom, onRegionClick }) =>
             });
 
             let selectedLayer: L.Layer | null = null;
+            const geojsonLayer = L.geoJSON(regionsData as any);
 
             const highlightFeature = (e: L.LeafletMouseEvent) => {
                 const layer = e.target;
@@ -64,8 +66,6 @@ const RegionMap: React.FC<RegionMapProps> = ({ center, zoom, onRegionClick }) =>
                     layer.bringToFront();
                 }
             };
-            
-            const geojsonLayer = L.geoJSON(regionsData as any);
 
             const resetHighlight = (e: L.LeafletMouseEvent) => {
                 if (e.target !== selectedLayer) {
@@ -105,16 +105,6 @@ const RegionMap: React.FC<RegionMapProps> = ({ center, zoom, onRegionClick }) =>
             });
             geojsonLayer.addTo(map);
         }
-
-        return () => {
-            if (mapRef.current && mapRef.current.hasAttribute('_leaflet_id')) {
-                const mapInstance = (mapRef.current as any)._leaflet_map;
-                if (mapInstance) {
-                    mapInstance.remove();
-                }
-                 mapRef.current.removeAttribute('_leaflet_id');
-            }
-        };
     }, [center, zoom, onRegionClick]);
 
     return <div ref={mapRef} style={{ height: '100%', width: '100%' }} />;

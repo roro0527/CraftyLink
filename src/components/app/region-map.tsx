@@ -25,11 +25,17 @@ const RegionMap: React.FC<RegionMapProps> = ({ center, zoom, onRegionClick }) =>
 
     React.useEffect(() => {
         let map: L.Map;
-        if (mapRef.current && !mapRef.current._leaflet_id) {
+        if (mapRef.current && !mapRef.current.hasAttribute('_leaflet_id')) {
             map = L.map(mapRef.current, {
                 center: center,
                 zoom: zoom,
-                scrollWheelZoom: true,
+                zoomControl: false,
+                dragging: false,
+                scrollWheelZoom: false,
+                doubleClickZoom: false,
+                touchZoom: false,
+                boxZoom: false,
+                keyboard: false,
             });
 
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -44,6 +50,8 @@ const RegionMap: React.FC<RegionMapProps> = ({ center, zoom, onRegionClick }) =>
                 dashArray: '3',
                 fillOpacity: 0.5
             });
+
+            let selectedLayer: L.Layer | null = null;
 
             const highlightFeature = (e: L.LeafletMouseEvent) => {
                 const layer = e.target;
@@ -60,14 +68,26 @@ const RegionMap: React.FC<RegionMapProps> = ({ center, zoom, onRegionClick }) =>
             const geojsonLayer = L.geoJSON(regionsData as any);
 
             const resetHighlight = (e: L.LeafletMouseEvent) => {
-                geojsonLayer.resetStyle(e.target);
+                if (e.target !== selectedLayer) {
+                   geojsonLayer.resetStyle(e.target);
+                }
             };
             
             const onEachFeature = (feature: RegionFeature, layer: Layer) => {
                 layer.on({
                     mouseover: highlightFeature,
                     mouseout: resetHighlight,
-                    click: () => {
+                    click: (e) => {
+                        if (selectedLayer) {
+                            geojsonLayer.resetStyle(selectedLayer as L.Path);
+                        }
+                        selectedLayer = e.target;
+                         e.target.setStyle({
+                            weight: 3,
+                            color: '#e60000',
+                            fillOpacity: 0.8
+                        });
+
                         const properties = feature.properties;
                         if (properties && properties.CTP_KOR_NM && properties.CTPRVN_CD) {
                            onRegionClick({ name: properties.CTP_KOR_NM, code: `KR-${properties.CTPRVN_CD}`});
@@ -87,11 +107,12 @@ const RegionMap: React.FC<RegionMapProps> = ({ center, zoom, onRegionClick }) =>
         }
 
         return () => {
-            if (mapRef.current && mapRef.current._leaflet_id) {
+            if (mapRef.current && mapRef.current.hasAttribute('_leaflet_id')) {
                 const mapInstance = (mapRef.current as any)._leaflet_map;
                 if (mapInstance) {
                     mapInstance.remove();
                 }
+                 mapRef.current.removeAttribute('_leaflet_id');
             }
         };
     }, [center, zoom, onRegionClick]);

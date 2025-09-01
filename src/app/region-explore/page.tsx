@@ -15,11 +15,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { getRegionalTrendsAction, getYoutubeVideosAction } from '../actions';
 import type { YoutubeVideo } from '@/lib/types';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-
-const RegionMap = dynamic(() => import('@/components/app/region-map'), { 
-    ssr: false,
-    loading: () => <Skeleton className="h-full w-full" />
-});
+import RegionMap from '@/components/app/region-map';
 
 interface TrendWithVideos {
     keyword: string;
@@ -134,4 +130,7 @@ function RegionExplorePage() {
   );
 }
 
-export default RegionExplorePage;
+export default dynamic(() => Promise.resolve(RegionExplorePage), {
+    ssr: false,
+    loading: () => <div className="flex h-[calc(100vh-65px)] items-center justify-center"><Skeleton className="w-[95%] h-[95%]" /></div>
+});

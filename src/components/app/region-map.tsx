@@ -3,9 +3,17 @@
 
 import 'leaflet/dist/leaflet.css';
 import * as React from 'react';
-import { GeoJSON } from 'react-leaflet';
 import L, { type LatLngExpression, type Layer, type GeoJsonObject } from 'leaflet';
 import geoJsonData from '@/lib/korea-regions.geo.json';
+
+// Fix for broken leaflet icons
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: require('leaflet/dist/images/marker-icon-2x.png').default.src,
+  iconUrl: require('leaflet/dist/images/marker-icon.png').default.src,
+  shadowUrl: require('leaflet/dist/images/marker-shadow.png').default.src,
+});
+
 
 const regionColors: { [key: string]: string } = {
   "서울특별시": "#b4d379",
@@ -27,7 +35,6 @@ const regionColors: { [key: string]: string } = {
   "제주특별자치도": "#c999d9",
 };
 
-
 const defaultStyle = {
   weight: 2,
   opacity: 1,
@@ -46,7 +53,6 @@ const clickStyle = {
     color: '#333',
     fillOpacity: 1,
 };
-
 
 interface RegionMapProps {
   center: LatLngExpression;

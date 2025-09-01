@@ -9,7 +9,6 @@ import {
   CardTitle,
   CardDescription
 } from '@/components/ui/card';
-import type { LatLngExpression } from 'leaflet';
 import dynamic from 'next/dynamic';
 import { Skeleton } from '@/components/ui/skeleton';
 import { getRegionalTrendsAction, getYoutubeVideosAction } from '../actions';
@@ -41,6 +40,11 @@ export default function RegionExplorePage() {
     try {
         const trends = await getRegionalTrendsAction({ geoCode: region.code });
 
+        if (trends.length === 0) {
+            setRegionalTrends([]);
+            return;
+        }
+
         const trendsWithVideos = await Promise.all(
             trends.slice(0, 3).map(async (keyword) => {
                 const videos = await getYoutubeVideosAction({ keyword });
@@ -54,12 +58,11 @@ export default function RegionExplorePage() {
 
     } catch (error) {
         console.error("Failed to fetch regional data:", error);
+        setRegionalTrends([]);
     } finally {
         setIsLoading(false);
     }
   }, [isLoading]);
-
-  const center: LatLngExpression = [36.5, 127.5];
 
   return (
     <div className="flex h-[calc(100vh-65px)]">
@@ -68,8 +71,6 @@ export default function RegionExplorePage() {
         <Card className="h-[calc(100%-48px)]">
           <CardContent className="p-0 h-full">
             <RegionMap
-                center={center}
-                zoom={7}
                 onRegionClick={handleRegionClick}
             />
           </CardContent>

@@ -2,16 +2,12 @@
 'use client';
 
 import * as React from 'react';
-import { MapContainer, TileLayer, GeoJSON } from 'react-leaflet';
-import type { LatLngExpression, Layer, Feature as GeoJSONFeature } from 'leaflet';
+import type { Layer, Feature as GeoJSONFeature } from 'leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import 'leaflet-draw/dist/leaflet.draw.css';
 import regionsData from '@/lib/korea-regions.geo.json';
 
 interface RegionMapProps {
-    center: LatLngExpression;
-    zoom: number;
     onRegionClick: (region: { name: string; code: string }) => void;
 }
 
@@ -23,10 +19,25 @@ interface RegionProperties {
 type RegionFeature = GeoJSONFeature<GeoJSON.Point, RegionProperties>;
 
 
-const RegionMap: React.FC<RegionMapProps> = ({ center, zoom, onRegionClick }) => {
-    
-    const displayMap = React.useMemo(
-        () => {
+const RegionMap: React.FC<RegionMapProps> = ({ onRegionClick }) => {
+    const mapRef = React.useRef<HTMLDivElement>(null);
+    // Use a ref to store the map instance. This prevents it from being recreated on re-renders.
+    const mapInstanceRef = React.useRef<L.Map | null>(null);
+
+    React.useEffect(() => {
+        // Only initialize the map if the ref is attached to a div and the map is not already initialized.
+        if (mapRef.current && !mapInstanceRef.current) {
+            const map = L.map(mapRef.current, {
+                center: [36.5, 127.5],
+                zoom: 7,
+                scrollWheelZoom: true,
+            });
+            mapInstanceRef.current = map;
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+
             const style = (feature?: RegionFeature) => {
                 return {
                     fillColor: '#3388ff',
@@ -49,13 +60,11 @@ const RegionMap: React.FC<RegionMapProps> = ({ center, zoom, onRegionClick }) =>
                     layer.bringToFront();
                 }
             };
+            
+            const geojsonLayer = L.geoJSON(regionsData as any);
 
             const resetHighlight = (e: L.LeafletMouseEvent) => {
-                (e.target as any)._map.eachLayer((layer: any) => {
-                    if (layer.feature && layer.feature.properties.CTPRVN_CD === e.target.feature.properties.CTPRVN_CD) {
-                        (layer as L.GeoJSON).resetStyle(e.target);
-                    }
-                });
+                geojsonLayer.resetStyle(e.target);
             };
             
             const onEachFeature = (feature: RegionFeature, layer: Layer) => {
@@ -71,24 +80,26 @@ const RegionMap: React.FC<RegionMapProps> = ({ center, zoom, onRegionClick }) =>
                 });
             };
 
-            return (
-                <MapContainer center={center} zoom={zoom} scrollWheelZoom={true} style={{ height: '100%', width: '100%' }}>
-                    <TileLayer
-                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                    />
-                    <GeoJSON 
-                        data={regionsData as any} 
-                        style={style} 
-                        onEachFeature={onEachFeature as any} 
-                    />
-                </MapContainer>
-            );
-        },
-        [center, zoom, onRegionClick]
-    );
+            geojsonLayer.setStyle(style);
+            geojsonLayer.on('add', () => {
+                 geojsonLayer.eachLayer((layer) => {
+                    const feature = (layer as L.GeoJSON).feature as RegionFeature;
+                    onEachFeature(feature, layer);
+                 });
+            });
+            geojsonLayer.addTo(map);
+        }
 
-    return displayMap;
+        // Cleanup function: remove the map instance when the component unmounts.
+        return () => {
+            if (mapInstanceRef.current) {
+                mapInstanceRef.current.remove();
+                mapInstanceRef.current = null;
+            }
+        };
+    }, [onRegionClick]); // Dependency array is important
+
+    return <div ref={mapRef} style={{ height: '100%', width: '100%' }} />;
 };
 
-export default React.memo(RegionMap);
+export default RegionMap;

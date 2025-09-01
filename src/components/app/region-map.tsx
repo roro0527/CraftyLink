@@ -9,9 +9,9 @@ import geoJsonData from '@/lib/korea-regions.geo.json';
 // Fix for broken leaflet icons
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
-  iconRetinaUrl: require('leaflet/dist/images/marker-icon-2x.png').default.src,
-  iconUrl: require('leaflet/dist/images/marker-icon.png').default.src,
-  shadowUrl: require('leaflet/dist/images/marker-shadow.png').default.src,
+  iconRetinaUrl: 'leaflet/dist/images/marker-icon-2x.png',
+  iconUrl: 'leaflet/dist/images/marker-icon.png',
+  shadowUrl: 'leaflet/dist/images/marker-shadow.png',
 });
 
 

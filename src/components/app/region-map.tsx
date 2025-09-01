@@ -4,7 +4,6 @@
 import 'leaflet/dist/leaflet.css';
 import * as React from 'react';
 import L, { type LatLngExpression, type Layer, type GeoJsonObject } from 'leaflet';
-import { MapContainer, GeoJSON, TileLayer } from 'react-leaflet';
 import geoJsonData from '@/lib/korea-regions.geo.json';
 
 // Fix for broken leaflet icons
@@ -62,75 +61,85 @@ interface RegionMapProps {
 }
 
 const RegionMap: React.FC<RegionMapProps> = ({ center, zoom, onRegionClick }) => {
-  const mapInstanceRef = React.useRef<L.Map | null>(null);
-  const geoJsonLayerRef = React.useRef<L.GeoJSON | null>(null);
-  const [selectedRegion, setSelectedRegion] = React.useState<Layer | null>(null);
-  
-  const onEachFeature = (feature: GeoJsonObject['features'][0], layer: Layer) => {
-    layer.bindTooltip(feature.properties.CTP_KOR_NM, {
-      permanent: true,
-      direction: 'center',
-      className: 'region-label',
-      offset: [0, 0],
-    });
+    const mapRef = React.useRef<HTMLDivElement>(null);
+    const mapInstanceRef = React.useRef<L.Map | null>(null);
+    const geoJsonLayerRef = React.useRef<L.GeoJSON | null>(null);
+    const [selectedRegion, setSelectedRegion] = React.useState<Layer | null>(null);
 
-    layer.on({
-        mouseover: (e) => {
-            const targetLayer = e.target;
-            if (targetLayer !== selectedRegion) {
-                targetLayer.setStyle(hoverStyle);
-            }
-        },
-        mouseout: (e) => {
-             if (selectedRegion !== e.target && geoJsonLayerRef.current) {
-                 geoJsonLayerRef.current.resetStyle(e.target);
-             }
-        },
-        click: (e) => {
-            if (selectedRegion && geoJsonLayerRef.current) {
-                geoJsonLayerRef.current.resetStyle(selectedRegion as Layer);
-            }
-            const targetLayer = e.target;
-            targetLayer.setStyle(clickStyle);
-            if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
-                targetLayer.bringToFront();
-            }
-            setSelectedRegion(targetLayer);
-            const { CTP_KOR_NM, CTPRVN_CD } = feature.properties;
-            onRegionClick(CTP_KOR_NM, `KR-${CTPRVN_CD}`);
-        },
-    });
-  }
+    React.useEffect(() => {
+        if (mapRef.current && !mapInstanceRef.current) {
+            const map = L.map(mapRef.current, {
+                center: center,
+                zoom: zoom,
+                zoomControl: true,
+                scrollWheelZoom: true,
+            });
+            mapInstanceRef.current = map;
 
-  const geoJsonStyle = (feature?: GeoJsonObject['features'][0]) => {
-      const regionName = feature?.properties.CTP_KOR_NM;
-      return {
-          ...defaultStyle,
-          fillColor: regionColors[regionName] || '#9e9e9e',
-      };
-  }
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
 
-  return (
-    <MapContainer
-      center={center}
-      zoom={zoom}
-      style={{ height: '100%', width: '100%' }}
-      whenCreated={(map) => { mapInstanceRef.current = map; }}
-      zoomControl={true}
-      scrollWheelZoom={true}
-    >
-      <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-      />
-      <GeoJSON 
-        ref={geoJsonLayerRef}
-        data={geoJsonData as GeoJsonObject} 
-        style={geoJsonStyle}
-        onEachFeature={onEachFeature}
-      />
-    </MapContainer>
-  );
+            const onEachFeature = (feature: GeoJsonObject['features'][0], layer: Layer) => {
+                layer.bindTooltip(feature.properties.CTP_KOR_NM, {
+                    permanent: true,
+                    direction: 'center',
+                    className: 'region-label',
+                    offset: [0, 0],
+                });
+
+                layer.on({
+                    mouseover: (e) => {
+                        const targetLayer = e.target;
+                        if (targetLayer !== selectedRegion) {
+                            targetLayer.setStyle(hoverStyle);
+                        }
+                    },
+                    mouseout: (e) => {
+                         if (selectedRegion !== e.target && geoJsonLayerRef.current) {
+                             geoJsonLayerRef.current.resetStyle(e.target);
+                         }
+                    },
+                    click: (e) => {
+                        if (selectedRegion && geoJsonLayerRef.current) {
+                            geoJsonLayerRef.current.resetStyle(selectedRegion as Layer);
+                        }
+                        const targetLayer = e.target;
+                        targetLayer.setStyle(clickStyle);
+                        if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
+                            targetLayer.bringToFront();
+                        }
+                        setSelectedRegion(targetLayer);
+                        const { CTP_KOR_NM, CTPRVN_CD } = feature.properties;
+                        onRegionClick(CTP_KOR_NM, `KR-${CTPRVN_CD}`);
+                    },
+                });
+            }
+
+            const geoJsonStyle = (feature?: GeoJsonObject['features'][0]) => {
+                const regionName = feature?.properties.CTP_KOR_NM;
+                return {
+                    ...defaultStyle,
+                    fillColor: regionColors[regionName] || '#9e9e9e',
+                };
+            }
+
+            geoJsonLayerRef.current = L.geoJSON(geoJsonData as GeoJsonObject, {
+                style: geoJsonStyle,
+                onEachFeature: onEachFeature
+            }).addTo(map);
+        }
+        
+        return () => {
+            if (mapInstanceRef.current) {
+                mapInstanceRef.current.remove();
+                mapInstanceRef.current = null;
+            }
+        };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [center, zoom, onRegionClick]);
+
+  return <div ref={mapRef} style={{ height: '100%', width: '100%' }} />;
 };
 
 export default React.memo(RegionMap);

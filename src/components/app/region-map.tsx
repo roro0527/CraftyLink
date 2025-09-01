@@ -2,12 +2,14 @@
 'use client';
 
 import * as React from 'react';
-import type { Layer, Feature as GeoJSONFeature } from 'leaflet';
-import L from 'leaflet';
+import type { LatLngExpression, Layer } from 'leaflet';
+import L, { type Feature as GeoJSONFeature } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import regionsData from '@/lib/korea-regions.geo.json';
 
 interface RegionMapProps {
+    center: LatLngExpression;
+    zoom: number;
     onRegionClick: (region: { name: string; code: string }) => void;
 }
 
@@ -18,36 +20,30 @@ interface RegionProperties {
 
 type RegionFeature = GeoJSONFeature<GeoJSON.Point, RegionProperties>;
 
-
-const RegionMap: React.FC<RegionMapProps> = ({ onRegionClick }) => {
+const RegionMap: React.FC<RegionMapProps> = ({ center, zoom, onRegionClick }) => {
     const mapRef = React.useRef<HTMLDivElement>(null);
-    // Use a ref to store the map instance. This prevents it from being recreated on re-renders.
-    const mapInstanceRef = React.useRef<L.Map | null>(null);
 
     React.useEffect(() => {
-        // Only initialize the map if the ref is attached to a div and the map is not already initialized.
-        if (mapRef.current && !mapInstanceRef.current) {
-            const map = L.map(mapRef.current, {
-                center: [36.5, 127.5],
-                zoom: 7,
+        let map: L.Map;
+        if (mapRef.current && !mapRef.current._leaflet_id) {
+            map = L.map(mapRef.current, {
+                center: center,
+                zoom: zoom,
                 scrollWheelZoom: true,
             });
-            mapInstanceRef.current = map;
 
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             }).addTo(map);
-
-            const style = (feature?: RegionFeature) => {
-                return {
-                    fillColor: '#3388ff',
-                    weight: 2,
-                    opacity: 1,
-                    color: 'white',
-                    dashArray: '3',
-                    fillOpacity: 0.5
-                };
-            };
+            
+            const style = () => ({
+                fillColor: '#3388ff',
+                weight: 2,
+                opacity: 1,
+                color: 'white',
+                dashArray: '3',
+                fillOpacity: 0.5
+            });
 
             const highlightFeature = (e: L.LeafletMouseEvent) => {
                 const layer = e.target;
@@ -90,14 +86,15 @@ const RegionMap: React.FC<RegionMapProps> = ({ onRegionClick }) => {
             geojsonLayer.addTo(map);
         }
 
-        // Cleanup function: remove the map instance when the component unmounts.
         return () => {
-            if (mapInstanceRef.current) {
-                mapInstanceRef.current.remove();
-                mapInstanceRef.current = null;
+            if (mapRef.current && mapRef.current._leaflet_id) {
+                const mapInstance = (mapRef.current as any)._leaflet_map;
+                if (mapInstance) {
+                    mapInstance.remove();
+                }
             }
         };
-    }, [onRegionClick]); // Dependency array is important
+    }, [center, zoom, onRegionClick]);
 
     return <div ref={mapRef} style={{ height: '100%', width: '100%' }} />;
 };

@@ -71,6 +71,8 @@ export default function RegionExplorePage() {
         <Card className="h-[calc(100%-48px)]">
           <CardContent className="p-0 h-full">
             <RegionMap
+                center={[36.5, 127.5]}
+                zoom={7}
                 onRegionClick={handleRegionClick}
             />
           </CardContent>

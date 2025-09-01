@@ -15,14 +15,19 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { getRegionalTrendsAction, getYoutubeVideosAction } from '../actions';
 import type { YoutubeVideo } from '@/lib/types';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import RegionMap from '@/components/app/region-map';
+
+// Dynamically import the RegionMap component to ensure it only runs on the client-side
+const RegionMap = dynamic(() => import('@/components/app/region-map'), {
+    ssr: false,
+    loading: () => <Skeleton className="w-full h-full" />
+});
 
 interface TrendWithVideos {
     keyword: string;
     videos: YoutubeVideo[];
 }
 
-function RegionExplorePage() {
+export default function RegionExplorePage() {
   const [selectedRegion, setSelectedRegion] = React.useState<{ name: string; code: string } | null>(null);
   const [regionalTrends, setRegionalTrends] = React.useState<TrendWithVideos[]>([]);
   const [isLoading, setIsLoading] = React.useState(false);
@@ -129,8 +134,3 @@ function RegionExplorePage() {
     </div>
   );
 }
-
-export default dynamic(() => Promise.resolve(RegionExplorePage), {
-    ssr: false,
-    loading: () => <div className="flex h-[calc(100vh-65px)] items-center justify-center"><Skeleton className="w-[95%] h-[95%]" /></div>
-});

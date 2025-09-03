@@ -45,6 +45,62 @@ const RegionMap: React.FC<RegionMapProps> = ({ center, zoom, onRegionSelect, sel
   useEffect(() => {
     if (!window.kakao || !window.kakao.maps) return;
 
+    const drawPolygons = () => {
+      const map = mapRef.current;
+      if (!map) return;
+      
+      // Clear existing polygons
+      polygonsRef.current.forEach(p => p.setMap(null));
+      polygonsRef.current = [];
+
+      geoJsonData.features.forEach((feature) => {
+        const regionName = feature.properties.nm;
+        const regionCode = feature.properties.code;
+        const coordinates = feature.geometry.coordinates;
+        const geometryType = feature.geometry.type;
+
+        const paths = coordinates.map((coordSet: any) => {
+            // For Polygon, coordSet is the ring. For MultiPolygon, it's a list of polygons.
+            const ring = geometryType === 'Polygon' ? coordSet : coordSet[0];
+            return ring.map((point: [number, number]) => new window.kakao.maps.LatLng(point[1], point[0]));
+        });
+
+        const polygonPaths = geometryType === 'Polygon' ? [paths] : paths;
+
+        polygonPaths.forEach((path: any) => {
+          const polygon = new window.kakao.maps.Polygon({
+              map: map,
+              path: path,
+              strokeWeight: 1.5,
+              strokeColor: '#fff',
+              strokeOpacity: 0.8,
+              fillColor: regionColors[regionName] || '#999',
+              fillOpacity: 0.6,
+          });
+
+          (polygon as any).regionName = regionName;
+          polygonsRef.current.push(polygon);
+
+          window.kakao.maps.event.addListener(polygon, 'click', () => {
+              onRegionSelect(regionName, regionCode);
+          });
+
+          window.kakao.maps.event.addListener(polygon, 'mouseover', () => {
+              if (regionName !== selectedRegionName) {
+                  polygon.setOptions({ fillOpacity: 0.8 });
+              }
+          });
+
+          window.kakao.maps.event.addListener(polygon, 'mouseout', () => {
+               if (regionName !== selectedRegionName) {
+                  polygon.setOptions({ fillOpacity: 0.6 });
+              }
+          });
+
+        });
+      });
+    };
+
     window.kakao.maps.load(() => {
       const mapOption = {
         center: new window.kakao.maps.LatLng(center[0], center[1]),
@@ -57,7 +113,7 @@ const RegionMap: React.FC<RegionMapProps> = ({ center, zoom, onRegionSelect, sel
         drawPolygons();
       }
     });
-  }, [center, zoom]);
+  }, [center, zoom, onRegionSelect]);
 
 
   useEffect(() => {
@@ -74,63 +130,6 @@ const RegionMap: React.FC<RegionMapProps> = ({ center, zoom, onRegionSelect, sel
     });
 
   }, [selectedRegionName]);
-
-
-  const drawPolygons = () => {
-    const map = mapRef.current;
-    if (!map) return;
-    
-    // Clear existing polygons
-    polygonsRef.current.forEach(p => p.setMap(null));
-    polygonsRef.current = [];
-
-    geoJsonData.features.forEach((feature) => {
-      const regionName = feature.properties.nm;
-      const regionCode = feature.properties.code;
-      const coordinates = feature.geometry.coordinates;
-      const geometryType = feature.geometry.type;
-
-      const paths = coordinates.map((coordSet: any) => {
-          // For Polygon, coordSet is the ring. For MultiPolygon, it's a list of polygons.
-          const ring = geometryType === 'Polygon' ? coordSet : coordSet[0];
-          return ring.map((point: [number, number]) => new window.kakao.maps.LatLng(point[1], point[0]));
-      });
-
-      const polygonPaths = geometryType === 'Polygon' ? [paths] : paths;
-
-      polygonPaths.forEach((path: any) => {
-        const polygon = new window.kakao.maps.Polygon({
-            map: map,
-            path: path,
-            strokeWeight: 1.5,
-            strokeColor: '#fff',
-            strokeOpacity: 0.8,
-            fillColor: regionColors[regionName] || '#999',
-            fillOpacity: 0.6,
-        });
-
-        (polygon as any).regionName = regionName;
-        polygonsRef.current.push(polygon);
-
-        window.kakao.maps.event.addListener(polygon, 'click', () => {
-            onRegionSelect(regionName, regionCode);
-        });
-
-        window.kakao.maps.event.addListener(polygon, 'mouseover', () => {
-            if (regionName !== selectedRegionName) {
-                polygon.setOptions({ fillOpacity: 0.8 });
-            }
-        });
-
-        window.kakao.maps.event.addListener(polygon, 'mouseout', () => {
-             if (regionName !== selectedRegionName) {
-                polygon.setOptions({ fillOpacity: 0.6 });
-            }
-        });
-
-      });
-    });
-  };
 
 
   return <div ref={mapContainerRef} style={{ height: '100%', width: '100%', borderRadius: 'inherit' }} />;

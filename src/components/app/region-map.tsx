@@ -44,21 +44,22 @@ const RegionMap: React.FC<RegionMapProps> = ({ center, zoom, onRegionSelect, sel
 
   useEffect(() => {
     if (!window.kakao || !window.kakao.maps) {
-      console.error("Kakao maps script is not loaded yet.");
+      // 스크립트가 아직 로드되지 않았으면 아무것도 하지 않음
       return;
     }
     
     window.kakao.maps.load(() => {
       if (!mapContainerRef.current) return;
       
+      // 지도가 이미 생성되었으면 다시 생성하지 않음
       if (mapRef.current) {
-        // Map is already initialized, no need to re-initialize.
         return;
       }
 
       const mapOption = {
         center: new window.kakao.maps.LatLng(center[0], center[1]),
         level: zoom,
+        disableDoubleClickZoom: true,
       };
 
       const map = new window.kakao.maps.Map(mapContainerRef.current, mapOption);
@@ -113,13 +114,12 @@ const RegionMap: React.FC<RegionMapProps> = ({ center, zoom, onRegionSelect, sel
       polygonsRef.current = drawnPolygons;
     });
 
-  // This empty dependency array ensures this effect runs only once on mount.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
 
   useEffect(() => {
-    if (!mapRef.current || polygonsRef.current.length === 0) return;
+    if (polygonsRef.current.length === 0) return;
     
     polygonsRef.current.forEach(p => {
         const isSelected = p.regionName === selectedRegionName;

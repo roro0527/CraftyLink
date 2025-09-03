@@ -1,19 +1,14 @@
 
 'use client';
 
-import 'leaflet/dist/leaflet.css';
-import * as L from 'leaflet';
 import React, { useEffect, useRef } from 'react';
 import geoJsonData from '@/lib/korea-regions.geo.json';
 
-// Leaflet's default icon paths might break in a Next.js environment.
-// This code manually sets the icon paths to fix them.
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-});
+declare global {
+  interface Window {
+    kakao: any;
+  }
+}
 
 interface RegionMapProps {
   center: [number, number];
@@ -43,74 +38,99 @@ const regionColors: { [key: string]: string } = {
 };
 
 const RegionMap: React.FC<RegionMapProps> = ({ center, zoom, onRegionSelect, selectedRegionName }) => {
-  const mapRef = useRef<L.Map | null>(null);
-  const geoJsonLayerRef = useRef<L.GeoJSON | null>(null);
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
+  const mapRef = useRef<any>(null);
+  const polygonsRef = useRef<any[]>([]);
 
   useEffect(() => {
-    if (mapContainerRef.current && !mapRef.current) {
-      const map = L.map(mapContainerRef.current, {
-        center: center,
-        zoom: zoom,
-        zoomControl: true,
-        scrollWheelZoom: true,
-      });
+    if (!window.kakao || !window.kakao.maps) return;
 
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-      }).addTo(map);
-
-      mapRef.current = map;
-    }
+    window.kakao.maps.load(() => {
+      const mapOption = {
+        center: new window.kakao.maps.LatLng(center[0], center[1]),
+        level: zoom,
+      };
+      
+      if (mapContainerRef.current && !mapRef.current) {
+        const map = new window.kakao.maps.Map(mapContainerRef.current, mapOption);
+        mapRef.current = map;
+        drawPolygons();
+      }
+    });
   }, [center, zoom]);
 
 
   useEffect(() => {
+    // This effect handles highlighting the selected region
+    if (!mapRef.current) return;
+    
+    polygonsRef.current.forEach(p => {
+        const isSelected = p.regionName === selectedRegionName;
+        p.setOptions({
+            fillOpacity: isSelected ? 0.8 : 0.6,
+            strokeWeight: isSelected ? 3 : 1.5,
+            strokeColor: isSelected ? '#333' : '#fff'
+        });
+    });
+
+  }, [selectedRegionName]);
+
+
+  const drawPolygons = () => {
     const map = mapRef.current;
     if (!map) return;
+    
+    // Clear existing polygons
+    polygonsRef.current.forEach(p => p.setMap(null));
+    polygonsRef.current = [];
 
-    if (geoJsonLayerRef.current) {
-        map.removeLayer(geoJsonLayerRef.current);
-    }
+    geoJsonData.features.forEach((feature) => {
+      const regionName = feature.properties.nm;
+      const regionCode = feature.properties.code;
+      const coordinates = feature.geometry.coordinates;
+      const geometryType = feature.geometry.type;
 
-    const geoJsonLayer = L.geoJSON(geoJsonData as any, {
-      style: (feature) => {
-        const regionName = feature?.properties.nm;
-        const isSelected = regionName === selectedRegionName;
-        return {
-          fillColor: regionColors[regionName] || '#999',
-          weight: isSelected ? 3 : 1.5,
-          opacity: 1,
-          color: isSelected ? '#333' : 'white',
-          fillOpacity: isSelected ? 0.8 : 0.6,
-        };
-      },
-      onEachFeature: (feature, layer) => {
-        const regionName = feature.properties.nm;
-        const regionCode = feature.properties.code;
-        
-        layer.on({
-          click: () => {
-             if (regionName && regionCode) {
-               onRegionSelect(regionName, regionCode);
-             }
-          },
-          mouseover: () => {
-             layer.setStyle({
-                weight: 3,
-                fillOpacity: 0.8
-             });
-          },
-          mouseout: () => {
-            geoJsonLayer.resetStyle(layer);
-          }
+      const paths = coordinates.map((coordSet: any) => {
+          // For Polygon, coordSet is the ring. For MultiPolygon, it's a list of polygons.
+          const ring = geometryType === 'Polygon' ? coordSet : coordSet[0];
+          return ring.map((point: [number, number]) => new window.kakao.maps.LatLng(point[1], point[0]));
+      });
+
+      const polygonPaths = geometryType === 'Polygon' ? [paths] : paths;
+
+      polygonPaths.forEach((path: any) => {
+        const polygon = new window.kakao.maps.Polygon({
+            map: map,
+            path: path,
+            strokeWeight: 1.5,
+            strokeColor: '#fff',
+            strokeOpacity: 0.8,
+            fillColor: regionColors[regionName] || '#999',
+            fillOpacity: 0.6,
         });
-      },
-    }).addTo(map);
 
-    geoJsonLayerRef.current = geoJsonLayer;
+        (polygon as any).regionName = regionName;
+        polygonsRef.current.push(polygon);
 
-  }, [onRegionSelect, selectedRegionName]);
+        window.kakao.maps.event.addListener(polygon, 'click', () => {
+            onRegionSelect(regionName, regionCode);
+        });
+
+        window.kakao.maps.event.addListener(polygon, 'mouseover', () => {
+            if (regionName !== selectedRegionName) {
+                polygon.setOptions({ fillOpacity: 0.8 });
+            }
+        });
+
+        window.kakao.maps.event.addListener(polygon, 'mouseout', () => {
+             if (regionName !== selectedRegionName) {
+                polygon.setOptions({ fillOpacity: 0.6 });
+            }
+        });
+
+      });
+    });
+  };
 
 
   return <div ref={mapContainerRef} style={{ height: '100%', width: '100%', borderRadius: 'inherit' }} />;

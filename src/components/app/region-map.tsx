@@ -71,13 +71,6 @@ const RegionMap: React.FC<RegionMapProps> = ({ center, zoom, onRegionClick }) =>
             const map = L.map(mapRef.current, {
                 center: center,
                 zoom: zoom,
-                zoomControl: false,
-                dragging: false,
-                scrollWheelZoom: false,
-                doubleClickZoom: false,
-                touchZoom: false,
-                boxZoom: false,
-                keyboard: false,
             });
             mapInstanceRef.current = map;
 

@@ -25,7 +25,7 @@ export default function RootLayout({
       <body className="font-body antialiased">
         <Script
             strategy="beforeInteractive"
-            src={`//dapi.kakao.com/v2/maps/sdk.js?appkey=${process.env.NEXT_PUBLIC_KAKAO_MAP_API_KEY}&autoload=false&libraries=services,clusterer,drawing`}
+            src={`//dapi.kakao.com/v2/maps/sdk.js?appkey=${process.env.NEXT_PUBLIC_KAKAO_MAP_API_KEY}&autoload=false&libraries=services`}
         />
         <div className="min-h-screen bg-background text-foreground">
           <AppHeader />

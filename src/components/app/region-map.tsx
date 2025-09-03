@@ -43,24 +43,28 @@ const RegionMap: React.FC<RegionMapProps> = ({ center, zoom, onRegionSelect, sel
   const polygonsRef = useRef<any[]>([]);
 
   useEffect(() => {
-    if (!window.kakao || !window.kakao.maps || !mapContainerRef.current) {
+    if (!window.kakao || !window.kakao.maps) {
+      console.error("Kakao maps script is not loaded yet.");
       return;
     }
-
-    if (mapRef.current) {
-        // Map is already initialized
+    
+    window.kakao.maps.load(() => {
+      if (!mapContainerRef.current) return;
+      
+      if (mapRef.current) {
+        // Map is already initialized, no need to re-initialize.
         return;
-    }
+      }
 
-    const mapOption = {
+      const mapOption = {
         center: new window.kakao.maps.LatLng(center[0], center[1]),
         level: zoom,
-    };
-    const map = new window.kakao.maps.Map(mapContainerRef.current, mapOption);
-    mapRef.current = map;
-    
-    // Draw polygons after map initialization
-    const drawnPolygons = geoJsonData.features.flatMap((feature) => {
+      };
+
+      const map = new window.kakao.maps.Map(mapContainerRef.current, mapOption);
+      mapRef.current = map;
+
+      const drawnPolygons = geoJsonData.features.flatMap((feature) => {
         const regionName = feature.properties.nm;
         const regionCode = feature.properties.code;
         const coordinates = feature.geometry.coordinates;
@@ -68,47 +72,50 @@ const RegionMap: React.FC<RegionMapProps> = ({ center, zoom, onRegionSelect, sel
 
         let paths: any[] = [];
         if (geometryType === 'Polygon') {
-            paths = [coordinates[0].map((p: [number, number]) => new window.kakao.maps.LatLng(p[1], p[0]))];
+          paths = [coordinates[0].map((p: [number, number]) => new window.kakao.maps.LatLng(p[1], p[0]))];
         } else if (geometryType === 'MultiPolygon') {
-            paths = coordinates.map((poly: any[][]) => 
-                poly[0].map((p: [number, number]) => new window.kakao.maps.LatLng(p[1], p[0]))
-            );
+          paths = coordinates.map((poly: any[][]) =>
+            poly[0].map((p: [number, number]) => new window.kakao.maps.LatLng(p[1], p[0]))
+          );
         }
-        
+
         return paths.map(path => {
           const polygon = new window.kakao.maps.Polygon({
-              map: map,
-              path: path,
-              strokeWeight: 1.5,
-              strokeColor: '#fff',
-              strokeOpacity: 0.8,
-              fillColor: regionColors[regionName] || '#999',
-              fillOpacity: 0.6,
+            map: map,
+            path: path,
+            strokeWeight: 1.5,
+            strokeColor: '#fff',
+            strokeOpacity: 0.8,
+            fillColor: regionColors[regionName] || '#999',
+            fillOpacity: 0.6,
           });
 
           (polygon as any).regionName = regionName;
-          
+
           window.kakao.maps.event.addListener(polygon, 'click', () => {
-              onRegionSelect(regionName, regionCode);
+            onRegionSelect(regionName, regionCode);
           });
 
           window.kakao.maps.event.addListener(polygon, 'mouseover', () => {
-              if (regionName !== selectedRegionName) {
-                  polygon.setOptions({ fillOpacity: 0.8 });
-              }
+            if (regionName !== selectedRegionName) {
+              polygon.setOptions({ fillOpacity: 0.8 });
+            }
           });
 
           window.kakao.maps.event.addListener(polygon, 'mouseout', () => {
-               if (regionName !== selectedRegionName) {
-                  polygon.setOptions({ fillOpacity: 0.6 });
-              }
+            if (regionName !== selectedRegionName) {
+              polygon.setOptions({ fillOpacity: 0.6 });
+            }
           });
           return polygon;
         });
       });
       polygonsRef.current = drawnPolygons;
+    });
 
-  }, [center, zoom, onRegionSelect, selectedRegionName]);
+  // This empty dependency array ensures this effect runs only once on mount.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
 
   useEffect(() => {

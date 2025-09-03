@@ -28,7 +28,7 @@ export default function RootLayout({
         {KAKAO_MAP_API_KEY && (
           <Script
             strategy="beforeInteractive"
-            src={`//dapi.kakao.com/v2/maps/sdk.js?appkey=${KAKAO_MAP_API_KEY}&libraries=services`}
+            src={`//dapi.kakao.com/v2/maps/sdk.js?appkey=${KAKAO_MAP_API_KEY}&libraries=services&autoload=false`}
           />
         )}
         <div className="min-h-screen bg-background text-foreground">

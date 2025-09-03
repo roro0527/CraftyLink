@@ -43,31 +43,31 @@ const RegionMap: React.FC<RegionMapProps> = ({ center, zoom, onRegionSelect, sel
   const polygonsRef = useRef<any[]>([]);
 
   useEffect(() => {
-    if (!window.kakao || !window.kakao.maps) return;
+    if (!window.kakao || !window.kakao.maps) {
+      console.error("Kakao maps script not loaded.");
+      return;
+    }
 
     const drawPolygons = () => {
       const map = mapRef.current;
-      if (!map) return;
+      if (!map || polygonsRef.current.length > 0) return; // 이미 그려졌으면 다시 그리지 않음
       
-      // Clear existing polygons
-      polygonsRef.current.forEach(p => p.setMap(null));
-      polygonsRef.current = [];
-
       geoJsonData.features.forEach((feature) => {
         const regionName = feature.properties.nm;
         const regionCode = feature.properties.code;
         const coordinates = feature.geometry.coordinates;
         const geometryType = feature.geometry.type;
 
-        const paths = coordinates.map((coordSet: any) => {
-            // For Polygon, coordSet is the ring. For MultiPolygon, it's a list of polygons.
-            const ring = geometryType === 'Polygon' ? coordSet : coordSet[0];
-            return ring.map((point: [number, number]) => new window.kakao.maps.LatLng(point[1], point[0]));
-        });
-
-        const polygonPaths = geometryType === 'Polygon' ? [paths] : paths;
-
-        polygonPaths.forEach((path: any) => {
+        let paths: any[] = [];
+        if (geometryType === 'Polygon') {
+            paths = [coordinates[0].map((p: [number, number]) => new window.kakao.maps.LatLng(p[1], p[0]))];
+        } else if (geometryType === 'MultiPolygon') {
+            paths = coordinates.map((poly: any[][]) => {
+                return poly[0].map((p: [number, number]) => new window.kakao.maps.LatLng(p[1], p[0]));
+            });
+        }
+        
+        paths.forEach(path => {
           const polygon = new window.kakao.maps.Polygon({
               map: map,
               path: path,
@@ -96,7 +96,6 @@ const RegionMap: React.FC<RegionMapProps> = ({ center, zoom, onRegionSelect, sel
                   polygon.setOptions({ fillOpacity: 0.6 });
               }
           });
-
         });
       });
     };
@@ -108,17 +107,16 @@ const RegionMap: React.FC<RegionMapProps> = ({ center, zoom, onRegionSelect, sel
       };
       
       if (mapContainerRef.current && !mapRef.current) {
-        const map = new window.kakao.maps.Map(mapContainerRef.current, mapOption);
-        mapRef.current = map;
-        drawPolygons();
+        mapRef.current = new window.kakao.maps.Map(mapContainerRef.current, mapOption);
       }
+      drawPolygons();
     });
-  }, [center, zoom, onRegionSelect]);
+  }, [center, zoom, onRegionSelect, selectedRegionName]); // selectedRegionName을 의존성에 추가하여 하이라이트가 즉시 반영되도록 함
 
 
   useEffect(() => {
     // This effect handles highlighting the selected region
-    if (!mapRef.current) return;
+    if (!mapRef.current || polygonsRef.current.length === 0) return;
     
     polygonsRef.current.forEach(p => {
         const isSelected = p.regionName === selectedRegionName;

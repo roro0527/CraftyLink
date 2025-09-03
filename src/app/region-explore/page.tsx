@@ -96,11 +96,6 @@ export default function RegionExplorePage() {
                 {isLoading ? <LoaderCircle className="animate-spin" /> : <Search />}
               </Button>
             </div>
-            {selectedRegion && (
-              <p className="text-sm font-semibold">
-                선택된 지역: <span className="text-primary">{selectedRegion.name}</span>
-              </p>
-            )}
           </CardContent>
         </Card>
 
@@ -134,7 +129,6 @@ export default function RegionExplorePage() {
                {isLoading ? (
                 [...Array(3)].map((_, i) => (
                   <div key={i} className="flex gap-4">
-                    <Skeleton className="h-16 w-24 rounded-md" />
                     <div className="space-y-2 flex-1">
                       <Skeleton className="h-4 w-full" />
                       <Skeleton className="h-4 w-2/3" />

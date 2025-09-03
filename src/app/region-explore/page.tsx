@@ -33,7 +33,7 @@ export default function RegionExplorePage() {
   const [trendResult, setTrendResult] = React.useState<TrendResult | null>(null);
   const [error, setError] = React.useState<string | null>(null);
   const [initialCenter] = React.useState<[number, number]>([36.3, 127.8]);
-  const [initialZoom] = React.useState(6.25);
+  const [initialZoom] = React.useState(6.4);
 
   const handleRegionClick = React.useCallback(async (regionName: string, regionCode: string) => {
     setSelectedRegion(regionName);

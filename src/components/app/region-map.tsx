@@ -50,103 +50,100 @@ const RegionMap: React.FC<RegionMapProps> = ({ center, zoom, onRegionSelect, sel
     }
 
     const scriptId = 'kakao-maps-sdk';
-    let script = document.getElementById(scriptId) as HTMLScriptElement;
+    const existingScript = document.getElementById(scriptId);
 
-    if (!script) {
-      script = document.createElement('script');
+    const loadMap = () => {
+      window.kakao.maps.load(() => {
+        if (!mapContainerRef.current || mapRef.current) {
+          return;
+        }
+
+        const mapOption = {
+          center: new window.kakao.maps.LatLng(center[0], center[1]),
+          level: zoom,
+          disableDoubleClickZoom: true,
+        };
+
+        const map = new window.kakao.maps.Map(mapContainerRef.current, mapOption);
+        mapRef.current = map;
+
+        const drawnPolygons = geoJsonData.features.flatMap((feature) => {
+          const regionName = feature.properties.nm;
+          const regionCode = feature.properties.code;
+          const coordinates = feature.geometry.coordinates;
+          const geometryType = feature.geometry.type;
+
+          let paths: any[] = [];
+          if (geometryType === 'Polygon') {
+            paths = [coordinates[0].map((p: [number, number]) => new window.kakao.maps.LatLng(p[1], p[0]))];
+          } else if (geometryType === 'MultiPolygon') {
+            paths = coordinates.map((poly: any[][]) =>
+              poly[0].map((p: [number, number]) => new window.kakao.maps.LatLng(p[1], p[0]))
+            );
+          }
+
+          return paths.map(path => {
+            const polygon = new window.kakao.maps.Polygon({
+              map: map,
+              path: path,
+              strokeWeight: 1.5,
+              strokeColor: '#fff',
+              strokeOpacity: 0.8,
+              fillColor: regionColors[regionName] || '#999',
+              fillOpacity: 0.6,
+            });
+
+            (polygon as any).regionName = regionName;
+
+            window.kakao.maps.event.addListener(polygon, 'click', () => {
+              onRegionSelect(regionName, regionCode);
+            });
+
+            window.kakao.maps.event.addListener(polygon, 'mouseover', () => {
+              if (regionName !== selectedRegionName) {
+                polygon.setOptions({ fillOpacity: 0.8 });
+              }
+            });
+
+            window.kakao.maps.event.addListener(polygon, 'mouseout', () => {
+              if (regionName !== selectedRegionName) {
+                polygon.setOptions({ fillOpacity: 0.6 });
+              }
+            });
+            return polygon;
+          });
+        });
+        polygonsRef.current = drawnPolygons;
+      });
+    };
+
+    if (!existingScript) {
+      const script = document.createElement('script');
       script.id = scriptId;
       script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${KAKAO_MAP_API_KEY}&libraries=services&autoload=false`;
       script.async = true;
-      document.head.appendChild(script);
-    }
-    
-    const onLoadKakaoMap = () => {
-        if (!mapContainerRef.current) return;
-        
-        window.kakao.maps.load(() => {
-            if (mapRef.current) return;
-
-            const mapOption = {
-                center: new window.kakao.maps.LatLng(center[0], center[1]),
-                level: zoom,
-                disableDoubleClickZoom: true,
-            };
-
-            const map = new window.kakao.maps.Map(mapContainerRef.current, mapOption);
-            mapRef.current = map;
-
-            const drawnPolygons = geoJsonData.features.flatMap((feature) => {
-                const regionName = feature.properties.nm;
-                const regionCode = feature.properties.code;
-                const coordinates = feature.geometry.coordinates;
-                const geometryType = feature.geometry.type;
-
-                let paths: any[] = [];
-                if (geometryType === 'Polygon') {
-                    paths = [coordinates[0].map((p: [number, number]) => new window.kakao.maps.LatLng(p[1], p[0]))];
-                } else if (geometryType === 'MultiPolygon') {
-                    paths = coordinates.map((poly: any[][]) =>
-                    poly[0].map((p: [number, number]) => new window.kakao.maps.LatLng(p[1], p[0]))
-                    );
-                }
-
-                return paths.map(path => {
-                    const polygon = new window.kakao.maps.Polygon({
-                    map: map,
-                    path: path,
-                    strokeWeight: 1.5,
-                    strokeColor: '#fff',
-                    strokeOpacity: 0.8,
-                    fillColor: regionColors[regionName] || '#999',
-                    fillOpacity: 0.6,
-                    });
-
-                    (polygon as any).regionName = regionName;
-
-                    window.kakao.maps.event.addListener(polygon, 'click', () => {
-                    onRegionSelect(regionName, regionCode);
-                    });
-
-                    window.kakao.maps.event.addListener(polygon, 'mouseover', () => {
-                    if (regionName !== selectedRegionName) {
-                        polygon.setOptions({ fillOpacity: 0.8 });
-                    }
-                    });
-
-                    window.kakao.maps.event.addListener(polygon, 'mouseout', () => {
-                    if (regionName !== selectedRegionName) {
-                        polygon.setOptions({ fillOpacity: 0.6 });
-                    }
-                    });
-                    return polygon;
-                });
-            });
-            polygonsRef.current = drawnPolygons;
-        });
-    };
-
-    if (script.getAttribute('data-loaded')) {
-      onLoadKakaoMap();
-    } else {
       script.onload = () => {
-        script.setAttribute('data-loaded', 'true');
-        onLoadKakaoMap();
+        loadMap();
+      };
+      document.head.appendChild(script);
+    } else {
+      if (window.kakao && window.kakao.maps) {
+          loadMap();
       }
     }
   }, [center, zoom, onRegionSelect, selectedRegionName]);
 
   useEffect(() => {
     if (polygonsRef.current.length === 0 || !selectedRegionName) return;
-    
-    polygonsRef.current.forEach(p => {
-        const isSelected = p.regionName === selectedRegionName;
-        p.setOptions({
-            fillOpacity: isSelected ? 0.9 : 0.6,
-            strokeWeight: isSelected ? 3 : 1.5,
-            strokeColor: isSelected ? '#333' : '#fff'
-        });
-    });
 
+    polygonsRef.current.forEach(p => {
+      const isSelected = p.regionName === selectedRegionName;
+      p.setOptions({
+        fillOpacity: isSelected ? 0.9 : 0.6,
+        strokeWeight: isSelected ? 3 : 1.5,
+        strokeColor: isSelected ? '#333' : '#fff'
+      });
+    });
   }, [selectedRegionName]);
 
   return <div ref={mapContainerRef} style={{ height: '100%', width: '100%', borderRadius: 'inherit' }} />;

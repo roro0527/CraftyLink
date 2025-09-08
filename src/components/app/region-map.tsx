@@ -37,12 +37,12 @@ const RegionMap: React.FC<RegionMapProps> = ({ center, zoom }) => {
         const mapOption = {
           center: new window.kakao.maps.LatLng(center[0], center[1]),
           level: zoom,
+          mapTypeId: window.kakao.maps.MapTypeId.SKYVIEW, // 도로가 없는 위성 지도 타입으로 설정
         };
 
         const map = new window.kakao.maps.Map(mapContainerRef.current, mapOption);
         mapRef.current = map;
 
-        // Add a marker to the center
         const marker = new window.kakao.maps.Marker({
           position: map.getCenter(),
         });
@@ -64,7 +64,6 @@ const RegionMap: React.FC<RegionMapProps> = ({ center, zoom }) => {
         console.error("Failed to load Kakao Maps script.");
       };
     } else if (window.kakao && window.kakao.maps) {
-      // If script is already loaded, just load the map
       loadMap();
     }
   }, [center, zoom]);

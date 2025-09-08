@@ -20,13 +20,13 @@ const RegionMap = dynamic(() => import('@/components/app/region-map'), {
 });
 
 export default function RegionExplorePage() {
-  const [keyword, setKeyword] = React.useState('K-POP');
+  const [keyword, setKeyword] = React.useState('축구');
   const [selectedRegion, setSelectedRegion] = React.useState<{ name: string; code: string } | null>(null);
   const [isLoading, setIsLoading] = React.useState(false);
   const [trendData, setTrendData] = React.useState<RegionalTrendsOutput | null>(null);
   
   const initialCenter: [number, number] = [36.3, 127.8];
-  const initialZoom = 6.4;
+  const initialZoom = 7.5;
 
   const handleSearch = async (region: { name: string, code: string } | null = selectedRegion) => {
     if (!keyword.trim() || !region) {

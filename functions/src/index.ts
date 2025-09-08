@@ -43,7 +43,7 @@ const youtube = google.youtube({
   auth: functions.config().google.youtube_api_key,
 });
 
-const KAKAO_API_KEY = functions.config().kakao.key;
+const KAKAO_API_KEY = functions.config().kakao.app_key;
 const CACHE_TTL_MINUTES = parseInt(functions.config().cache?.ttl_minutes || "10", 10);
 
 /**

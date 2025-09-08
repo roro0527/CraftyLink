@@ -19,15 +19,7 @@ const RegionMap: React.FC<RegionMapProps> = ({ center, zoom }) => {
   const mapRef = useRef<any>(null);
 
   useEffect(() => {
-    const KAKAO_MAP_API_KEY = process.env.NEXT_PUBLIC_KAKAOMAP_JAVASCRIPT_KEY;
-
-    if (!KAKAO_MAP_API_KEY || KAKAO_MAP_API_KEY === "YOUR_KAKAO_JAVASCRIPT_KEY") {
-      console.error("Kakao map API key is not configured. Please set NEXT_PUBLIC_KAKAOMAP_JAVASCRIPT_KEY in your .env file.");
-      if (mapContainerRef.current) {
-        mapContainerRef.current.innerHTML = '<div style="text-align: center; padding-top: 20px; color: red;">카카오맵 API 키가 설정되지 않았습니다.</div>';
-      }
-      return;
-    }
+    const KAKAO_MAP_API_KEY = process.env.NEXT_PUBLIC_KAKAOMAP_APP_KEY;
 
     function initializeMap() {
       if (!mapContainerRef.current) {
@@ -49,6 +41,14 @@ const RegionMap: React.FC<RegionMapProps> = ({ center, zoom }) => {
       });
       marker.setMap(map);
     };
+    
+    if (!KAKAO_MAP_API_KEY || KAKAO_MAP_API_KEY === "YOUR_KAKAO_JAVASCRIPT_KEY") {
+      console.error("Kakao map API key is not configured. Please set NEXT_PUBLIC_KAKAOMAP_APP_KEY in your .env.local file.");
+      if (mapContainerRef.current) {
+        mapContainerRef.current.innerHTML = '<div style="text-align: center; padding-top: 20px; color: red;">카카오맵 API 키가 설정되지 않았습니다. (.env.local)</div>';
+      }
+      return;
+    }
 
     const scriptId = 'kakao-maps-sdk';
     if (document.getElementById(scriptId)) {

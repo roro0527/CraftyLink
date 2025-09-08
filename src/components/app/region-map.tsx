@@ -37,11 +37,14 @@ const RegionMap: React.FC<RegionMapProps> = ({ center, zoom }) => {
         const mapOption = {
           center: new window.kakao.maps.LatLng(center[0], center[1]),
           level: zoom,
-          mapTypeId: window.kakao.maps.MapTypeId.SKYVIEW, // 도로가 없는 위성 지도 타입으로 설정
+          mapTypeId: window.kakao.maps.MapTypeId.ROADMAP, // 기본 지도를 일반 지도로 설정
         };
 
         const map = new window.kakao.maps.Map(mapContainerRef.current, mapOption);
         mapRef.current = map;
+        
+        // 도로 정보가 없는 오버레이를 지도에 추가하여 도로를 가립니다.
+        map.addOverlayMapTypeId(window.kakao.maps.MapTypeId.OVERLAY);
 
         const marker = new window.kakao.maps.Marker({
           position: map.getCenter(),
@@ -64,6 +67,7 @@ const RegionMap: React.FC<RegionMapProps> = ({ center, zoom }) => {
         console.error("Failed to load Kakao Maps script.");
       };
     } else if (window.kakao && window.kakao.maps) {
+      // 스크립트가 이미 로드된 경우
       loadMap();
     }
   }, [center, zoom]);

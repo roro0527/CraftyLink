@@ -45,7 +45,7 @@ const RegionMap: React.FC<RegionMapProps> = ({ center, zoom, onRegionSelect, sel
   useEffect(() => {
     const KAKAO_MAP_API_KEY = process.env.NEXT_PUBLIC_KAKAO_MAP_API_KEY;
     if (!KAKAO_MAP_API_KEY) {
-      console.error("Kakao map API key is not configured.");
+      console.error("Kakao map API key is not configured in .env file (NEXT_PUBLIC_KAKAO_MAP_API_KEY).");
       return;
     }
     
@@ -56,7 +56,6 @@ const RegionMap: React.FC<RegionMapProps> = ({ center, zoom, onRegionSelect, sel
        window.kakao.maps.load(() => {
         if (!mapContainerRef.current) return;
 
-        // If map already exists, just resize it, otherwise create it.
         if (mapRef.current) {
             mapRef.current.relayout();
             mapRef.current.setCenter(new window.kakao.maps.LatLng(center[0], center[1]));
@@ -70,7 +69,6 @@ const RegionMap: React.FC<RegionMapProps> = ({ center, zoom, onRegionSelect, sel
             mapRef.current = map;
         }
 
-        // Draw polygons only if they haven't been drawn yet.
         if (polygonsRef.current.length === 0) {
             const drawnPolygons = geoJsonData.features.flatMap((feature) => {
               const regionName = feature.properties.nm;
@@ -117,7 +115,7 @@ const RegionMap: React.FC<RegionMapProps> = ({ center, zoom, onRegionSelect, sel
                 });
                 return polygon;
               });
-            });
+            }).flat();
             polygonsRef.current = drawnPolygons;
         }
       });
@@ -134,11 +132,10 @@ const RegionMap: React.FC<RegionMapProps> = ({ center, zoom, onRegionSelect, sel
             loadAndDrawMap();
         };
     } else if (window.kakao && window.kakao.maps) {
-        // If script is already loaded
         loadAndDrawMap();
     }
 
-  }, [center, zoom, onRegionSelect, selectedRegionName]); // Dependency array kept minimal
+  }, [center, zoom, onRegionSelect, selectedRegionName]);
 
   useEffect(() => {
     if (polygonsRef.current.length === 0 || !selectedRegionName) return;
@@ -153,7 +150,6 @@ const RegionMap: React.FC<RegionMapProps> = ({ center, zoom, onRegionSelect, sel
     });
   }, [selectedRegionName]);
 
-  // Effect to handle resizing
   useEffect(() => {
     const handleResize = () => {
         if (mapRef.current) {

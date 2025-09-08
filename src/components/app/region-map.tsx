@@ -19,40 +19,14 @@ const RegionMap: React.FC<RegionMapProps> = ({ center, zoom }) => {
   const mapRef = useRef<any>(null);
 
   useEffect(() => {
-    const KAKAO_MAP_API_KEY = process.env.NEXT_PUBLIC_KAKAO_MAP_API_KEY;
+    const KAKAO_MAP_API_KEY = process.env.NEXT_PUBLIC_KAKAOMAP_APP_KEY;
+
     if (!KAKAO_MAP_API_KEY) {
-      console.error("Kakao map API key is not configured. Please set NEXT_PUBLIC_KAKAO_MAP_API_KEY in your .env file.");
+      console.error("Kakao map API key is not configured. Please set NEXT_PUBLIC_KAKAOMAP_APP_KEY in your .env file.");
       return;
     }
 
-    const scriptId = 'kakao-maps-sdk';
-    if (document.getElementById(scriptId)) {
-      // 스크립트가 이미 로드되었다면 지도를 바로 생성
-      if (window.kakao && window.kakao.maps) {
-        window.kakao.maps.load(() => {
-          initializeMap();
-        });
-      }
-      return;
-    }
-    
-    const script = document.createElement('script');
-    script.id = scriptId;
-    script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${KAKAO_MAP_API_KEY}&autoload=false`;
-    script.async = true;
-    document.head.appendChild(script);
-
-    script.onload = () => {
-      window.kakao.maps.load(() => {
-        initializeMap();
-      });
-    };
-
-    script.onerror = () => {
-      console.error("Failed to load Kakao Maps script.");
-    };
-
-    const initializeMap = () => {
+    function initializeMap() {
       if (!mapContainerRef.current || mapRef.current) {
         return;
       }
@@ -72,6 +46,29 @@ const RegionMap: React.FC<RegionMapProps> = ({ center, zoom }) => {
         position: markerPosition
       });
       marker.setMap(map);
+    };
+
+    const scriptId = 'kakao-maps-sdk';
+    if (document.getElementById(scriptId)) {
+      // 스크립트가 이미 로드되었다면 지도를 바로 생성
+      if (window.kakao && window.kakao.maps) {
+        window.kakao.maps.load(initializeMap);
+      }
+      return;
+    }
+    
+    const script = document.createElement('script');
+    script.id = scriptId;
+    script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${KAKAO_MAP_API_KEY}&autoload=false`;
+    script.async = true;
+    document.head.appendChild(script);
+
+    script.onload = () => {
+      window.kakao.maps.load(initializeMap);
+    };
+
+    script.onerror = () => {
+      console.error("Failed to load Kakao Maps script.");
     };
 
   }, [center, zoom]);

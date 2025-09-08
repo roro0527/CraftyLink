@@ -34,12 +34,6 @@ const RegionMap: React.FC<RegionMapProps> = ({ center, zoom }) => {
 
       const map = new window.kakao.maps.Map(mapContainerRef.current, mapOption);
       mapRef.current = map;
-
-      const markerPosition = new window.kakao.maps.LatLng(center[0], center[1]);
-      const marker = new window.kakao.maps.Marker({
-        position: markerPosition
-      });
-      marker.setMap(map);
     };
     
     if (!KAKAO_MAP_API_KEY || KAKAO_MAP_API_KEY === "YOUR_KAKAO_JAVASCRIPT_KEY") {
@@ -53,7 +47,10 @@ const RegionMap: React.FC<RegionMapProps> = ({ center, zoom }) => {
     const scriptId = 'kakao-maps-sdk';
     if (document.getElementById(scriptId)) {
       if (window.kakao && window.kakao.maps) {
-        window.kakao.maps.load(initializeMap);
+        window.kakao.maps.load(() => {
+           if (mapRef.current) return;
+           initializeMap();
+        });
       }
       return;
     }

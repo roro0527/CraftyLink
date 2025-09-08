@@ -43,32 +43,32 @@ const RegionMap: React.FC<RegionMapProps> = ({ center, zoom, onRegionSelect, sel
   const polygonsRef = useRef<any[]>([]);
 
   useEffect(() => {
-    const KAKAO_MAP_API_KEY = process.env.NEXT_PUBLIC_KAKAO_MAP_API_KEY;
+    const KAKAO_MAP_API_KEY = process.env.NEXT_PUBLIC_KAKAOMAP_KEY || process.env.NEXT_PUBLIC_KAKAO_MAP_API_KEY;
     if (!KAKAO_MAP_API_KEY) {
-      console.error("Kakao map API key is not configured in .env file (NEXT_PUBLIC_KAKAO_MAP_API_KEY).");
+      console.error("Kakao map API key is not configured. Please set NEXT_PUBLIC_KAKAOMAP_KEY in your .env file.");
       return;
     }
-    
+
     const scriptId = 'kakao-maps-sdk';
     let script = document.getElementById(scriptId) as HTMLScriptElement;
 
-    const loadAndDrawMap = () => {
-       window.kakao.maps.load(() => {
+    const loadMap = () => {
+      window.kakao.maps.load(() => {
         if (!mapContainerRef.current) return;
 
+        const mapOption = {
+          center: new window.kakao.maps.LatLng(center[0], center[1]),
+          level: zoom,
+          disableDoubleClickZoom: true,
+        };
+
         if (mapRef.current) {
-            mapRef.current.relayout();
-            mapRef.current.setCenter(new window.kakao.maps.LatLng(center[0], center[1]));
+          mapRef.current.setCenter(new window.kakao.maps.LatLng(center[0], center[1]));
         } else {
-            const mapOption = {
-              center: new window.kakao.maps.LatLng(center[0], center[1]),
-              level: zoom,
-              disableDoubleClickZoom: true,
-            };
-            const map = new window.kakao.maps.Map(mapContainerRef.current, mapOption);
-            mapRef.current = map;
+          mapRef.current = new window.kakao.maps.Map(mapContainerRef.current, mapOption);
         }
 
+        // Draw polygons only if they haven't been drawn before
         if (polygonsRef.current.length === 0) {
             const drawnPolygons = geoJsonData.features.flatMap((feature) => {
               const regionName = feature.properties.nm;
@@ -109,7 +109,7 @@ const RegionMap: React.FC<RegionMapProps> = ({ center, zoom, onRegionSelect, sel
                 });
 
                 window.kakao.maps.event.addListener(polygon, 'mouseout', () => {
-                  if (regionName !== selectedRegionName) {
+                   if (regionName !== selectedRegionName) {
                     polygon.setOptions({ fillOpacity: 0.6 });
                   }
                 });
@@ -119,29 +119,31 @@ const RegionMap: React.FC<RegionMapProps> = ({ center, zoom, onRegionSelect, sel
             polygonsRef.current = drawnPolygons;
         }
       });
-    }
+    };
 
     if (!script) {
-        script = document.createElement('script');
-        script.id = scriptId;
-        script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${KAKAO_MAP_API_KEY}&libraries=services&autoload=false`;
-        script.async = true;
-        document.head.appendChild(script);
-        
-        script.onload = () => {
-            loadAndDrawMap();
-        };
-    } else if (window.kakao && window.kakao.maps) {
-        loadAndDrawMap();
-    }
+      script = document.createElement('script');
+      script.id = scriptId;
+      script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${KAKAO_MAP_API_KEY}&libraries=services&autoload=false`;
+      script.async = true;
+      document.head.appendChild(script);
 
+      script.onload = () => {
+        loadMap();
+      };
+    } else if (window.kakao && window.kakao.maps) {
+        // If script is already loaded (e.g., on fast refresh), just load the map
+        loadMap();
+    }
   }, [center, zoom, onRegionSelect, selectedRegionName]);
 
+
   useEffect(() => {
+    // This effect handles highlighting the selected region
     if (polygonsRef.current.length === 0 || !selectedRegionName) return;
 
     polygonsRef.current.forEach(p => {
-      const isSelected = p.regionName === selectedRegionName;
+      const isSelected = (p as any).regionName === selectedRegionName;
       p.setOptions({
         fillOpacity: isSelected ? 0.9 : 0.6,
         strokeWeight: isSelected ? 3 : 1.5,
@@ -151,6 +153,7 @@ const RegionMap: React.FC<RegionMapProps> = ({ center, zoom, onRegionSelect, sel
   }, [selectedRegionName]);
 
   useEffect(() => {
+    // This effect handles map resizing
     const handleResize = () => {
         if (mapRef.current) {
             mapRef.current.relayout();

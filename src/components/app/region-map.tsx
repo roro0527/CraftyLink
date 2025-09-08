@@ -42,9 +42,6 @@ const RegionMap: React.FC<RegionMapProps> = ({ center, zoom }) => {
 
         const map = new window.kakao.maps.Map(mapContainerRef.current, mapOption);
         mapRef.current = map;
-        
-        // 도로 정보가 없는 오버레이를 지도에 추가하여 도로를 가립니다.
-        map.addOverlayMapTypeId(window.kakao.maps.MapTypeId.OVERLAY);
 
         const marker = new window.kakao.maps.Marker({
           position: map.getCenter(),

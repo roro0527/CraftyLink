@@ -40,7 +40,7 @@ app.use("/getTopVideos", limiter);
 
 const youtube = google.youtube({
   version: "v3",
-  auth: functions.config().youtube.key,
+  auth: functions.config().google.youtube_api_key,
 });
 
 const KAKAO_API_KEY = functions.config().kakao.key;

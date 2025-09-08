@@ -19,15 +19,18 @@ const RegionMap: React.FC<RegionMapProps> = ({ center, zoom }) => {
   const mapRef = useRef<any>(null);
 
   useEffect(() => {
-    const KAKAO_MAP_API_KEY = process.env.NEXT_PUBLIC_KAKAOMAP_APP_KEY;
+    const KAKAO_MAP_API_KEY = process.env.NEXT_PUBLIC_KAKAOMAP_JAVASCRIPT_KEY;
 
-    if (!KAKAO_MAP_API_KEY) {
-      console.error("Kakao map API key is not configured. Please set NEXT_PUBLIC_KAKAOMAP_APP_KEY in your .env file.");
+    if (!KAKAO_MAP_API_KEY || KAKAO_MAP_API_KEY === "YOUR_KAKAO_JAVASCRIPT_KEY") {
+      console.error("Kakao map API key is not configured. Please set NEXT_PUBLIC_KAKAOMAP_JAVASCRIPT_KEY in your .env file.");
+      if (mapContainerRef.current) {
+        mapContainerRef.current.innerHTML = '<div style="text-align: center; padding-top: 20px; color: red;">카카오맵 API 키가 설정되지 않았습니다.</div>';
+      }
       return;
     }
 
     function initializeMap() {
-      if (!mapContainerRef.current || mapRef.current) {
+      if (!mapContainerRef.current) {
         return;
       }
       
@@ -40,7 +43,6 @@ const RegionMap: React.FC<RegionMapProps> = ({ center, zoom }) => {
       const map = new window.kakao.maps.Map(mapContainerRef.current, mapOption);
       mapRef.current = map;
 
-      // Add a simple marker
       const markerPosition = new window.kakao.maps.LatLng(center[0], center[1]);
       const marker = new window.kakao.maps.Marker({
         position: markerPosition
@@ -50,7 +52,6 @@ const RegionMap: React.FC<RegionMapProps> = ({ center, zoom }) => {
 
     const scriptId = 'kakao-maps-sdk';
     if (document.getElementById(scriptId)) {
-      // 스크립트가 이미 로드되었다면 지도를 바로 생성
       if (window.kakao && window.kakao.maps) {
         window.kakao.maps.load(initializeMap);
       }
@@ -69,13 +70,14 @@ const RegionMap: React.FC<RegionMapProps> = ({ center, zoom }) => {
 
     script.onerror = () => {
       console.error("Failed to load Kakao Maps script.");
+       if (mapContainerRef.current) {
+        mapContainerRef.current.innerHTML = '<div style="text-align: center; padding-top: 20px; color: red;">카카오맵 스크립트를 불러오는데 실패했습니다.</div>';
+      }
     };
 
   }, [center, zoom]);
 
-
   useEffect(() => {
-    // Handle resize to prevent map layout breaking
     const handleResize = () => {
         if (mapRef.current) {
             mapRef.current.relayout();

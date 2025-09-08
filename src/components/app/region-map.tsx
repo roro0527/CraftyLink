@@ -48,90 +48,97 @@ const RegionMap: React.FC<RegionMapProps> = ({ center, zoom, onRegionSelect, sel
       console.error("Kakao map API key is not configured.");
       return;
     }
-
+    
     const scriptId = 'kakao-maps-sdk';
-    const existingScript = document.getElementById(scriptId);
+    let script = document.getElementById(scriptId) as HTMLScriptElement;
 
-    const loadMap = () => {
-      window.kakao.maps.load(() => {
-        if (!mapContainerRef.current || mapRef.current) {
-          return;
+    const loadAndDrawMap = () => {
+       window.kakao.maps.load(() => {
+        if (!mapContainerRef.current) return;
+
+        // If map already exists, just resize it, otherwise create it.
+        if (mapRef.current) {
+            mapRef.current.relayout();
+            mapRef.current.setCenter(new window.kakao.maps.LatLng(center[0], center[1]));
+        } else {
+            const mapOption = {
+              center: new window.kakao.maps.LatLng(center[0], center[1]),
+              level: zoom,
+              disableDoubleClickZoom: true,
+            };
+            const map = new window.kakao.maps.Map(mapContainerRef.current, mapOption);
+            mapRef.current = map;
         }
 
-        const mapOption = {
-          center: new window.kakao.maps.LatLng(center[0], center[1]),
-          level: zoom,
-          disableDoubleClickZoom: true,
-        };
+        // Draw polygons only if they haven't been drawn yet.
+        if (polygonsRef.current.length === 0) {
+            const drawnPolygons = geoJsonData.features.flatMap((feature) => {
+              const regionName = feature.properties.nm;
+              const regionCode = feature.properties.code;
+              const coordinates = feature.geometry.coordinates;
+              const geometryType = feature.geometry.type;
 
-        const map = new window.kakao.maps.Map(mapContainerRef.current, mapOption);
-        mapRef.current = map;
-
-        const drawnPolygons = geoJsonData.features.flatMap((feature) => {
-          const regionName = feature.properties.nm;
-          const regionCode = feature.properties.code;
-          const coordinates = feature.geometry.coordinates;
-          const geometryType = feature.geometry.type;
-
-          let paths: any[] = [];
-          if (geometryType === 'Polygon') {
-            paths = [coordinates[0].map((p: [number, number]) => new window.kakao.maps.LatLng(p[1], p[0]))];
-          } else if (geometryType === 'MultiPolygon') {
-            paths = coordinates.map((poly: any[][]) =>
-              poly[0].map((p: [number, number]) => new window.kakao.maps.LatLng(p[1], p[0]))
-            );
-          }
-
-          return paths.map(path => {
-            const polygon = new window.kakao.maps.Polygon({
-              map: map,
-              path: path,
-              strokeWeight: 1.5,
-              strokeColor: '#fff',
-              strokeOpacity: 0.8,
-              fillColor: regionColors[regionName] || '#999',
-              fillOpacity: 0.6,
-            });
-
-            (polygon as any).regionName = regionName;
-
-            window.kakao.maps.event.addListener(polygon, 'click', () => {
-              onRegionSelect(regionName, regionCode);
-            });
-
-            window.kakao.maps.event.addListener(polygon, 'mouseover', () => {
-              if (regionName !== selectedRegionName) {
-                polygon.setOptions({ fillOpacity: 0.8 });
+              let paths: any[] = [];
+              if (geometryType === 'Polygon') {
+                paths = [coordinates[0].map((p: [number, number]) => new window.kakao.maps.LatLng(p[1], p[0]))];
+              } else if (geometryType === 'MultiPolygon') {
+                paths = coordinates.map((poly: any[][]) =>
+                  poly[0].map((p: [number, number]) => new window.kakao.maps.LatLng(p[1], p[0]))
+                );
               }
-            });
 
-            window.kakao.maps.event.addListener(polygon, 'mouseout', () => {
-              if (regionName !== selectedRegionName) {
-                polygon.setOptions({ fillOpacity: 0.6 });
-              }
+              return paths.map(path => {
+                const polygon = new window.kakao.maps.Polygon({
+                  map: mapRef.current,
+                  path: path,
+                  strokeWeight: 1.5,
+                  strokeColor: '#fff',
+                  strokeOpacity: 0.8,
+                  fillColor: regionColors[regionName] || '#999',
+                  fillOpacity: 0.6,
+                });
+
+                (polygon as any).regionName = regionName;
+
+                window.kakao.maps.event.addListener(polygon, 'click', () => {
+                  onRegionSelect(regionName, regionCode);
+                });
+
+                window.kakao.maps.event.addListener(polygon, 'mouseover', () => {
+                  if (regionName !== selectedRegionName) {
+                    polygon.setOptions({ fillOpacity: 0.8 });
+                  }
+                });
+
+                window.kakao.maps.event.addListener(polygon, 'mouseout', () => {
+                  if (regionName !== selectedRegionName) {
+                    polygon.setOptions({ fillOpacity: 0.6 });
+                  }
+                });
+                return polygon;
+              });
             });
-            return polygon;
-          });
-        });
-        polygonsRef.current = drawnPolygons;
+            polygonsRef.current = drawnPolygons;
+        }
       });
-    };
-
-    if (!existingScript) {
-      const script = document.createElement('script');
-      script.id = scriptId;
-      script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${KAKAO_MAP_API_KEY}&libraries=services&autoload=false`;
-      script.async = true;
-      script.onload = () => {
-        loadMap();
-      };
-      document.head.appendChild(script);
-    } else {
-      if (window.kakao && window.kakao.maps) {
-          loadMap();
-      }
     }
-  }, [center, zoom, onRegionSelect, selectedRegionName]);
+
+    if (!script) {
+        script = document.createElement('script');
+        script.id = scriptId;
+        script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${KAKAO_MAP_API_KEY}&libraries=services&autoload=false`;
+        script.async = true;
+        document.head.appendChild(script);
+        
+        script.onload = () => {
+            loadAndDrawMap();
+        };
+    } else if (window.kakao && window.kakao.maps) {
+        // If script is already loaded
+        loadAndDrawMap();
+    }
+
+  }, [center, zoom, onRegionSelect, selectedRegionName]); // Dependency array kept minimal
 
   useEffect(() => {
     if (polygonsRef.current.length === 0 || !selectedRegionName) return;
@@ -145,6 +152,17 @@ const RegionMap: React.FC<RegionMapProps> = ({ center, zoom, onRegionSelect, sel
       });
     });
   }, [selectedRegionName]);
+
+  // Effect to handle resizing
+  useEffect(() => {
+    const handleResize = () => {
+        if (mapRef.current) {
+            mapRef.current.relayout();
+        }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   return <div ref={mapContainerRef} style={{ height: '100%', width: '100%', borderRadius: 'inherit' }} />;
 };

@@ -29,7 +29,7 @@ app.use(cors({ origin: true }));
 // Basic rate limiting to prevent abuse
 const limiter = rateLimit({
   windowMs: 60 * 1000, // 1 minute
-  max: 10, // Limit each IP to 10 requests per windowMs
+  max: 30, // Limit each IP to 30 requests per windowMs
   standardHeaders: true,
   legacyHeaders: false,
   handler: (req, res) => {
@@ -59,7 +59,7 @@ const CACHE_TTL_MINUTES = parseInt(functions.config().cache?.ttl_minutes || "10"
 
 
 // Helper function to remove HTML tags
-const removeHtmlTags = (str: string) => str.replace(/<[^>]*>?/gm, '');
+const removeHtmlTags = (str: string) => str ? str.replace(/<[^>]*>?/gm, '') : '';
 
 
 /**
@@ -211,6 +211,7 @@ app.get("/getTopVideos", async (req, res) => {
 
 /**
  * Fetches top news articles from Naver Search API.
+ * Caches results in Firestore.
  * @param {string} query - The search query.
  * @returns {Promise<any[]>} A list of news articles.
  */
@@ -222,7 +223,8 @@ app.get("/getNaverNews", async (req, res) => {
     }
 
     const queryString = query as string;
-    const cacheRef = firestore.collection("naverNews").doc(queryString);
+    const cacheKey = queryString.replace(/[^a-zA-Z0-9가-힣]/g, ""); // Sanitize key
+    const cacheRef = firestore.collection("naverNews").doc(cacheKey);
     
     try {
         const cacheDoc = await cacheRef.get();
@@ -247,10 +249,16 @@ app.get("/getNaverNews", async (req, res) => {
             },
         });
 
+        // Handle cases where Naver API returns a success status but with an error message
+        if (response.data && response.data.errorMessage) {
+            functions.logger.error("Naver API returned an error:", response.data.errorMessage);
+            return res.status(500).send({ error: `Naver API Error: ${response.data.errorMessage}` });
+        }
+        
         if (response.data && response.data.items) {
           const articles = response.data.items.map((item: any) => ({
               title: removeHtmlTags(item.title),
-              url: item.link,
+              url: item.link.replace(/\\/g, ''), // Clean up URL
               summary: removeHtmlTags(item.description),
           }));
 
@@ -262,25 +270,24 @@ app.get("/getNaverNews", async (req, res) => {
           
           return res.status(200).json(articles);
         } else {
-           // Handle cases where Naver API returns a success status but with an error message (e.g. invalid client id)
-           if (response.data && response.data.errorMessage) {
-               functions.logger.error("Naver API returned an error:", response.data.errorMessage);
-           } else {
-               functions.logger.error("Naver API call failed: Unexpected response format", response.data);
-           }
+           functions.logger.error("Naver API call failed: Unexpected response format", response.data);
            return res.status(500).send({ error: "Failed to fetch news from Naver API due to an unexpected response." });
         }
 
     } catch (error: any) {
         if (axios.isAxiosError(error) && error.response) {
             // Log detailed error from Naver API
-            functions.logger.error("Naver API call failed:", error.response.status, error.response.data);
+            functions.logger.error(`Naver API call failed for query "${queryString}":`, {
+                status: error.response.status,
+                data: error.response.data,
+            });
+             return res.status(500).send({ error: "Failed to fetch news from Naver API.", details: error.response.data });
         } else {
-            functions.logger.error("An unexpected error occurred in getNaverNews:", error);
+            functions.logger.error(`An unexpected error occurred in getNaverNews for query "${queryString}":`, error);
         }
-        return res.status(500).send({ error: "Failed to fetch news from Naver API." });
+        return res.status(500).send({ error: "An unexpected error occurred while fetching news." });
     }
 });
 
 
-export const api = functions.region("asia-northeast3").https.onRequest(app);
+export const api = functions.runWith({ secrets: ["NAVER_CLIENT_ID", "NAVER_CLIENT_SECRET", "GOOGLE_YOUTUBE_API_KEY", "KAKAO_APP_KEY"]}).region("asia-northeast3").https.onRequest(app);

@@ -2,13 +2,14 @@
 'use server';
 
 import type { SuperParam } from '@/lib/types';
-import {nanoid} from 'nanoid';
 import { getKeywordTrends, type KeywordTrendsInput, type KeywordTrendsData } from '@/ai/flows/keyword-trends-flow';
 import { getRelatedKeywords, type RelatedKeywordsInput, type RelatedKeywordsData } from '@/ai/flows/related-keywords-flow';
 import { getYoutubeVideos, type YoutubeVideosInput, type YoutubeVideosData } from '@/ai/flows/youtube-videos-flow';
-import { getNaverNews, type NaverNewsInput, type RelatedNewsData } from '@/ai/flows/naver-news-flow';
 import { getRegionalTrends, type RegionalTrendsInput, type RegionalTrendsOutput } from '@/ai/flows/regional-trends-flow';
 import { getKeywordRegionRank, type KeywordRegionRankInput, type KeywordRegionRankOutput } from '@/ai/flows/keyword-region-rank-flow';
+import { z } from 'zod';
+import axios from 'axios';
+import { headers } from 'next/headers';
 
 
 export async function suggestSuperParametersAction(
@@ -60,15 +61,53 @@ export async function getYoutubeVideosAction(input: YoutubeVideosInput): Promise
     }
 }
 
+const NaverNewsInputSchema = z.object({
+  keyword: z.string().describe('The keyword to find news articles for.'),
+});
+export type NaverNewsInput = z.infer<typeof NaverNewsInputSchema>;
+
+const NewsArticleSchema = z.object({
+  title: z.string().describe('The title of the news article.'),
+  summary: z.string().describe('A brief summary of the news article.'),
+  url: z.string().url().describe('The URL of the news article.'),
+});
+
+const RelatedNewsDataSchema = z.array(NewsArticleSchema).describe('A list of related news articles.');
+export type RelatedNewsData = z.infer<typeof RelatedNewsDataSchema>;
+
 export async function getNaverNewsAction(input: NaverNewsInput): Promise<RelatedNewsData> {
+    const functionUrl = '/api/getNaverNews';
+  
     try {
-        const news = await getNaverNews(input);
-        return news;
-    } catch (error) {
-        console.error('Error fetching naver news:', error);
+      const host = headers().get('host');
+      const protocol = host?.startsWith('localhost') ? 'http' : 'https';
+      const baseURL = `${protocol}://${host}`;
+
+      const response = await axios.get(functionUrl, {
+        baseURL,
+        params: {
+          query: input.keyword,
+        },
+      });
+
+      // Validate the response data with Zod
+      const validationResult = RelatedNewsDataSchema.safeParse(response.data);
+      if (!validationResult.success) {
+        console.error('Naver news data validation failed:', validationResult.error);
         return [];
+      }
+
+      return validationResult.data;
+    } catch (error: any) {
+      if (axios.isAxiosError(error)) {
+          console.error('Error fetching Naver news from Cloud Function:', error.response?.data || error.message);
+      } else {
+          console.error('An unexpected error occurred in getNaverNews:', error);
+      }
+      return [];
     }
 }
+
 
 export async function getRegionalTrendsAction(input: RegionalTrendsInput): Promise<RegionalTrendsOutput> {
     try {

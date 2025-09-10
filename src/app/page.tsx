@@ -8,9 +8,8 @@ import UrlInputSection from '@/components/app/url-input-section';
 import RecommendedKeywords from '@/components/app/recommended-keywords';
 import HomeTrendChart from '@/components/app/home-trend-chart';
 import { useRouter } from 'next/navigation';
-import { getKeywordTrendsAction, getNaverNewsAction } from '@/app/actions';
+import { getKeywordTrendsAction, getNaverNewsAction, type RelatedNewsData } from '@/app/actions';
 import type { KeywordTrendPoint } from '@/lib/types';
-import type { RelatedNewsData } from '@/ai/flows/naver-news-flow';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 

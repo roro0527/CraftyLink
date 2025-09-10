@@ -238,6 +238,7 @@ app.get("/getNaverNews", async (req, res) => {
 
         functions.logger.info(`Cache miss or expired for news query: ${queryString}. Fetching fresh data.`);
         const url = "https://openapi.naver.com/v1/search/news.json";
+        
         const response = await axios.get(url, {
             params: { query: queryString, display: 5, sort: 'sim' }, // display 5 items
             headers: {
@@ -246,27 +247,40 @@ app.get("/getNaverNews", async (req, res) => {
             },
         });
 
-        const articles = response.data.items.map((item: any) => ({
-            title: removeHtmlTags(item.title),
-            url: item.link,
-            summary: removeHtmlTags(item.description),
-        }));
+        if (response.data && response.data.items) {
+          const articles = response.data.items.map((item: any) => ({
+              title: removeHtmlTags(item.title),
+              url: item.link,
+              summary: removeHtmlTags(item.description),
+          }));
 
-        await cacheRef.set({
-            articles,
-            updatedAt: admin.firestore.Timestamp.now(),
-        });
-        functions.logger.info(`Successfully cached news for query: ${queryString}`);
-        
-        return res.status(200).json(articles);
+          await cacheRef.set({
+              articles,
+              updatedAt: admin.firestore.Timestamp.now(),
+          });
+          functions.logger.info(`Successfully cached news for query: ${queryString}`);
+          
+          return res.status(200).json(articles);
+        } else {
+           // Handle cases where Naver API returns a success status but with an error message (e.g. invalid client id)
+           if (response.data && response.data.errorMessage) {
+               functions.logger.error("Naver API returned an error:", response.data.errorMessage);
+           } else {
+               functions.logger.error("Naver API call failed: Unexpected response format", response.data);
+           }
+           return res.status(500).send({ error: "Failed to fetch news from Naver API due to an unexpected response." });
+        }
 
-    } catch (error) {
-        functions.logger.error("Naver API call failed:", error);
+    } catch (error: any) {
+        if (axios.isAxiosError(error) && error.response) {
+            // Log detailed error from Naver API
+            functions.logger.error("Naver API call failed:", error.response.status, error.response.data);
+        } else {
+            functions.logger.error("An unexpected error occurred in getNaverNews:", error);
+        }
         return res.status(500).send({ error: "Failed to fetch news from Naver API." });
     }
 });
 
 
 export const api = functions.region("asia-northeast3").https.onRequest(app);
-
-    

@@ -104,7 +104,6 @@ export default function RegionExplorePage() {
         <RegionMap 
             center={initialCenter} 
             zoom={initialZoom} 
-            highlightedRegionCode={topRegion?.geoCode}
             bounds={bounds}
         />
       </div>

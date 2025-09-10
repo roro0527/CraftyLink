@@ -2,7 +2,6 @@
 'use client';
 
 import React, { useEffect, useRef } from 'react';
-import regionsData from '@/lib/korea-regions.geo.json';
 
 declare global {
   interface Window {
@@ -13,50 +12,14 @@ declare global {
 interface RegionMapProps {
   center: [number, number];
   zoom: number;
-  highlightedRegionCode?: string | null;
   bounds?: any;
 }
 
-const RegionMap: React.FC<RegionMapProps> = ({ center, zoom, highlightedRegionCode, bounds }) => {
+const RegionMap: React.FC<RegionMapProps> = ({ center, zoom, bounds }) => {
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<any>(null);
-  const polygonsRef = useRef<any[]>([]);
   const KAKAO_MAP_API_KEY = process.env.NEXT_PUBLIC_KAKAOMAP_APP_KEY;
 
-  const createPolygon = (path: any[], highlighted: boolean) => {
-    return new window.kakao.maps.Polygon({
-      path: path,
-      strokeWeight: 2,
-      strokeColor: '#004c80',
-      strokeOpacity: 0.8,
-      fillColor: highlighted ? '#007BFF' : '#E0E0E0',
-      fillOpacity: highlighted ? 0.5 : 0.3,
-    });
-  };
-
-  const displayArea = (coordinates: any[], highlighted: boolean) => {
-    const paths: any[][] = [];
-
-    const processCoordinates = (coords: any[]) => {
-      if (typeof coords[0][0] === 'number') {
-        const path: any[] = [];
-        coords.forEach((coord: any) => {
-          path.push(new window.kakao.maps.LatLng(coord[1], coord[0]));
-        });
-        paths.push(path);
-      } else {
-        coords.forEach(processCoordinates);
-      }
-    };
-    
-    processCoordinates(coordinates);
-    
-    paths.forEach(path => {
-        const polygon = createPolygon(path, highlighted);
-        polygon.setMap(mapRef.current);
-        polygonsRef.current.push(polygon);
-    });
-  };
 
   function initializeMap() {
     if (!mapContainerRef.current) return;
@@ -67,11 +30,6 @@ const RegionMap: React.FC<RegionMapProps> = ({ center, zoom, highlightedRegionCo
     };
 
     mapRef.current = new window.kakao.maps.Map(mapContainerRef.current, mapOption);
-
-    regionsData.features.forEach((feature) => {
-      const isHighlighted = feature.properties.code === highlightedRegionCode;
-      displayArea(feature.geometry.coordinates, isHighlighted);
-    });
   }
 
   // Initialize map
@@ -111,20 +69,6 @@ const RegionMap: React.FC<RegionMapProps> = ({ center, zoom, highlightedRegionCo
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Update polygons when highlightedRegionCode changes
-  useEffect(() => {
-    if (!mapRef.current || polygonsRef.current.length === 0) return;
-
-    // Clear existing polygons
-    polygonsRef.current.forEach(p => p.setMap(null));
-    polygonsRef.current = [];
-
-    // Redraw polygons with new highlight
-    regionsData.features.forEach((feature) => {
-      const isHighlighted = feature.properties.code === highlightedRegionCode;
-      displayArea(feature.geometry.coordinates, isHighlighted);
-    });
-  }, [highlightedRegionCode]);
 
   // Update map bounds
   useEffect(() => {

@@ -239,7 +239,7 @@ app.get("/getNaverNews", async (req, res) => {
         functions.logger.info(`Cache miss or expired for news query: ${queryString}. Fetching fresh data.`);
         const url = "https://openapi.naver.com/v1/search/news.json";
         const response = await axios.get(url, {
-            params: { query: queryString, display: 3, sort: 'sim' }, // display 3 items
+            params: { query: queryString, display: 5, sort: 'sim' }, // display 5 items
             headers: {
                 "X-Naver-Client-Id": NAVER_CLIENT_ID,
                 "X-Naver-Client-Secret": NAVER_CLIENT_SECRET,
@@ -268,3 +268,5 @@ app.get("/getNaverNews", async (req, res) => {
 
 
 export const api = functions.region("asia-northeast3").https.onRequest(app);
+
+    

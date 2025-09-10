@@ -1,10 +1,12 @@
+
 /**
- * @fileOverview Firebase Cloud Function to get top YouTube videos for a given location.
+ * @fileOverview Firebase Cloud Functions for CraftyLink.
  *
- * This file defines an HTTP endpoint `/getTopVideos` which takes latitude and
- * longitude, determines the city using the Kakao API, fetches relevant
- * YouTube videos, and returns them. It includes Firestore-based caching,
- * rate limiting, and robust error handling.
+ * This file defines two main HTTP endpoints:
+ * 1. /getTopVideos: Fetches top YouTube videos for a given location, using Kakao API for geocoding.
+ * 2. /getNaverNews: Fetches top news articles from Naver Search API for a given keyword.
+ *
+ * Both endpoints include caching, rate limiting, and robust error handling.
  */
 
 import * as functions from "firebase-functions";
@@ -27,7 +29,7 @@ app.use(cors({ origin: true }));
 // Basic rate limiting to prevent abuse
 const limiter = rateLimit({
   windowMs: 60 * 1000, // 1 minute
-  max: 5, // Limit each IP to 5 requests per windowMs
+  max: 10, // Limit each IP to 10 requests per windowMs
   standardHeaders: true,
   legacyHeaders: false,
   handler: (req, res) => {
@@ -37,14 +39,28 @@ const limiter = rateLimit({
 });
 
 app.use("/getTopVideos", limiter);
+app.use("/getNaverNews", limiter);
 
+
+// --- YouTube and Kakao API Setup ---
 const youtube = google.youtube({
   version: "v3",
   auth: functions.config().google.youtube_api_key,
 });
-
 const KAKAO_API_KEY = functions.config().kakao.app_key;
+
+
+// --- Naver API Setup ---
+const NAVER_CLIENT_ID = functions.config().naver.client_id;
+const NAVER_CLIENT_SECRET = functions.config().naver.client_secret;
+
+// --- Cache Configuration ---
 const CACHE_TTL_MINUTES = parseInt(functions.config().cache?.ttl_minutes || "10", 10);
+
+
+// Helper function to remove HTML tags
+const removeHtmlTags = (str: string) => str.replace(/<[^>]*>?/gm, '');
+
 
 /**
  * Fetches the city name from geographic coordinates using Kakao's coord2address API.
@@ -124,12 +140,9 @@ async function fetchTopVideos(city: string, lat: number, lng: number, radius: nu
 
     } catch (error) {
         functions.logger.error("YouTube Data API call failed:", error);
-        // This is a graceful fallback. If the API fails, we return an empty list
-        // instead of crashing the whole function. The caller should handle the empty list.
         return [];
     }
 }
-
 
 app.get("/getTopVideos", async (req, res) => {
   const { lat, lng, radius } = req.query;
@@ -194,5 +207,64 @@ app.get("/getTopVideos", async (req, res) => {
     return res.status(500).json({ error: "An unexpected error occurred." });
   }
 });
+
+
+/**
+ * Fetches top news articles from Naver Search API.
+ * @param {string} query - The search query.
+ * @returns {Promise<any[]>} A list of news articles.
+ */
+app.get("/getNaverNews", async (req, res) => {
+    const { query } = req.query;
+
+    if (!query) {
+        return res.status(400).send({ error: "Missing required query parameter: query" });
+    }
+
+    const queryString = query as string;
+    const cacheRef = firestore.collection("naverNews").doc(queryString);
+    
+    try {
+        const cacheDoc = await cacheRef.get();
+        if (cacheDoc.exists) {
+            const cacheData = cacheDoc.data()!;
+            const now = admin.firestore.Timestamp.now();
+            const diffMinutes = (now.seconds - cacheData.updatedAt.seconds) / 60;
+            if (diffMinutes < CACHE_TTL_MINUTES) {
+                functions.logger.info(`Returning cached news for query: ${queryString}`);
+                return res.status(200).json(cacheData.articles);
+            }
+        }
+
+        functions.logger.info(`Cache miss or expired for news query: ${queryString}. Fetching fresh data.`);
+        const url = "https://openapi.naver.com/v1/search/news.json";
+        const response = await axios.get(url, {
+            params: { query: queryString, display: 3, sort: 'sim' }, // display 3 items
+            headers: {
+                "X-Naver-Client-Id": NAVER_CLIENT_ID,
+                "X-Naver-Client-Secret": NAVER_CLIENT_SECRET,
+            },
+        });
+
+        const articles = response.data.items.map((item: any) => ({
+            title: removeHtmlTags(item.title),
+            url: item.link,
+            summary: removeHtmlTags(item.description),
+        }));
+
+        await cacheRef.set({
+            articles,
+            updatedAt: admin.firestore.Timestamp.now(),
+        });
+        functions.logger.info(`Successfully cached news for query: ${queryString}`);
+        
+        return res.status(200).json(articles);
+
+    } catch (error) {
+        functions.logger.error("Naver API call failed:", error);
+        return res.status(500).send({ error: "Failed to fetch news from Naver API." });
+    }
+});
+
 
 export const api = functions.region("asia-northeast3").https.onRequest(app);

@@ -6,7 +6,7 @@ import {nanoid} from 'nanoid';
 import { getKeywordTrends, type KeywordTrendsInput, type KeywordTrendsData } from '@/ai/flows/keyword-trends-flow';
 import { getRelatedKeywords, type RelatedKeywordsInput, type RelatedKeywordsData } from '@/ai/flows/related-keywords-flow';
 import { getYoutubeVideos, type YoutubeVideosInput, type YoutubeVideosData } from '@/ai/flows/youtube-videos-flow';
-import { getRelatedNews, type RelatedNewsInput, type RelatedNewsData } from '@/ai/flows/related-news-flow';
+import { getNaverNews, type NaverNewsInput, type RelatedNewsData } from '@/ai/flows/naver-news-flow';
 import { getRegionalTrends, type RegionalTrendsInput, type RegionalTrendsOutput } from '@/ai/flows/regional-trends-flow';
 import { getKeywordRegionRank, type KeywordRegionRankInput, type KeywordRegionRankOutput } from '@/ai/flows/keyword-region-rank-flow';
 
@@ -60,12 +60,12 @@ export async function getYoutubeVideosAction(input: YoutubeVideosInput): Promise
     }
 }
 
-export async function getRelatedNewsAction(input: RelatedNewsInput): Promise<RelatedNewsData> {
+export async function getNaverNewsAction(input: NaverNewsInput): Promise<RelatedNewsData> {
     try {
-        const news = await getRelatedNews(input);
+        const news = await getNaverNews(input);
         return news;
     } catch (error) {
-        console.error('Error fetching related news:', error);
+        console.error('Error fetching naver news:', error);
         return [];
     }
 }

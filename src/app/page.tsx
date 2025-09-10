@@ -8,9 +8,9 @@ import UrlInputSection from '@/components/app/url-input-section';
 import RecommendedKeywords from '@/components/app/recommended-keywords';
 import HomeTrendChart from '@/components/app/home-trend-chart';
 import { useRouter } from 'next/navigation';
-import { getKeywordTrendsAction, getRelatedNewsAction } from '@/app/actions';
+import { getKeywordTrendsAction, getNaverNewsAction } from '@/app/actions';
 import type { KeywordTrendPoint } from '@/lib/types';
-import type { RelatedNewsData } from '@/ai/flows/related-news-flow';
+import type { RelatedNewsData } from '@/ai/flows/naver-news-flow';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -48,7 +48,7 @@ export default function Home() {
       );
       
       const newsPromises = recommendedKeywords.map(keyword =>
-        getRelatedNewsAction({ keyword }).catch(e => {
+        getNaverNewsAction({ keyword }).catch(e => {
             console.error(`Failed to fetch news for ${keyword}`, e);
             return [];
         })

@@ -1,16 +1,16 @@
 
 'use server';
 /**
- * @fileOverview A related news fetching agent using Naver Search API.
+ * @fileOverview A related news fetching agent using Naver Search API via a Cloud Function.
  *
  * - getNaverNews - A function that handles fetching related news articles from Naver.
  * - NaverNewsInput - The input type for the getNaverNews function.
  * - RelatedNewsData - The return type for the getNaverNews function.
  */
 
-import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 import axios from 'axios';
+import { headers } from 'next/headers';
 
 const NaverNewsInputSchema = z.object({
   keyword: z.string().describe('The keyword to find news articles for.'),
@@ -26,31 +26,36 @@ const NewsArticleSchema = z.object({
 const RelatedNewsDataSchema = z.array(NewsArticleSchema).describe('A list of related news articles.');
 export type RelatedNewsData = z.infer<typeof RelatedNewsDataSchema>;
 
-const getNaverNewsFlow = ai.defineFlow(
-  {
-    name: 'getNaverNewsFlow',
-    inputSchema: NaverNewsInputSchema,
-    outputSchema: RelatedNewsDataSchema,
-  },
-  async (input) => {
-    // This URL should point to your Firebase Function endpoint.
-    // Ensure the region and project ID are correct for your setup.
-    const functionUrl = `https://asia-northeast3-crafylink.cloudfunctions.net/api/getNaverNews`;
-    
-    try {
-      const response = await axios.get(functionUrl, {
-        params: {
-          query: input.keyword,
-        },
-      });
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching Naver news from Cloud Function:', error);
-      return [];
-    }
-  }
-);
 
 export async function getNaverNews(input: NaverNewsInput): Promise<RelatedNewsData> {
-  return getNaverNewsFlow(input);
+  const functionUrl = '/api/getNaverNews';
+  
+  try {
+    const host = headers().get('host');
+    const protocol = host?.startsWith('localhost') ? 'http' : 'https';
+    const baseURL = `${protocol}://${host}`;
+
+    const response = await axios.get(functionUrl, {
+      baseURL,
+      params: {
+        query: input.keyword,
+      },
+    });
+
+    // Validate the response data with Zod
+    const validationResult = RelatedNewsDataSchema.safeParse(response.data);
+    if (!validationResult.success) {
+      console.error('Naver news data validation failed:', validationResult.error);
+      return [];
+    }
+
+    return validationResult.data;
+  } catch (error: any) {
+    if (axios.isAxiosError(error)) {
+        console.error('Error fetching Naver news from Cloud Function:', error.response?.data || error.message);
+    } else {
+        console.error('An unexpected error occurred in getNaverNews:', error);
+    }
+    return [];
+  }
 }

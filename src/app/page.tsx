@@ -148,7 +148,8 @@ export default function Home() {
             ) : newsData[currentKeyword] && newsData[currentKeyword].length > 0 ? (
                  <div className="flex flex-col gap-4">
                     {newsData[currentKeyword].map((article, index) => (
-                        <Card key={index} className="transition-shadow hover:shadow-lg">
+                      <a href={article.url} key={index} target="_blank" rel="noopener noreferrer" className="block">
+                        <Card className="transition-shadow hover:shadow-lg">
                             <CardHeader>
                                 <CardTitle className="text-lg">{article.title}</CardTitle>
                             </CardHeader>
@@ -156,6 +157,7 @@ export default function Home() {
                                 <p className="text-sm text-muted-foreground">{article.summary}</p>
                             </CardContent>
                         </Card>
+                      </a>
                     ))}
                 </div>
             ) : (

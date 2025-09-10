@@ -19,6 +19,7 @@ export type RelatedNewsInput = z.infer<typeof RelatedNewsInputSchema>;
 const NewsArticleSchema = z.object({
     title: z.string().describe('The title of the news article.'),
     summary: z.string().describe('A brief summary of the news article.'),
+    url: z.string().url().describe('The URL of the news article.'),
 });
 
 const RelatedNewsDataSchema = z.array(NewsArticleSchema).describe('A list of related news articles.');
@@ -32,7 +33,7 @@ const getRelatedNewsFlow = ai.defineFlow(
     outputSchema: RelatedNewsDataSchema,
   },
   async (input) => {
-    const prompt = `최신 뉴스를 바탕으로 키워드 '${input.keyword}'와(과) 관련된 뉴스 기사 3개를 찾아서 각각 제목과 짧은 요약을 제공해줘.`;
+    const prompt = `최신 뉴스를 바탕으로 키워드 '${input.keyword}'와(과) 관련된 뉴스 기사 3개를 찾아서 각각 제목, 짧은 요약, 그리고 원본 기사의 URL을 제공해줘.`;
     
     const { output } = await ai.generate({
         prompt,

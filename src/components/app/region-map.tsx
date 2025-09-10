@@ -14,22 +14,27 @@ interface RegionMapProps {
   center: [number, number];
   zoom: number;
   highlightedRegionCode?: string;
+  bounds?: any;
 }
 
-const RegionMap: React.FC<RegionMapProps> = ({ center, zoom, highlightedRegionCode }) => {
+const RegionMap: React.FC<RegionMapProps> = ({ center, zoom, highlightedRegionCode, bounds }) => {
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<any>(null);
   const polygonsRef = useRef<any[]>([]);
+  const KAKAO_MAP_API_KEY = process.env.NEXT_PUBLIC_KAKAOMAP_APP_KEY;
 
-  const createPolygon = (feature: any) => {
+
+  function createPolygon(feature: any) {
     const geometry = feature.geometry;
     const properties = feature.properties;
 
-    let path = geometry.coordinates[0].map(
-      (coord: any) => new window.kakao.maps.LatLng(coord[1], coord[0])
-    );
-    if (geometry.type === 'MultiPolygon') {
-        path = geometry.coordinates.flatMap((poly: any) => 
+    let paths: any[] = [];
+    if (geometry.type === 'Polygon') {
+        paths = geometry.coordinates.map((ring: any) => 
+            ring.map((coord: any) => new window.kakao.maps.LatLng(coord[1], coord[0]))
+        );
+    } else if (geometry.type === 'MultiPolygon') {
+        paths = geometry.coordinates.map((poly: any) => 
             poly[0].map((coord: any) => new window.kakao.maps.LatLng(coord[1], coord[0]))
         );
     }
@@ -37,7 +42,8 @@ const RegionMap: React.FC<RegionMapProps> = ({ center, zoom, highlightedRegionCo
     const isHighlighted = properties.code === highlightedRegionCode;
 
     const polygon = new window.kakao.maps.Polygon({
-        path: path,
+        map: mapRef.current,
+        path: paths,
         strokeWeight: 2,
         strokeColor: '#004c80',
         strokeOpacity: 0.8,
@@ -45,15 +51,10 @@ const RegionMap: React.FC<RegionMapProps> = ({ center, zoom, highlightedRegionCo
         fillOpacity: isHighlighted ? 0.7 : 0.5,
     });
     
-    polygon.setMap(mapRef.current);
     polygonsRef.current.push(polygon);
   };
   
-  // Initialize map and polygons
-  useEffect(() => {
-    const KAKAO_MAP_API_KEY = process.env.NEXT_PUBLIC_KAKAOMAP_APP_KEY;
-
-    function initializeMap() {
+  function initializeMap() {
       if (!mapContainerRef.current) return;
       
       const mapOption = {
@@ -62,14 +63,15 @@ const RegionMap: React.FC<RegionMapProps> = ({ center, zoom, highlightedRegionCo
       };
 
       mapRef.current = new window.kakao.maps.Map(mapContainerRef.current, mapOption);
-
       regionData.features.forEach(createPolygon);
-    };
-    
+  };
+
+  // Initialize map
+  useEffect(() => {
     if (!KAKAO_MAP_API_KEY || KAKAO_MAP_API_KEY === "YOUR_KAKAO_JAVASCRIPT_KEY") {
       console.error("Kakao map API key is not configured. Please set NEXT_PUBLIC_KAKAOMAP_APP_KEY in your .env.local file.");
       if (mapContainerRef.current) {
-        mapContainerRef.current.innerHTML = '<div style="text-align: center; padding-top: 20px; color: red;">카카오맵 API 키가 설정되지 않았습니다. (.env.local)</div>';
+        mapContainerRef.current.innerHTML = '<div style="text-align: center; padding-top: 20px; color: red;">카카오맵 API 키가 설정되지 않았습니다.</div>';
       }
       return;
     }
@@ -77,23 +79,14 @@ const RegionMap: React.FC<RegionMapProps> = ({ center, zoom, highlightedRegionCo
     const scriptId = 'kakao-maps-sdk';
     if (document.getElementById(scriptId)) {
       if (window.kakao && window.kakao.maps) {
-        window.kakao.maps.load(() => {
-           if (mapRef.current) {
-              // Map already initialized, just draw polygons
-              polygonsRef.current.forEach(p => p.setMap(null));
-              polygonsRef.current = [];
-              regionData.features.forEach(createPolygon);
-           } else {
-             initializeMap();
-           }
-        });
+        window.kakao.maps.load(initializeMap);
       }
       return;
     }
     
     const script = document.createElement('script');
     script.id = scriptId;
-    script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${KAKAO_MAP_API_KEY}&autoload=false`;
+    script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${KAKAO_MAP_API_KEY}&libraries=services,clusterer,drawing&autoload=false`;
     script.async = true;
     document.head.appendChild(script);
 
@@ -125,6 +118,13 @@ const RegionMap: React.FC<RegionMapProps> = ({ center, zoom, highlightedRegionCo
     });
 
   }, [highlightedRegionCode]);
+
+  // Update map bounds
+  useEffect(() => {
+    if (mapRef.current && bounds) {
+      mapRef.current.setBounds(bounds);
+    }
+  }, [bounds]);
 
   useEffect(() => {
     const handleResize = () => {

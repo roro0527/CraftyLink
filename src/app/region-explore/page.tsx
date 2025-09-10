@@ -13,26 +13,35 @@ import type { YoutubeVideo } from '@/lib/types';
 import type { KeywordRegionRankOutput } from '@/ai/flows/keyword-region-rank-flow';
 import { format, parseISO } from 'date-fns';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import regionData from '@/lib/korea-regions.geo.json';
 
 const RegionMap = dynamic(() => import('@/components/app/region-map'), {
   ssr: false,
   loading: () => <Skeleton className="w-full h-full" />,
 });
 
+declare global {
+  interface Window {
+    kakao: any;
+  }
+}
+
 export default function RegionExplorePage() {
   const initialCenter: [number, number] = [36.3, 127.8]; // Center of South Korea
-  const initialZoom = 7;
+  const initialZoom = 13;
 
   const [keyword, setKeyword] = React.useState('');
   const [videos, setVideos] = React.useState<YoutubeVideo[]>([]);
   const [isSearching, setIsSearching] = React.useState(false);
   const [topRegion, setTopRegion] = React.useState<KeywordRegionRankOutput | null>(null);
+  const [bounds, setBounds] = React.useState<any>(null);
 
   const handleSearch = async () => {
     if (!keyword.trim()) return;
     setIsSearching(true);
     setVideos([]);
     setTopRegion(null);
+    setBounds(null);
 
     try {
       const [videoResults, regionResult] = await Promise.all([
@@ -41,6 +50,27 @@ export default function RegionExplorePage() {
       ]);
       setVideos(videoResults);
       setTopRegion(regionResult);
+
+      if (regionResult?.geoCode) {
+        const feature = regionData.features.find(f => f.properties.code === regionResult.geoCode);
+        if (feature) {
+          const coordinates = feature.geometry.coordinates;
+          const newBounds = new window.kakao.maps.LatLngBounds();
+
+          const processCoordinates = (coords: any[]) => {
+            coords.forEach((coord: any) => {
+              if (Array.isArray(coord[0])) { // Nested arrays for MultiPolygon or holes
+                processCoordinates(coord);
+              } else {
+                newBounds.extend(new window.kakao.maps.LatLng(coord[1], coord[0]));
+              }
+            });
+          };
+          
+          processCoordinates(coordinates);
+          setBounds(newBounds);
+        }
+      }
     } catch (error) {
       console.error('Failed to fetch data:', error);
       // You can add a toast notification here to inform the user.
@@ -58,7 +88,7 @@ export default function RegionExplorePage() {
   return (
     <div className="p-6 h-[calc(100vh-128px)] flex flex-row gap-6">
       <div className="flex-1 h-full rounded-2xl overflow-hidden shadow-lg border relative">
-        <RegionMap center={initialCenter} zoom={initialZoom} highlightedRegionCode={topRegion?.geoCode} />
+        <RegionMap center={initialCenter} zoom={initialZoom} highlightedRegionCode={topRegion?.geoCode} bounds={bounds} />
       </div>
 
       <div className="w-96 flex-shrink-0 h-full">

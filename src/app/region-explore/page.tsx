@@ -48,7 +48,7 @@ export default function RegionExplorePage() {
   };
 
   return (
-    <div className="p-6 flex justify-center">
+    <div className="p-6">
       <div className="w-[75vh] h-[75vh] relative rounded-2xl overflow-hidden shadow-lg border">
         <RegionMap center={initialCenter} zoom={initialZoom} />
         <div className="absolute top-4 left-4 w-full max-w-sm h-[calc(100%-2rem)]">

@@ -38,6 +38,7 @@ const getRelatedNewsFlow = ai.defineFlow(
     
     const { output } = await ai.generate({
         prompt,
+        model: 'googleai/gemini-1.5-flash',
         tools: ['googleSearch'],
         output: {
             schema: RelatedNewsDataSchema,

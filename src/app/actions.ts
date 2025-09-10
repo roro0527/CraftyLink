@@ -8,6 +8,7 @@ import { getRelatedKeywords, type RelatedKeywordsInput, type RelatedKeywordsData
 import { getYoutubeVideos, type YoutubeVideosInput, type YoutubeVideosData } from '@/ai/flows/youtube-videos-flow';
 import { getRelatedNews, type RelatedNewsInput, type RelatedNewsData } from '@/ai/flows/related-news-flow';
 import { getRegionalTrends, type RegionalTrendsInput, type RegionalTrendsOutput } from '@/ai/flows/regional-trends-flow';
+import { getKeywordRegionRank, type KeywordRegionRankInput, type KeywordRegionRankOutput } from '@/ai/flows/keyword-region-rank-flow';
 
 
 export async function suggestSuperParametersAction(
@@ -76,5 +77,15 @@ export async function getRegionalTrendsAction(input: RegionalTrendsInput): Promi
     } catch (error) {
         console.error('Error fetching regional trends:', error);
         return { relatedKeywords: [], relatedVideos: [] };
+    }
+}
+
+export async function getKeywordRegionRankAction(input: KeywordRegionRankInput): Promise<KeywordRegionRankOutput> {
+    try {
+        const rank = await getKeywordRegionRank(input);
+        return rank;
+    } catch (error) {
+        console.error('Error fetching keyword region rank:', error);
+        return {};
     }
 }

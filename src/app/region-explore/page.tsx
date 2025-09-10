@@ -63,6 +63,10 @@ export default function RegionExplorePage() {
         );
 
         if (regionFeature) {
+          if (!window.kakao || !window.kakao.maps) {
+              console.error('Kakao maps script not loaded yet.');
+              return;
+          }
           const coordinates = regionFeature.geometry.coordinates;
           const newBounds = new window.kakao.maps.LatLngBounds();
 
@@ -125,28 +129,29 @@ export default function RegionExplorePage() {
             </CardHeader>
           </Card>
           
-          {isSearching || topRegion ? (
-              <Card>
-                <CardHeader className="flex-row items-center gap-2 space-y-0">
-                    <Trophy className="w-6 h-6 text-yellow-500" />
-                    <CardTitle className="text-lg">최고 관심 지역</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    {isSearching ? (
-                        <div className="space-y-2">
-                            <Skeleton className="h-6 w-2/4" />
-                            <Skeleton className="h-4 w-1/4" />
-                        </div>
-                    ) : topRegion ? (
-                        <div>
-                            <p className="text-xl font-bold">{topRegion.geoName}</p>
-                            <p className="text-sm text-muted-foreground">관심도 점수: {topRegion.value}</p>
-                        </div>
-                    ) : null}
-                </CardContent>
-              </Card>
-          ) : null}
-
+          <Card>
+            <CardHeader className="flex-row items-center gap-2 space-y-0">
+                <Trophy className="w-6 h-6 text-yellow-500" />
+                <CardTitle className="text-lg">최고 관심 지역</CardTitle>
+            </CardHeader>
+            <CardContent>
+                {isSearching ? (
+                    <div className="space-y-2">
+                        <Skeleton className="h-6 w-2/4" />
+                        <Skeleton className="h-4 w-1/4" />
+                    </div>
+                ) : topRegion ? (
+                    <div>
+                        <p className="text-xl font-bold">{topRegion.geoName}</p>
+                        <p className="text-sm text-muted-foreground">관심도 점수: {topRegion.value}</p>
+                    </div>
+                ) : (
+                    <div className="text-sm text-muted-foreground">
+                       키워드를 검색하여 가장 인기있는 지역을 확인하세요.
+                    </div>
+                )}
+            </CardContent>
+          </Card>
 
           <Card className="h-full flex flex-col flex-grow overflow-hidden">
             <CardHeader>

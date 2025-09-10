@@ -8,12 +8,10 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { LoaderCircle, Search, Video, Trophy } from 'lucide-react';
-import { getYoutubeVideosAction, getKeywordRegionRankAction } from '../actions';
+import { getYoutubeVideosAction } from '../actions';
 import type { YoutubeVideo } from '@/lib/types';
-import type { KeywordRegionRankOutput } from '@/ai/flows/keyword-region-rank-flow';
 import { format, parseISO } from 'date-fns';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import regionData from '@/lib/korea-regions.geo.json';
 
 const RegionMap = dynamic(() => import('@/components/app/region-map'), {
   ssr: false,
@@ -33,44 +31,15 @@ export default function RegionExplorePage() {
   const [keyword, setKeyword] = React.useState('');
   const [videos, setVideos] = React.useState<YoutubeVideo[]>([]);
   const [isSearching, setIsSearching] = React.useState(false);
-  const [topRegion, setTopRegion] = React.useState<KeywordRegionRankOutput | null>(null);
-  const [bounds, setBounds] = React.useState<any>(null);
 
   const handleSearch = async () => {
     if (!keyword.trim()) return;
     setIsSearching(true);
     setVideos([]);
-    setTopRegion(null);
-    setBounds(null);
 
     try {
-      const [videoResults, regionResult] = await Promise.all([
-        getYoutubeVideosAction({ keyword }),
-        getKeywordRegionRankAction({ keyword }),
-      ]);
+      const videoResults = await getYoutubeVideosAction({ keyword });
       setVideos(videoResults);
-      setTopRegion(regionResult);
-
-      if (regionResult?.geoCode) {
-        const feature = regionData.features.find(f => f.properties.code === regionResult.geoCode);
-        if (feature) {
-          const coordinates = feature.geometry.coordinates;
-          const newBounds = new window.kakao.maps.LatLngBounds();
-
-          const processCoordinates = (coords: any[]) => {
-            coords.forEach((coord: any) => {
-              if (Array.isArray(coord[0])) { // Nested arrays for MultiPolygon or holes
-                processCoordinates(coord);
-              } else {
-                newBounds.extend(new window.kakao.maps.LatLng(coord[1], coord[0]));
-              }
-            });
-          };
-          
-          processCoordinates(coordinates);
-          setBounds(newBounds);
-        }
-      }
     } catch (error) {
       console.error('Failed to fetch data:', error);
       // You can add a toast notification here to inform the user.
@@ -88,7 +57,7 @@ export default function RegionExplorePage() {
   return (
     <div className="p-6 h-[calc(100vh-128px)] flex flex-row gap-6">
       <div className="flex-1 h-full rounded-2xl overflow-hidden shadow-lg border relative">
-        <RegionMap center={initialCenter} zoom={initialZoom} highlightedRegionCode={topRegion?.geoCode} bounds={bounds} />
+        <RegionMap center={initialCenter} zoom={initialZoom} />
       </div>
 
       <div className="w-96 flex-shrink-0 h-full">
@@ -114,34 +83,6 @@ export default function RegionExplorePage() {
             </div>
             </CardHeader>
             
-            <CardContent>
-              {isSearching ? (
-                <div className="flex items-center gap-4 p-4 border rounded-lg bg-muted/50">
-                  <Skeleton className="h-10 w-10 rounded-full" />
-                  <div className="space-y-2">
-                    <Skeleton className="h-4 w-32" />
-                    <Skeleton className="h-3 w-24" />
-                  </div>
-                </div>
-              ) : topRegion?.geoName ? (
-                <div className="p-4 border rounded-lg bg-secondary/50">
-                  <div className="flex items-center gap-3">
-                    <Trophy className="w-8 h-8 text-yellow-500" />
-                    <div>
-                      <p className="text-sm text-muted-foreground">최고 관심 지역</p>
-                      <p className="text-lg font-bold">{topRegion.geoName}</p>
-                    </div>
-                     <div className="ml-auto text-right">
-                       <p className="text-sm text-muted-foreground">관심도</p>
-                       <p className="text-lg font-bold">{topRegion.value}</p>
-                     </div>
-                  </div>
-                </div>
-              ) : (
-                 !isSearching && <div className="h-20" />
-              )}
-            </CardContent>
-
             <CardContent className="flex-grow overflow-hidden pt-0">
               <ScrollArea className="h-full pr-4">
                   <div className="space-y-4">

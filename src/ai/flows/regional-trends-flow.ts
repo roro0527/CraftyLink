@@ -10,7 +10,6 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import googleTrends from 'google-trends-api';
 import { getYoutubeVideos, type YoutubeVideosData, type YoutubeVideosInput } from './youtube-videos-flow';
 
 const RegionalTrendsInputSchema = z.object({
@@ -37,27 +36,10 @@ const getRegionalTrendsFlow = ai.defineFlow(
     const { keyword, region } = input;
     
     try {
-      // 1. Fetch related keywords for the region
-      const trendsResult = await googleTrends.relatedQueries({
-        keyword,
-        geo: region,
-      });
+      // google-trends-api was removed. We will return empty data for now.
+      const relatedKeywords: string[] = [];
 
-      const parsedResults = JSON.parse(trendsResult);
-      const rankedLists = parsedResults.default.rankedList;
-      let relatedKeywords: string[] = [];
-
-      if (Array.isArray(rankedLists) && rankedLists.length > 0) {
-        // Find the "top" or "rising" list and extract queries
-        for (const list of rankedLists) {
-          if (list && Array.isArray(list.rankedKeyword) && list.rankedKeyword.length > 0) {
-            relatedKeywords = list.rankedKeyword.slice(0, 5).map((item: any) => item.query);
-            break; // Use the first available list
-          }
-        }
-      }
-
-      // 2. Fetch related YouTube videos (region is not directly supported, so we use the keyword)
+      // Fetch related YouTube videos (region is not directly supported, so we use the keyword)
       const relatedVideos = await getYoutubeVideos({ keyword });
 
       return {

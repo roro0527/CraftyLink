@@ -45,17 +45,17 @@ app.use("/getNaverNews", limiter);
 // --- YouTube and Kakao API Setup ---
 const youtube = google.youtube({
   version: "v3",
-  auth: functions.config().google.youtube_api_key,
+  auth: process.env.GOOGLE_YOUTUBE_API_KEY,
 });
-const KAKAO_API_KEY = functions.config().kakao.app_key;
+const KAKAO_API_KEY = process.env.KAKAO_APP_KEY;
 
 
 // --- Naver API Setup ---
-const NAVER_CLIENT_ID = functions.config().naver.client_id;
-const NAVER_CLIENT_SECRET = functions.config().naver.client_secret;
+const NAVER_CLIENT_ID = process.env.NAVER_CLIENT_ID;
+const NAVER_CLIENT_SECRET = process.env.NAVER_CLIENT_SECRET;
 
 // --- Cache Configuration ---
-const CACHE_TTL_MINUTES = parseInt(functions.config().cache?.ttl_minutes || "10", 10);
+const CACHE_TTL_MINUTES = 10;
 
 
 // Helper function to remove HTML tags

@@ -56,33 +56,10 @@ export default function RegionExplorePage() {
           geoName: regionRankResult.geoName || '알 수 없음',
           value: regionRankResult.value || 0,
         });
-
-        // Find region geometry and calculate bounds
-        const regionFeature = regionsData.features.find(
-          (f) => f.properties.code === regionRankResult.geoCode
-        );
-
-        if (regionFeature) {
-          if (!window.kakao || !window.kakao.maps) {
-              console.error('Kakao maps script not loaded yet.');
-              return;
-          }
-          const coordinates = regionFeature.geometry.coordinates;
-          const newBounds = new window.kakao.maps.LatLngBounds();
-
-          const processCoordinates = (coords: any[]) => {
-            coords.forEach((coord: any) => {
-              if (Array.isArray(coord[0])) { // MultiPolygon or nested Polygon
-                processCoordinates(coord);
-              } else {
-                newBounds.extend(new window.kakao.maps.LatLng(coord[1], coord[0]));
-              }
-            });
-          };
-
-          processCoordinates(coordinates);
-          setBounds(newBounds);
-        }
+        
+        // Naver Datalab provides age groups, not geo data, so we can't show it on map.
+        // We will just show the top group info.
+        setBounds(null); 
       }
 
     } catch (error) {
@@ -131,7 +108,7 @@ export default function RegionExplorePage() {
           <Card>
             <CardHeader className="flex-row items-center gap-2 space-y-0">
                 <Trophy className="w-6 h-6 text-yellow-500" />
-                <CardTitle className="text-lg">최고 관심 지역</CardTitle>
+                <CardTitle className="text-lg">최고 관심 그룹</CardTitle>
             </CardHeader>
             <CardContent>
                 {isSearching ? (
@@ -142,11 +119,11 @@ export default function RegionExplorePage() {
                 ) : topRegion ? (
                     <div>
                         <p className="text-xl font-bold">{topRegion.geoName}</p>
-                        <p className="text-sm text-muted-foreground">관심도 점수: {topRegion.value}</p>
+                        <p className="text-sm text-muted-foreground">클릭량 점수: {topRegion.value.toFixed(2)}</p>
                     </div>
                 ) : (
                     <div className="text-sm text-muted-foreground">
-                       키워드를 검색하여 가장 인기있는 지역을 확인하세요.
+                       키워드를 검색하여 가장 인기있는 그룹을 확인하세요.
                     </div>
                 )}
             </CardContent>

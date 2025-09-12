@@ -1,16 +1,17 @@
 
 'use server';
 /**
- * @fileOverview A related keywords AI agent.
+ * @fileOverview A related keywords agent using Naver DataLab API.
  *
  * - getRelatedKeywords - A function that handles fetching related keywords.
  * - RelatedKeywordsInput - The input type for the getRelatedKeywords function.
  * - RelatedKeywordsData - The return type for the getRelatedKeywords function.
  */
 
-import {ai} from '@/ai/genkit';
-import {z} from 'zod';
-import googleTrends from 'google-trends-api';
+import { ai } from '@/ai/genkit';
+import { z } from 'zod';
+import axios from 'axios';
+import { format, subMonths } from 'date-fns';
 
 const RelatedKeywordsInputSchema = z.object({
   keyword: z.string().describe('The keyword to find related queries for.'),
@@ -27,27 +28,39 @@ const getRelatedKeywordsFlow = ai.defineFlow(
     outputSchema: RelatedKeywordsDataSchema,
   },
   async (input) => {
-    try {
-      const results = await googleTrends.relatedQueries({
-        keyword: input.keyword,
-      });
-      const parsedResults = JSON.parse(results);
-      const rankedLists = parsedResults.default.rankedList;
+    const endDate = new Date();
+    const startDate = subMonths(endDate, 1);
 
-      if (Array.isArray(rankedLists) && rankedLists.length > 0) {
-        // rankedLists usually contains two objects: one for "top" and one for "rising" queries.
-        // We will try to get queries from either of them.
-        for (const list of rankedLists) {
-          if (list && Array.isArray(list.rankedKeyword) && list.rankedKeyword.length > 0) {
-            return list.rankedKeyword.slice(0, 5).map((item: any) => item.query);
-          }
-        }
+    const requestBody = {
+      startDate: format(startDate, 'yyyy-MM-dd'),
+      endDate: format(endDate, 'yyyy-MM-dd'),
+      timeUnit: 'month',
+      category: '50000000', // 패션의류 - Shopping insight API requires a category
+      keyword: input.keyword,
+      device: '',
+      gender: '',
+      ages: [],
+    };
+
+    try {
+      const response = await axios.post('https://openapi.naver.com/v1/datalab/shopping-insight/category/keyword/rank', requestBody, {
+        headers: {
+          'X-Naver-Client-Id': process.env.NAVER_DATALAB_CLIENT_ID,
+          'X-Naver-Client-Secret': process.env.NAVER_DATALAB_CLIENT_SECRET,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const rankedKeywords = response.data.results[0]?.data;
+      if (!rankedKeywords || rankedKeywords.length === 0) {
+        return [];
       }
       
-      return [];
+      // Return top 5 related keywords
+      return rankedKeywords.slice(0, 5).map((item: any) => item.keyword);
 
-    } catch (err) {
-      console.error('Error fetching related keywords from Google Trends:', err);
+    } catch (err: any) {
+      console.error('Error fetching related keywords from Naver DataLab:', err.response?.data || err.message);
       return [];
     }
   }

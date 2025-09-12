@@ -245,18 +245,7 @@ export default function ComparePage() {
                         tickLine={false}
                         axisLine={false}
                         tickMargin={8}
-                        tickFormatter={(value) => {
-                            try {
-                                // Use new Date() for more lenient parsing than parseISO
-                                const date = new Date(value);
-                                // Check if the date is valid
-                                if (isNaN(date.getTime())) return value;
-                                return format(date, 'M/d', { locale: ko });
-                            } catch (error) {
-                                // In case of any unexpected error, return the original value
-                                return value;
-                            }
-                        }}
+                        tickFormatter={(value) => format(parseISO(value), 'M/d', { locale: ko })}
                       />
                       <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
                        <ChartTooltip

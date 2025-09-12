@@ -29,7 +29,7 @@ import { LoaderCircle, Search } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { getKeywordTrendsAction, getRelatedKeywordsAction, getYoutubeVideosAction } from '@/app/actions';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartConfig } from '@/components/ui/chart';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { format, parseISO } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -295,7 +295,6 @@ export default function KeywordPage() {
                         type="monotone"
                         stroke="var(--color-value)"
                         strokeWidth={2}
-                        dot={true}
                       />
                     </LineChart>
                   </ChartContainer>

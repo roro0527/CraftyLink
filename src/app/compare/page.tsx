@@ -164,22 +164,30 @@ export default function ComparePage() {
         color: chartColors[index % chartColors.length],
       };
     });
-
-    const allDates = new Set<string>();
-    Object.values(trendData).forEach(trends => {
-      trends.forEach(point => allDates.add(point.date));
-    });
-    const sortedDates = Array.from(allDates).sort();
-    
-    const data: ChartableData[] = sortedDates.map(date => {
-      const dataPoint: ChartableData = { date };
-      keywords.forEach(keyword => {
-        const trendPoint = trendData[keyword]?.find(p => p.date === date);
-        dataPoint[keyword] = trendPoint ? trendPoint.value : 0;
+  
+    // Use a map to merge data points by date
+    const dataMap = new Map<string, ChartableData>();
+  
+    // Initialize map with all keywords to ensure all columns are present
+    keywords.forEach(keyword => {
+      const trends = trendData[keyword] || [];
+      trends.forEach(point => {
+        if (!dataMap.has(point.date)) {
+          const initialPoint: ChartableData = { date: point.date };
+          // Ensure all keyword keys are created with a default value
+          keywords.forEach(kw => {
+            initialPoint[kw] = 0;
+          });
+          dataMap.set(point.date, initialPoint);
+        }
+        const existingPoint = dataMap.get(point.date)!;
+        existingPoint[keyword] = point.value;
       });
-      return dataPoint;
     });
-
+    
+    // Convert map to array and sort by date
+    const data = Array.from(dataMap.values()).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  
     return { chartConfig: config, chartData: data };
   }, [keywords, trendData]);
 
@@ -245,7 +253,13 @@ export default function ComparePage() {
                         tickLine={false}
                         axisLine={false}
                         tickMargin={8}
-                        tickFormatter={(value) => format(parseISO(value), 'M/d', { locale: ko })}
+                        tickFormatter={(value) => {
+                           try {
+                            return format(parseISO(value), 'M/d', { locale: ko });
+                           } catch (e) {
+                            return value;
+                           }
+                        }}
                       />
                       <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
                        <ChartTooltip
@@ -322,3 +336,4 @@ export default function ComparePage() {
     </div>
   );
 }
+

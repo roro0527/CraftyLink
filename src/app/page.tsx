@@ -52,7 +52,6 @@ export default function Home() {
           return await getNaverNewsAction({ keyword });
         } catch (e) {
             console.error(`Failed to fetch news for ${keyword}`, e);
-            alert('api 인증 실패'); // API authentication failure alert for error_1
             toast({
                 variant: 'destructive',
                 title: '뉴스 데이터 로드 실패',

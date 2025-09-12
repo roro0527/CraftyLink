@@ -3,7 +3,7 @@
 
 import type { SuperParam } from '@/lib/types';
 import { getKeywordTrends, type KeywordTrendsInput, type KeywordTrendsData } from '@/ai/flows/keyword-trends-flow';
-import { getRelatedKeywords, type RelatedKeywordsInput, type RelatedKeywordsData } from '@/ai/flows/related-keywords-flow';
+import { getRelatedKeywords } from '@/ai/flows/related-keywords-flow';
 import { getYoutubeVideos, type YoutubeVideosInput, type YoutubeVideosData } from '@/ai/flows/youtube-videos-flow';
 import { getRegionalTrends, type RegionalTrendsInput, type RegionalTrendsOutput } from '@/ai/flows/regional-trends-flow';
 import { getKeywordRegionRank, type KeywordRegionRankInput, type KeywordRegionRankOutput } from '@/ai/flows/keyword-region-rank-flow';
@@ -41,23 +41,25 @@ export async function getKeywordTrendsAction(input: KeywordTrendsInput): Promise
   }
 }
 
-export async function getRelatedKeywordsAction(input: RelatedKeywordsInput): Promise<RelatedKeywordsData> {
+export async function getRelatedKeywordsAction(input: { keyword: string }): Promise<string[]> {
     try {
         const keywords = await getRelatedKeywords(input);
         return keywords;
     } catch (error) {
         console.error('Error fetching related keywords:', error);
-        return [];
+        return []; // Return empty array on failure to prevent crash
     }
 }
+
 
 export async function getNaverNewsAction(input: NaverNewsInput): Promise<RelatedNewsData> {
     try {
         const news = await getNaverNews(input);
         return news;
     } catch (error) {
-        console.error('Error fetching naver news:', error);
-        return [];
+        console.error('An unexpected error occurred in getNaverNewsAction:', error);
+        // Re-throwing the error to be handled by the caller (e.g., in a try-catch block in the component)
+        throw error;
     }
 }
 

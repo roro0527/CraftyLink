@@ -27,8 +27,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { LoaderCircle, Search } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
-import { getKeywordTrendsAction, getYoutubeVideosAction } from '@/app/actions';
-import { getRelatedKeywords } from '@/ai/flows/related-keywords-flow';
+import { getKeywordTrendsAction, getYoutubeVideosAction, getRelatedKeywordsAction } from '@/app/actions';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartConfig } from '@/components/ui/chart';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { format, parseISO } from 'date-fns';
@@ -96,7 +95,7 @@ export default function KeywordPage() {
       // Fetch all data in parallel
       const [trendResult, relatedResult, videoResult] = await Promise.all([
         getKeywordTrendsAction({ keyword, timeRange }),
-        getRelatedKeywords({ keyword }),
+        getRelatedKeywordsAction({ keyword }),
         getYoutubeVideosAction({ keyword })
       ]);
       

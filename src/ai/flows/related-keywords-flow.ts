@@ -35,12 +35,8 @@ const relatedKeywordsPrompt = ai.definePrompt(
 export async function getRelatedKeywords(input: RelatedKeywordsInput): Promise<string[]> {
   try {
     const { output } = await relatedKeywordsPrompt(input);
-    if (!output) {
-      console.warn(`No related keywords could be generated for: ${input.keyword}`);
-      return [];
-    }
-    // Assuming the AI returns the tags in the 'tags' field as defined in the schema.
-    return output.tags;
+    // Ensure we return an array of strings, even if the output or tags are missing.
+    return output?.tags || [];
   } catch (error) {
     console.error('Error generating related keywords from AI:', error);
     // Return an empty array on error to prevent app crashes

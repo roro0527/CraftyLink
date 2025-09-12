@@ -53,6 +53,7 @@ const getRelatedKeywordsFlow = ai.defineFlow(
 
       const rankedKeywords = response.data.results[0]?.data;
       if (!rankedKeywords || rankedKeywords.length === 0) {
+        console.warn(`No related keywords found for: ${input.keyword}`);
         return [];
       }
       
@@ -61,6 +62,7 @@ const getRelatedKeywordsFlow = ai.defineFlow(
 
     } catch (err: any) {
       console.error('Error fetching related keywords from Naver DataLab:', err.response?.data || err.message);
+      // Return an empty array on error to prevent app crashes
       return [];
     }
   }

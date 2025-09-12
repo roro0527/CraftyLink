@@ -320,6 +320,7 @@ export default function KeywordPage() {
                         type="monotone"
                         stroke="var(--color-value)"
                         strokeWidth={2}
+                        dot={false}
                       />
                     </LineChart>
                   </ChartContainer>
@@ -381,9 +382,9 @@ export default function KeywordPage() {
             <CardHeader>
               <CardTitle>연관 태그</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="h-full min-h-[240px]">
               {isFetchingRelated ? (
-                 <div className="space-y-2">
+                 <div className="space-y-2 pt-2">
                     <Skeleton className="h-8 w-full" />
                     <Skeleton className="h-8 w-4/5" />
                     <Skeleton className="h-8 w-full" />
@@ -393,14 +394,14 @@ export default function KeywordPage() {
               ) : relatedKeywords.length > 0 ? (
                 <div className="flex flex-wrap gap-2">
                   {relatedKeywords.map((tag) => (
-                    <Badge key={tag} variant="secondary" className="text-base">
-                      {tag}
+                    <Badge key={tag} variant="secondary" className="text-base font-normal">
+                      #{tag}
                     </Badge>
                   ))}
                 </div>
               ) : (
-                <div className="h-60 flex items-center justify-center">
-                  <p className="text-muted-foreground">연관 태그가 없습니다.</p>
+                <div className="h-full flex items-center justify-center">
+                  <p className="text-muted-foreground text-center">연관 태그가 없습니다.</p>
                 </div>
               )}
             </CardContent>

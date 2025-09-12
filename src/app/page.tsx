@@ -8,11 +8,11 @@ import UrlInputSection from '@/components/app/url-input-section';
 import RecommendedKeywords from '@/components/app/recommended-keywords';
 import HomeTrendChart from '@/components/app/home-trend-chart';
 import { useRouter } from 'next/navigation';
-import { getKeywordTrendsAction, getRelatedKeywordsAction, RelatedKeywordsData } from '@/app/actions';
+import { getKeywordTrendsAction, getNaverNewsAction } from '@/app/actions';
 import type { KeywordTrendPoint } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Badge } from '@/components/ui/badge';
+import type { RelatedNewsData } from '@/ai/flows/naver-news-flow';
 
 const recommendedKeywords = ['게임', '먹방', '여행', '뷰티', 'IT'];
 
@@ -20,8 +20,8 @@ type TrendData = {
   [keyword: string]: KeywordTrendPoint[];
 };
 
-type RelatedKeywordsMap = {
-  [keyword: string]: RelatedKeywordsData;
+type RelatedNewsMap = {
+  [keyword: string]: RelatedNewsData;
 };
 
 export default function Home() {
@@ -32,13 +32,13 @@ export default function Home() {
   const [activeIndex, setActiveIndex] = useState(0);
   const [trendData, setTrendData] = useState<TrendData>({});
   const [isLoadingTrends, setIsLoadingTrends] = useState(true);
-  const [relatedKeywords, setRelatedKeywords] = useState<RelatedKeywordsMap>({});
-  const [isLoadingRelated, setIsLoadingRelated] = useState(true);
+  const [relatedNews, setRelatedNews] = useState<RelatedNewsMap>({});
+  const [isLoadingNews, setIsLoadingNews] = useState(true);
 
   useEffect(() => {
     const fetchAllData = async () => {
       setIsLoadingTrends(true);
-      setIsLoadingRelated(true);
+      setIsLoadingNews(true);
 
       const trendPromises = recommendedKeywords.map(keyword => 
         getKeywordTrendsAction({ keyword, timeRange: '2w' }).catch(e => {
@@ -47,30 +47,30 @@ export default function Home() {
         })
       );
       
-      const relatedKeywordsPromises = recommendedKeywords.map(keyword =>
-        getRelatedKeywordsAction({ keyword }).catch(e => {
-            console.error(`Failed to fetch related keywords for ${keyword}`, e);
+      const newsPromises = recommendedKeywords.map(keyword =>
+        getNaverNewsAction({ keyword }).catch(e => {
+            console.error(`Failed to fetch news for ${keyword}`, e);
             return [];
         })
       );
 
-      const [trendResults, relatedKeywordsResults] = await Promise.all([
+      const [trendResults, newsResults] = await Promise.all([
         Promise.all(trendPromises),
-        Promise.all(relatedKeywordsPromises),
+        Promise.all(newsPromises),
       ]);
 
       const allTrendData: TrendData = {};
-      const allRelatedKeywords: RelatedKeywordsMap = {};
+      const allNewsData: RelatedNewsMap = {};
 
       recommendedKeywords.forEach((keyword, index) => {
         allTrendData[keyword] = trendResults[index];
-        allRelatedKeywords[keyword] = relatedKeywordsResults[index];
+        allNewsData[keyword] = newsResults[index];
       });
 
       setTrendData(allTrendData);
-      setRelatedKeywords(allRelatedKeywords);
+      setRelatedNews(allNewsData);
       setIsLoadingTrends(false);
-      setIsLoadingRelated(false);
+      setIsLoadingNews(false);
     };
     fetchAllData();
   }, []);
@@ -133,26 +133,29 @@ export default function Home() {
           <div className="w-full mt-6">
             <Card>
               <CardHeader>
-                <CardTitle>연관 태그</CardTitle>
+                <CardTitle>관련 뉴스</CardTitle>
               </CardHeader>
               <CardContent>
-                {isLoadingRelated ? (
-                   <div className="space-y-2">
-                      <Skeleton className="h-8 w-full" />
-                      <Skeleton className="h-8 w-4/5" />
-                      <Skeleton className="h-8 w-full" />
+                {isLoadingNews ? (
+                   <div className="space-y-4">
+                      <Skeleton className="h-20 w-full" />
+                      <Skeleton className="h-20 w-full" />
+                      <Skeleton className="h-20 w-full" />
                    </div>
-                ) : relatedKeywords[currentKeyword] && relatedKeywords[currentKeyword].length > 0 ? (
-                    <div className="flex flex-wrap gap-2">
-                        {relatedKeywords[currentKeyword].map((tag) => (
-                        <Badge key={tag} variant="secondary" className="text-base">
-                            {tag}
-                        </Badge>
+                ) : relatedNews[currentKeyword] && relatedNews[currentKeyword].length > 0 ? (
+                    <ul className="space-y-4">
+                        {relatedNews[currentKeyword].slice(0, 5).map((news, index) => (
+                           <li key={index} className="border-b pb-4 last:border-b-0 last:pb-0">
+                               <a href={news.url} target="_blank" rel="noopener noreferrer" className="hover:underline">
+                                 <h3 className="font-semibold">{news.title}</h3>
+                               </a>
+                               <p className="text-sm text-muted-foreground mt-1">{news.summary}</p>
+                           </li>
                         ))}
-                    </div>
+                    </ul>
                 ) : (
                     <div className="text-center py-10">
-                        <p className="text-muted-foreground">관련 태그를 찾을 수 없습니다.</p>
+                        <p className="text-muted-foreground">관련 뉴스를 찾을 수 없습니다.</p>
                     </div>
                 )}
               </CardContent>

@@ -7,6 +7,7 @@ import { getRelatedKeywords, type RelatedKeywordsInput, type RelatedKeywordsData
 import { getYoutubeVideos, type YoutubeVideosInput, type YoutubeVideosData } from '@/ai/flows/youtube-videos-flow';
 import { getRegionalTrends, type RegionalTrendsInput, type RegionalTrendsOutput } from '@/ai/flows/regional-trends-flow';
 import { getKeywordRegionRank, type KeywordRegionRankInput, type KeywordRegionRankOutput } from '@/ai/flows/keyword-region-rank-flow';
+import { getNaverNews, type NaverNewsInput, type RelatedNewsData } from '@/ai/flows/naver-news-flow';
 import { z } from 'zod';
 import axios from 'axios';
 import { headers } from 'next/headers';
@@ -49,6 +50,17 @@ export async function getRelatedKeywordsAction(input: RelatedKeywordsInput): Pro
         return [];
     }
 }
+
+export async function getNaverNewsAction(input: NaverNewsInput): Promise<RelatedNewsData> {
+    try {
+        const news = await getNaverNews(input);
+        return news;
+    } catch (error) {
+        console.error('Error fetching naver news:', error);
+        return [];
+    }
+}
+
 
 export async function getYoutubeVideosAction(input: YoutubeVideosInput): Promise<YoutubeVideosData> {
     try {

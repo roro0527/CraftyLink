@@ -27,7 +27,8 @@ import {
 import { Input } from '@/components/ui/input';
 import { LoaderCircle, Search } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
-import { getKeywordTrendsAction, getRelatedKeywordsAction, getYoutubeVideosAction } from '@/app/actions';
+import { getKeywordTrendsAction, getYoutubeVideosAction } from '@/app/actions';
+import { getRelatedKeywords } from '@/ai/flows/related-keywords-flow';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartConfig } from '@/components/ui/chart';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { format, parseISO } from 'date-fns';
@@ -92,17 +93,20 @@ export default function KeywordPage() {
     setMaxViewCount(null);
 
     try {
-      const trendAction = getKeywordTrendsAction({ keyword, timeRange });
-      const relatedAction = getRelatedKeywordsAction({ keyword });
-      const videoAction = getYoutubeVideosAction({ keyword });
+      // Fetch all data in parallel
+      const [trendResult, relatedResult, videoResult] = await Promise.all([
+        getKeywordTrendsAction({ keyword, timeRange }),
+        getRelatedKeywords({ keyword }),
+        getYoutubeVideosAction({ keyword })
+      ]);
       
-      const [trendResult, relatedResult, videoResult] = await Promise.all([trendAction, relatedAction, videoAction]);
-      
+      // Set state for all results
       setTrendData(trendResult);
       setTotalSearchVolume(calculateTotalVolume(trendResult));
       setRelatedKeywords(relatedResult);
       setYoutubeVideos(videoResult);
       setMaxViewCount(findMaxViewCount(videoResult));
+
     } catch (error) {
         console.error("An error occurred during search:", error);
         toast({
@@ -113,8 +117,8 @@ export default function KeywordPage() {
     } finally {
         setIsSearching(false);
         setIsSearchingTrends(false);
-        setIsFetchingRelated(false);
         setIsFetchingVideos(false);
+        setIsFetchingRelated(false);
     }
   }, [timeRange, toast]);
 

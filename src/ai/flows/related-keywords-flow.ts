@@ -35,7 +35,7 @@ const getRelatedKeywordsFlow = ai.defineFlow(
       startDate: format(startDate, 'yyyy-MM-dd'),
       endDate: format(endDate, 'yyyy-MM-dd'),
       timeUnit: 'month',
-      category: '50000000', // 패션의류 - Shopping insight API requires a category
+      category: '50000001', // 디지털/가전 - All categories are not supported, so pick a broad one.
       keyword: input.keyword,
       device: '',
       gender: '',

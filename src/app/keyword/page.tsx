@@ -27,7 +27,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { LoaderCircle, Search } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
-import { getKeywordTrendsAction, getYoutubeVideosAction, getRelatedKeywordsAction } from '@/app/actions';
+import { getKeywordTrendsAction, getRelatedKeywordsAction } from '@/app/actions';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartConfig } from '@/components/ui/chart';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { format, parseISO } from 'date-fns';
@@ -36,6 +36,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import type { KeywordTrendPoint, YoutubeVideo } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
+import { getYoutubeVideosAction } from '../actions';
 
 
 const chartConfig = {
@@ -165,6 +166,11 @@ export default function KeywordPage() {
     if (event.key === 'Enter') {
       handleSearch(keywordSearch);
     }
+  };
+  
+  const handleTagClick = (tag: string) => {
+    setKeywordSearch(tag);
+    handleSearch(tag);
   };
 
   const handleExportCsv = () => {
@@ -397,7 +403,12 @@ export default function KeywordPage() {
               ) : relatedKeywords.length > 0 ? (
                 <div className="flex flex-wrap gap-2">
                   {relatedKeywords.map((tag) => (
-                    <Badge key={tag} variant="secondary" className="text-base font-normal">
+                    <Badge 
+                      key={tag} 
+                      variant="secondary" 
+                      className="text-base font-normal cursor-pointer hover:bg-primary/20"
+                      onClick={() => handleTagClick(tag)}
+                    >
                       #{tag}
                     </Badge>
                   ))}
@@ -413,3 +424,4 @@ export default function KeywordPage() {
     </div>
   );
 }
+

@@ -45,7 +45,7 @@ app.use("/getNaverNews", limiter);
 // --- YouTube and Kakao API Setup ---
 const youtube = google.youtube({
   version: "v3",
-  auth: process.env.GOOGLE_YOUTUBE_API_KEY,
+  auth: process.env.YOUTUBE_API_KEY,
 });
 const KAKAO_API_KEY = process.env.KAKAO_APP_KEY;
 
@@ -227,4 +227,4 @@ app.get("/getNaverNews", async (req, res) => {
 });
 
 
-export const api = functions.runWith({ secrets: ["NAVER_CLIENT_ID", "NAVER_CLIENT_SECRET", "GOOGLE_YOUTUBE_API_KEY", "KAKAO_APP_KEY"]}).region("asia-northeast3").https.onRequest(app);
+export const api = functions.runWith({ secrets: ["NAVER_CLIENT_ID", "NAVER_CLIENT_SECRET", "YOUTUBE_API_KEY", "KAKAO_APP_KEY"]}).region("asia-northeast3").https.onRequest(app);

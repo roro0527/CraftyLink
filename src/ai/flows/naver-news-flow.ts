@@ -28,19 +28,18 @@ export type RelatedNewsData = z.infer<typeof RelatedNewsDataSchema>;
 
 
 export async function getNaverNews(input: NaverNewsInput): Promise<RelatedNewsData> {
-  const functionUrl = '/api/getNaverNews';
+  const functionPath = '/api/getNaverNews';
   
   try {
     const host = headers().get('host');
     const protocol = host?.startsWith('localhost') ? 'http' : 'https';
     const baseURL = `${protocol}://${host}`;
 
-    const response = await axios.get(functionUrl, {
-      baseURL,
-      params: {
-        query: input.keyword,
-      },
-    });
+    // Create a full URL object to ensure the path is resolved correctly
+    const fullUrl = new URL(functionPath, baseURL);
+    fullUrl.searchParams.append('query', input.keyword);
+
+    const response = await axios.get(fullUrl.toString());
 
     // Validate the response data with Zod
     const validationResult = RelatedNewsDataSchema.safeParse(response.data);

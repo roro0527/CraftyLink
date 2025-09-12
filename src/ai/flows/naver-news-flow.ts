@@ -1,7 +1,6 @@
-
 'use server';
 /**
- * @fileOverview A related news fetching agent using Naver Search API via a Cloud Function.
+ * @fileOverview A related news fetching agent using a shared business logic function.
  *
  * - getNaverNews - A function that handles fetching related news articles from Naver.
  * - NaverNewsInput - The input type for the getNaverNews function.
@@ -9,8 +8,9 @@
  */
 
 import { z } from 'zod';
-import axios from 'axios';
-import { headers } from 'next/headers';
+import { fetchNaverNewsLogic, type NewsArticle } from '@/lib/naver-news';
+import { getFirestore } from 'firebase-admin/firestore';
+import { initializeApp, getApps, cert } from 'firebase-admin/app';
 
 const NaverNewsInputSchema = z.object({
   keyword: z.string().describe('The keyword to find news articles for.'),
@@ -26,23 +26,36 @@ const NewsArticleSchema = z.object({
 const RelatedNewsDataSchema = z.array(NewsArticleSchema).describe('A list of related news articles.');
 export type RelatedNewsData = z.infer<typeof RelatedNewsDataSchema>;
 
+function getAdminFirestore() {
+    if (getApps().length === 0) {
+        // In a non-Functions environment, you need to provide credentials.
+        // Assumes service account key is stored in an environment variable.
+        if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
+            initializeApp({
+                credential: cert(JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY)),
+            });
+        } else {
+            // This will work in Cloud Functions and other GCP environments.
+             initializeApp();
+        }
+    }
+    return getFirestore();
+}
+
 
 export async function getNaverNews(input: NaverNewsInput): Promise<RelatedNewsData> {
-  const functionPath = '/api/getNaverNews';
-  
   try {
-    const host = headers().get('host');
-    const protocol = host?.startsWith('localhost') ? 'http' : 'https';
-    const baseURL = `${protocol}://${host}`;
-
-    // Create a full URL object to ensure the path is resolved correctly
-    const fullUrl = new URL(functionPath, baseURL);
-    fullUrl.searchParams.append('query', input.keyword);
-
-    const response = await axios.get(fullUrl.toString());
+    const firestore = getAdminFirestore();
+    const articles: NewsArticle[] = await fetchNaverNewsLogic(
+        input.keyword,
+        firestore,
+        process.env.NAVER_CLIENT_ID!,
+        process.env.NAVER_CLIENT_SECRET!
+    );
 
     // Validate the response data with Zod
-    const validationResult = RelatedNewsDataSchema.safeParse(response.data);
+    const validationResult = RelatedNewsDataSchema.safeParse(articles);
+
     if (!validationResult.success) {
       console.error('Naver news data validation failed:', validationResult.error);
       return [];
@@ -50,12 +63,7 @@ export async function getNaverNews(input: NaverNewsInput): Promise<RelatedNewsDa
 
     return validationResult.data;
   } catch (error: any) {
-    if (axios.isAxiosError(error)) {
-        console.error('Error fetching Naver news from Cloud Function:', error.response?.data || error.message);
-    } else {
-        console.error('An unexpected error occurred in getNaverNews:', error);
-    }
-    // Re-throw the error to be caught by the caller (e.g., server action)
+    console.error('An unexpected error occurred in getNaverNews:', error);
     throw error;
   }
 }

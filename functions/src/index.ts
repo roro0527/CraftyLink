@@ -1,4 +1,3 @@
-
 /**
  * @fileOverview Firebase Cloud Functions for CraftyLink.
  *
@@ -16,6 +15,7 @@ import cors from "cors";
 import axios from "axios";
 import { google } from "googleapis";
 import rateLimit from "express-rate-limit";
+import { fetchNaverNewsLogic } from "./naver-news";
 
 // Initialize Firebase Admin SDK
 admin.initializeApp();
@@ -56,10 +56,6 @@ const NAVER_CLIENT_SECRET = process.env.NAVER_CLIENT_SECRET;
 
 // --- Cache Configuration ---
 const CACHE_TTL_MINUTES = 10;
-
-
-// Helper function to remove HTML tags
-const removeHtmlTags = (str: string) => str ? str.replace(/<[^>]*>?/gm, '') : '';
 
 
 /**
@@ -208,89 +204,25 @@ app.get("/getTopVideos", async (req, res) => {
   }
 });
 
-
-/**
- * Fetches top news articles from Naver Search API.
- * Caches results in Firestore.
- * @param {string} query - The search query.
- * @returns {Promise<any[]>} A list of news articles.
- */
 app.get("/getNaverNews", async (req, res) => {
     const { query } = req.query;
-
-    if (!query) {
-        return res.status(400).send({ error: "Missing required query parameter: query" });
+    if (typeof query !== 'string' || !query) {
+        return res.status(400).send({ error: "Missing or invalid required query parameter: query" });
     }
-
-    const queryString = query as string;
-    const cacheKey = queryString.replace(/[^a-zA-Z0-9가-힣]/g, ""); // Sanitize key
-    const cacheRef = firestore.collection("naverNews").doc(cacheKey);
-    
+    if (!NAVER_CLIENT_ID || !NAVER_CLIENT_SECRET) {
+        functions.logger.error("Naver API credentials are not set in the environment.");
+        return res.status(500).send({ error: "Server configuration error: Naver API credentials missing." });
+    }
     try {
-        const cacheDoc = await cacheRef.get();
-        if (cacheDoc.exists) {
-            const cacheData = cacheDoc.data()!;
-            const now = admin.firestore.Timestamp.now();
-            const diffMinutes = (now.seconds - cacheData.updatedAt.seconds) / 60;
-            if (diffMinutes < CACHE_TTL_MINUTES) {
-                functions.logger.info(`Returning cached news for query: ${queryString}`);
-                return res.status(200).json(cacheData.articles);
-            }
-        }
-
-        functions.logger.info(`Cache miss or expired for news query: ${queryString}. Fetching fresh data.`);
-        const url = "https://openapi.naver.com/v1/search/news.json";
-        
-        const response = await axios.get(url, {
-            params: { query: queryString, display: 5, sort: 'sim' }, // display 5 items
-            headers: {
-                "X-Naver-Client-Id": NAVER_CLIENT_ID,
-                "X-Naver-Client-Secret": NAVER_CLIENT_SECRET,
-            },
-        });
-
-        // Handle cases where Naver API returns a success status but with an error message (e.g., auth failure)
-        if (response.data && response.data.errorMessage) {
-            functions.logger.error("Naver API returned an error:", response.data.errorMessage, { query: queryString });
-            return res.status(500).send({ error: `Naver API Error: ${response.data.errorMessage}` });
-        }
-        
-        if (response.data && response.data.items) {
-          const articles = response.data.items.map((item: any) => ({
-              title: removeHtmlTags(item.title),
-              url: item.link.replace(/\\/g, ''), // Clean up URL
-              summary: removeHtmlTags(item.description),
-          }));
-
-          await cacheRef.set({
-              articles,
-              updatedAt: admin.firestore.Timestamp.now(),
-          });
-          functions.logger.info(`Successfully cached news for query: ${queryString}`);
-          
-          return res.status(200).json(articles);
-        } else {
-           // This case might happen if the response is successful but 'items' is missing.
-           functions.logger.warn("Naver API call successful but no items were returned.", { query: queryString, responseData: response.data });
-           return res.status(200).json([]);
-        }
-
+        const articles = await fetchNaverNewsLogic(query, firestore, NAVER_CLIENT_ID, NAVER_CLIENT_SECRET);
+        return res.status(200).json(articles);
     } catch (error: any) {
-        if (axios.isAxiosError(error) && error.response) {
-            // Log detailed error from Naver API (e.g., 4xx or 5xx responses)
-            functions.logger.error(`Naver API call failed for query "${queryString}":`, {
-                status: error.response.status,
-                data: error.response.data,
-            });
-             return res.status(error.response.status || 500).send({ 
-                error: "Failed to fetch news from Naver API.", 
-                details: error.response.data 
-            });
-        } else {
-            // Handle other unexpected errors (e.g., network issues, timeouts)
-            functions.logger.error(`An unexpected error occurred in getNaverNews for query "${queryString}":`, error);
-        }
-        return res.status(500).send({ error: "An unexpected error occurred while fetching news." });
+        functions.logger.error(`Error in /getNaverNews endpoint for query "${query}":`, error);
+        // Provide a more specific error message if available
+        const message = error.message || "An unexpected error occurred while fetching news.";
+        // Determine status code based on error type if possible
+        const statusCode = error.isAxiosError ? error.response?.status || 500 : 500;
+        return res.status(statusCode).send({ error: message });
     }
 });
 

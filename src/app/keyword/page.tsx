@@ -78,8 +78,8 @@ export default function KeywordPage() {
     return Math.max(...videos.map(video => parseInt(video.viewCount, 10) || 0));
   };
   
-  const handleSearch = async () => {
-    if (!keywordSearch.trim()) return;
+  const handleSearch = React.useCallback(async (keyword: string) => {
+    if (!keyword.trim()) return;
     
     setIsSearching(true);
     setIsSearchingTrends(true);
@@ -91,51 +91,76 @@ export default function KeywordPage() {
     setYoutubeVideos([]);
     setMaxViewCount(null);
 
-
-    const trendAction = getKeywordTrendsAction({ keyword: keywordSearch, timeRange });
-    const relatedAction = getRelatedKeywordsAction({ keyword: keywordSearch });
-    const videoAction = getYoutubeVideosAction({ keyword: keywordSearch });
-    
-    const [trendResult, relatedResult, videoResult] = await Promise.all([trendAction, relatedAction, videoAction]);
-    
-    setTrendData(trendResult);
-    setTotalSearchVolume(calculateTotalVolume(trendResult));
-    setRelatedKeywords(relatedResult);
-    setYoutubeVideos(videoResult);
-    setMaxViewCount(findMaxViewCount(videoResult));
-
-    setIsSearching(false);
-    setIsSearchingTrends(false);
-    setIsFetchingRelated(false);
-    setIsFetchingVideos(false);
-  };
-
-  React.useEffect(() => {
-    // On initial load, if there's a keyword from the URL, perform a search.
-    if (initialKeyword) {
-        handleSearch();
+    try {
+      const trendAction = getKeywordTrendsAction({ keyword, timeRange });
+      const relatedAction = getRelatedKeywordsAction({ keyword });
+      const videoAction = getYoutubeVideosAction({ keyword });
+      
+      const [trendResult, relatedResult, videoResult] = await Promise.all([trendAction, relatedAction, videoAction]);
+      
+      setTrendData(trendResult);
+      setTotalSearchVolume(calculateTotalVolume(trendResult));
+      setRelatedKeywords(relatedResult);
+      setYoutubeVideos(videoResult);
+      setMaxViewCount(findMaxViewCount(videoResult));
+    } catch (error) {
+        console.error("An error occurred during search:", error);
+        toast({
+            variant: "destructive",
+            title: "검색 중 오류 발생",
+            description: "데이터를 가져오는 데 실패했습니다. 다시 시도해주세요.",
+        });
+    } finally {
+        setIsSearching(false);
+        setIsSearchingTrends(false);
+        setIsFetchingRelated(false);
+        setIsFetchingVideos(false);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [timeRange, toast]);
 
   React.useEffect(() => {
-    // Refetch trend data when timeRange changes, but only if there's a keyword.
-    if (keywordSearch.trim()) {
+    if (initialKeyword) {
+        handleSearch(initialKeyword);
+    }
+  }, [initialKeyword, handleSearch]);
+
+  React.useEffect(() => {
+    if (keywordSearch.trim() && !isSearching) {
+      let isActive = true;
       const fetchTrends = async () => {
         setIsSearchingTrends(true);
-        const trendResult = await getKeywordTrendsAction({ keyword: keywordSearch, timeRange });
-        setTrendData(trendResult);
-        setTotalSearchVolume(calculateTotalVolume(trendResult));
-        setIsSearchingTrends(false);
+        try {
+          const trendResult = await getKeywordTrendsAction({ keyword: keywordSearch, timeRange });
+          if (isActive) {
+            setTrendData(trendResult);
+            setTotalSearchVolume(calculateTotalVolume(trendResult));
+          }
+        } catch (error) {
+           console.error("An error occurred fetching trends:", error);
+           if (isActive) {
+             toast({
+                variant: "destructive",
+                title: "트렌드 데이터 로드 실패",
+                description: "시간 범위에 따른 트렌드 데이터를 가져오는 데 실패했습니다.",
+             });
+           }
+        } finally {
+          if (isActive) {
+            setIsSearchingTrends(false);
+          }
+        }
       };
       fetchTrends();
+      
+      return () => {
+        isActive = false;
+      };
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [timeRange]);
+  }, [timeRange, keywordSearch, isSearching, toast]);
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Enter') {
-      handleSearch();
+      handleSearch(keywordSearch);
     }
   };
 
@@ -199,7 +224,7 @@ export default function KeywordPage() {
             <Button
                 variant="ghost"
                 size="icon"
-                onClick={handleSearch}
+                onClick={() => handleSearch(keywordSearch)}
                 disabled={isSearching || !keywordSearch.trim()}
                 className="absolute left-2 top-1/2 -translate-y-1/2 h-10 w-10"
               >

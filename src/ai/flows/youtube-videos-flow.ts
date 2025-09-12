@@ -12,6 +12,7 @@ import {ai} from '@/ai/genkit';
 import {z} from 'zod';
 import { google } from 'googleapis';
 import type { YoutubeVideo } from '@/lib/types';
+import { differenceInDays, parseISO } from 'date-fns';
 
 
 const YoutubeVideosInputSchema = z.object({
@@ -24,6 +25,7 @@ const YoutubeVideoSchema = z.object({
     publishedAt: z.string(),
     viewCount: z.string(),
     channelTitle: z.string(),
+    growthRate: z.number().optional(),
 });
 
 const YoutubeVideosDataSchema = z.array(YoutubeVideoSchema);
@@ -47,7 +49,7 @@ const getYoutubeVideosFlow = ai.defineFlow(
             part: ['snippet'],
             q: input.keyword,
             type: ['video'],
-            maxResults: 5,
+            maxResults: 25, // Fetch more results to calculate growth rate accurately
             order: 'relevance',
         });
 
@@ -62,14 +64,28 @@ const getYoutubeVideosFlow = ai.defineFlow(
             id: videoIds,
         });
 
-        const videoDetails: YoutubeVideosData = videosResponse.data.items?.map(item => ({
-            title: item.snippet?.title || 'No Title',
-            publishedAt: item.snippet?.publishedAt || '',
-            viewCount: item.statistics?.viewCount || '0',
-            channelTitle: item.snippet?.channelTitle || 'No Channel',
-        })) || [];
+        const videoDetails: YoutubeVideo[] = videosResponse.data.items?.map(item => {
+            const viewCount = parseInt(item.statistics?.viewCount || '0', 10);
+            const publishedAt = item.snippet?.publishedAt || new Date().toISOString();
+            const daysSincePublished = differenceInDays(new Date(), parseISO(publishedAt));
+            
+            // Calculate growth rate: views per day.
+            // If published within the last day, use viewCount itself to avoid division by zero and prioritize new videos.
+            const growthRate = daysSincePublished > 0 ? viewCount / daysSincePublished : viewCount;
+
+            return {
+                title: item.snippet?.title || 'No Title',
+                publishedAt: publishedAt,
+                viewCount: item.statistics?.viewCount || '0',
+                channelTitle: item.snippet?.channelTitle || 'No Channel',
+                growthRate: growthRate
+            };
+        }) || [];
         
-        return videoDetails;
+        // Sort by growth rate in descending order and take the top 5
+        const sortedVideos = videoDetails.sort((a, b) => (b.growthRate || 0) - (a.growthRate || 0));
+        
+        return sortedVideos.slice(0, 5);
 
     } catch (err) {
         console.error('Error fetching YouTube data:', err);

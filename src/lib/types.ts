@@ -17,4 +17,5 @@ export interface YoutubeVideo {
     publishedAt: string;
     viewCount: string;
     channelTitle: string;
+    growthRate?: number;
 }

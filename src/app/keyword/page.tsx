@@ -61,7 +61,7 @@ export default function KeywordPage() {
   const [isFetchingRelated, setIsFetchingRelated] = React.useState(false);
   const [youtubeVideos, setYoutubeVideos] = React.useState<YoutubeVideo[]>([]);
   const [isFetchingVideos, setIsFetchingVideos] = React.useState(false);
-  const [maxViewCount, setMaxViewCount] = React.useState<number | null>(null);
+  const [maxGrowthRate, setMaxGrowthRate] = React.useState<number | null>(null);
 
 
   const keywordData = {
@@ -74,9 +74,9 @@ export default function KeywordPage() {
     return data.reduce((sum, point) => sum + point.value, 0);
   };
 
-  const findMaxViewCount = (videos: YoutubeVideo[]) => {
+  const findMaxGrowthRate = (videos: YoutubeVideo[]) => {
     if (!videos || videos.length === 0) return 0;
-    return Math.max(...videos.map(video => parseInt(video.viewCount, 10) || 0));
+    return Math.max(...videos.map(video => video.growthRate || 0));
   };
   
   const handleSearch = React.useCallback(async (keyword: string) => {
@@ -90,7 +90,7 @@ export default function KeywordPage() {
     setTotalSearchVolume(null);
     setRelatedKeywords([]);
     setYoutubeVideos([]);
-    setMaxViewCount(null);
+    setMaxGrowthRate(null);
 
     try {
       // Fetch all data in parallel
@@ -105,7 +105,7 @@ export default function KeywordPage() {
       setTotalSearchVolume(calculateTotalVolume(trendResult));
       setRelatedKeywords(relatedResult);
       setYoutubeVideos(videoResult);
-      setMaxViewCount(findMaxViewCount(videoResult));
+      setMaxGrowthRate(findMaxGrowthRate(videoResult));
 
     } catch (error) {
         console.error("An error occurred during search:", error);
@@ -195,10 +195,10 @@ export default function KeywordPage() {
 
     // Add YouTube Video Data
     csvContent += '관련 영상 목록\n';
-    csvContent += '제목,업로드일,조회수,채널\n';
+    csvContent += '제목,업로드일,조회수,채널,조회수 증가율\n';
     youtubeVideos.forEach(video => {
       const title = video.title.replace(/"/g, '""'); // Escape double quotes
-      csvContent += `"${title}",${format(parseISO(video.publishedAt), 'yyyy-MM-dd')},${video.viewCount},${video.channelTitle}\n`;
+      csvContent += `"${title}",${format(parseISO(video.publishedAt), 'yyyy-MM-dd')},${video.viewCount},${video.channelTitle},${video.growthRate?.toFixed(2) || 0}\n`;
     });
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -264,14 +264,14 @@ export default function KeywordPage() {
           </Card>
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">최고 조회수</CardTitle>
+              <CardTitle className="text-sm font-medium">최고 증가율</CardTitle>
             </CardHeader>
             <CardContent>
                {isSearching || isFetchingVideos ? (
                 <Skeleton className="h-8 w-24" />
               ) : (
                 <div className="text-2xl font-bold">
-                  {maxViewCount !== null ? maxViewCount.toLocaleString() : 'N/A'}
+                  {maxGrowthRate !== null ? maxGrowthRate.toLocaleString(undefined, { maximumFractionDigits: 0 }) : 'N/A'}
                 </div>
               )}
             </CardContent>
@@ -353,6 +353,7 @@ export default function KeywordPage() {
                     <TableHead>업로드일</TableHead>
                     <TableHead>조회수</TableHead>
                     <TableHead>채널</TableHead>
+                    <TableHead>증가율</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -363,6 +364,7 @@ export default function KeywordPage() {
                         <TableCell><Skeleton className="h-5 w-24" /></TableCell>
                         <TableCell><Skeleton className="h-5 w-20" /></TableCell>
                         <TableCell><Skeleton className="h-5 w-28" /></TableCell>
+                        <TableCell><Skeleton className="h-5 w-16" /></TableCell>
                       </TableRow>
                     ))
                   ) : youtubeVideos.length > 0 ? (
@@ -372,11 +374,12 @@ export default function KeywordPage() {
                         <TableCell>{format(parseISO(video.publishedAt), 'yyyy-MM-dd')}</TableCell>
                         <TableCell>{parseInt(video.viewCount).toLocaleString()}</TableCell>
                         <TableCell>{video.channelTitle}</TableCell>
+                        <TableCell>{video.growthRate?.toFixed(2) || 'N/A'}</TableCell>
                       </TableRow>
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={4} className="text-center h-24">
+                      <TableCell colSpan={5} className="text-center h-24">
                         데이터가 없습니다.
                       </TableCell>
                     </TableRow>
@@ -424,4 +427,3 @@ export default function KeywordPage() {
     </div>
   );
 }
-

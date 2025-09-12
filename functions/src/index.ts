@@ -249,9 +249,9 @@ app.get("/getNaverNews", async (req, res) => {
             },
         });
 
-        // Handle cases where Naver API returns a success status but with an error message
+        // Handle cases where Naver API returns a success status but with an error message (e.g., auth failure)
         if (response.data && response.data.errorMessage) {
-            functions.logger.error("Naver API returned an error:", response.data.errorMessage);
+            functions.logger.error("Naver API returned an error:", response.data.errorMessage, { query: queryString });
             return res.status(500).send({ error: `Naver API Error: ${response.data.errorMessage}` });
         }
         
@@ -270,19 +270,24 @@ app.get("/getNaverNews", async (req, res) => {
           
           return res.status(200).json(articles);
         } else {
-           functions.logger.error("Naver API call failed: Unexpected response format", response.data);
-           return res.status(500).send({ error: "Failed to fetch news from Naver API due to an unexpected response." });
+           // This case might happen if the response is successful but 'items' is missing.
+           functions.logger.warn("Naver API call successful but no items were returned.", { query: queryString, responseData: response.data });
+           return res.status(200).json([]);
         }
 
     } catch (error: any) {
         if (axios.isAxiosError(error) && error.response) {
-            // Log detailed error from Naver API
+            // Log detailed error from Naver API (e.g., 4xx or 5xx responses)
             functions.logger.error(`Naver API call failed for query "${queryString}":`, {
                 status: error.response.status,
                 data: error.response.data,
             });
-             return res.status(500).send({ error: "Failed to fetch news from Naver API.", details: error.response.data });
+             return res.status(error.response.status || 500).send({ 
+                error: "Failed to fetch news from Naver API.", 
+                details: error.response.data 
+            });
         } else {
+            // Handle other unexpected errors (e.g., network issues, timeouts)
             functions.logger.error(`An unexpected error occurred in getNaverNews for query "${queryString}":`, error);
         }
         return res.status(500).send({ error: "An unexpected error occurred while fetching news." });

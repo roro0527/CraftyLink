@@ -47,12 +47,20 @@ export default function Home() {
         })
       );
       
-      const newsPromises = recommendedKeywords.map(keyword =>
-        getNaverNewsAction({ keyword }).catch(e => {
+      const newsPromises = recommendedKeywords.map(async (keyword) => {
+        try {
+          return await getNaverNewsAction({ keyword });
+        } catch (e) { {
             console.error(`Failed to fetch news for ${keyword}`, e);
-            return [];
-        })
-      );
+            toast({
+                variant: 'destructive',
+                title: '뉴스 데이터 로드 실패',
+                description: `'${keyword}' 관련 뉴스를 불러오는 데 실패했습니다.`,
+            });
+            return []; // Return empty array on error
+          }
+        }
+      });
 
       const [trendResults, newsResults] = await Promise.all([
         Promise.all(trendPromises),
@@ -73,6 +81,7 @@ export default function Home() {
       setIsLoadingNews(false);
     };
     fetchAllData();
+     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -155,7 +164,7 @@ export default function Home() {
                     </ul>
                 ) : (
                     <div className="text-center py-10">
-                        <p className="text-muted-foreground">관련 뉴스를 찾을 수 없습니다.</p>
+                        <p className="text-muted-foreground">관련된 뉴스를 찾을 수 없습니다.</p>
                     </div>
                 )}
               </CardContent>

@@ -55,6 +55,7 @@ export async function getNaverNews(input: NaverNewsInput): Promise<RelatedNewsDa
     } else {
         console.error('An unexpected error occurred in getNaverNews:', error);
     }
-    return [];
+    // Re-throw the error to be caught by the caller (e.g., server action)
+    throw error;
   }
 }

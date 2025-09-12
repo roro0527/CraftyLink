@@ -50,15 +50,15 @@ export default function Home() {
       const newsPromises = recommendedKeywords.map(async (keyword) => {
         try {
           return await getNaverNewsAction({ keyword });
-        } catch (e) { {
+        } catch (e) {
             console.error(`Failed to fetch news for ${keyword}`, e);
+            alert('api 인증 실패'); // API authentication failure alert for error_1
             toast({
                 variant: 'destructive',
                 title: '뉴스 데이터 로드 실패',
                 description: `'${keyword}' 관련 뉴스를 불러오는 데 실패했습니다.`,
             });
             return []; // Return empty array on error
-          }
         }
       });
 

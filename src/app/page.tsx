@@ -8,10 +8,11 @@ import UrlInputSection from '@/components/app/url-input-section';
 import RecommendedKeywords from '@/components/app/recommended-keywords';
 import HomeTrendChart from '@/components/app/home-trend-chart';
 import { useRouter } from 'next/navigation';
-import { getKeywordTrendsAction, getNaverNewsAction, type RelatedNewsData } from '@/app/actions';
+import { getKeywordTrendsAction, getRelatedKeywordsAction, RelatedKeywordsData } from '@/app/actions';
 import type { KeywordTrendPoint } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Badge } from '@/components/ui/badge';
 
 const recommendedKeywords = ['게임', '먹방', '여행', '뷰티', 'IT'];
 
@@ -19,8 +20,8 @@ type TrendData = {
   [keyword: string]: KeywordTrendPoint[];
 };
 
-type NewsData = {
-  [keyword: string]: RelatedNewsData;
+type RelatedKeywordsMap = {
+  [keyword: string]: RelatedKeywordsData;
 };
 
 export default function Home() {
@@ -31,13 +32,13 @@ export default function Home() {
   const [activeIndex, setActiveIndex] = useState(0);
   const [trendData, setTrendData] = useState<TrendData>({});
   const [isLoadingTrends, setIsLoadingTrends] = useState(true);
-  const [newsData, setNewsData] = useState<NewsData>({});
-  const [isLoadingNews, setIsLoadingNews] = useState(true);
+  const [relatedKeywords, setRelatedKeywords] = useState<RelatedKeywordsMap>({});
+  const [isLoadingRelated, setIsLoadingRelated] = useState(true);
 
   useEffect(() => {
     const fetchAllData = async () => {
       setIsLoadingTrends(true);
-      setIsLoadingNews(true);
+      setIsLoadingRelated(true);
 
       const trendPromises = recommendedKeywords.map(keyword => 
         getKeywordTrendsAction({ keyword, timeRange: '2w' }).catch(e => {
@@ -46,30 +47,30 @@ export default function Home() {
         })
       );
       
-      const newsPromises = recommendedKeywords.map(keyword =>
-        getNaverNewsAction({ keyword }).catch(e => {
-            console.error(`Failed to fetch news for ${keyword}`, e);
+      const relatedKeywordsPromises = recommendedKeywords.map(keyword =>
+        getRelatedKeywordsAction({ keyword }).catch(e => {
+            console.error(`Failed to fetch related keywords for ${keyword}`, e);
             return [];
         })
       );
 
-      const [trendResults, newsResults] = await Promise.all([
+      const [trendResults, relatedKeywordsResults] = await Promise.all([
         Promise.all(trendPromises),
-        Promise.all(newsPromises),
+        Promise.all(relatedKeywordsPromises),
       ]);
 
       const allTrendData: TrendData = {};
-      const allNewsData: NewsData = {};
+      const allRelatedKeywords: RelatedKeywordsMap = {};
 
       recommendedKeywords.forEach((keyword, index) => {
         allTrendData[keyword] = trendResults[index];
-        allNewsData[keyword] = newsResults[index];
+        allRelatedKeywords[keyword] = relatedKeywordsResults[index];
       });
 
       setTrendData(allTrendData);
-      setNewsData(allNewsData);
+      setRelatedKeywords(allRelatedKeywords);
       setIsLoadingTrends(false);
-      setIsLoadingNews(false);
+      setIsLoadingRelated(false);
     };
     fetchAllData();
   }, []);
@@ -130,40 +131,32 @@ export default function Home() {
           />
 
           <div className="w-full mt-6">
-            {isLoadingNews ? (
-                <div className="space-y-4">
-                    {Array.from({ length: 3 }).map((_, i) => (
-                        <Card key={i}>
-                            <CardHeader>
-                                <Skeleton className="h-6 w-3/4" />
-                            </CardHeader>
-                            <CardContent>
-                                <Skeleton className="h-4 w-full mb-2" />
-                                <Skeleton className="h-4 w-5/6" />
-                            </CardContent>
-                        </Card>
-                    ))}
-                </div>
-            ) : newsData[currentKeyword] && newsData[currentKeyword].length > 0 ? (
-                 <div className="flex flex-col gap-4">
-                    {newsData[currentKeyword].map((article, index) => (
-                      <a href={article.url} key={index} target="_blank" rel="noopener noreferrer" className="block">
-                        <Card className="transition-shadow hover:shadow-lg">
-                            <CardHeader>
-                                <CardTitle className="text-lg">{article.title}</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <p className="text-sm text-muted-foreground">{article.summary}</p>
-                            </CardContent>
-                        </Card>
-                      </a>
-                    ))}
-                </div>
-            ) : (
-                <div className="text-center py-10">
-                    <p className="text-muted-foreground">관련 뉴스를 찾을 수 없습니다.</p>
-                </div>
-            )}
+            <Card>
+              <CardHeader>
+                <CardTitle>연관 태그</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {isLoadingRelated ? (
+                   <div className="space-y-2">
+                      <Skeleton className="h-8 w-full" />
+                      <Skeleton className="h-8 w-4/5" />
+                      <Skeleton className="h-8 w-full" />
+                   </div>
+                ) : relatedKeywords[currentKeyword] && relatedKeywords[currentKeyword].length > 0 ? (
+                    <div className="flex flex-wrap gap-2">
+                        {relatedKeywords[currentKeyword].map((tag) => (
+                        <Badge key={tag} variant="secondary" className="text-base">
+                            {tag}
+                        </Badge>
+                        ))}
+                    </div>
+                ) : (
+                    <div className="text-center py-10">
+                        <p className="text-muted-foreground">관련 태그를 찾을 수 없습니다.</p>
+                    </div>
+                )}
+              </CardContent>
+            </Card>
           </div>
         </div>
       </main>

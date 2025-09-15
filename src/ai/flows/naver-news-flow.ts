@@ -35,7 +35,8 @@ function getAdminFirestore() {
                 credential: cert(JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY)),
             });
         } else {
-            // This will work in Cloud Functions and other GCP environments.
+            // This will work in Cloud Functions and other GCP environments but might fail in local Next.js dev.
+            // For robust local dev, FIREBASE_SERVICE_ACCOUNT_KEY should be set.
              initializeApp();
         }
     }

@@ -77,10 +77,10 @@ export async function fetchNaverNewsLogic(
                 summary: removeHtmlTags(item.description),
             }));
 
-            const { Timestamp } = await import('firebase-admin/firestore');
+            // Use the Timestamp object from the passed-in firestore instance
             await cacheRef.set({
                 articles,
-                updatedAt: Timestamp.fromMillis(now),
+                updatedAt: firestore.Timestamp.fromMillis(now),
             });
             logger.info(`Successfully cached news for query: ${query}`);
 

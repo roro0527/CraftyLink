@@ -1,0 +1,101 @@
+
+'use server';
+/**
+ * @fileOverview A keyword gender/age analysis agent using Naver DataLab API.
+ *
+ * - getGenderAgeTrend - A function that fetches gender and age trend data for a keyword.
+ * - GenderAgeTrendInput - The input type for the getGenderAgeTrend function.
+ * - GenderAgeTrendData - The return type for the getGenderAgeTrend function.
+ */
+
+import { ai } from '@/ai/genkit';
+import { z } from 'zod';
+import axios from 'axios';
+import { getAdminFirestore } from '@/lib/firebase-admin';
+import { GenderAgeTrendDataSchema, GenderAgeTrendInputSchema } from '@/lib/types';
+import type { GenderAgeTrendData, GenderAgeTrendInput } from '@/lib/types';
+
+
+const CACHE_TTL_HOURS = 24;
+
+export const getGenderAgeTrend = ai.defineFlow(
+  {
+    name: 'getGenderAgeTrend',
+    inputSchema: GenderAgeTrendInputSchema,
+    outputSchema: GenderAgeTrendDataSchema,
+  },
+  async (input): Promise<GenderAgeTrendData> => {
+    const { keyword, startDate, endDate } = input;
+    const firestore = getAdminFirestore();
+    const cacheKey = `gender-age-${keyword}-${startDate}-${endDate}`.replace(/[^a-zA-Z0-9-]/g, "");
+    const cacheRef = firestore.collection('naverDatalabCache').doc(cacheKey);
+
+    // 1. Check cache
+    try {
+        const cacheDoc = await cacheRef.get();
+        if (cacheDoc.exists) {
+            const cacheData = cacheDoc.data()!;
+            const now = new Date().getTime();
+            const updatedAt = cacheData.updatedAt.toMillis();
+            const diffHours = (now - updatedAt) / (1000 * 60 * 60);
+
+            if (diffHours < CACHE_TTL_HOURS) {
+                console.log(`Returning cached gender/age data for: ${keyword}`);
+                return cacheData.data as GenderAgeTrendData;
+            }
+        }
+    } catch (e) {
+        console.error("Cache read error for gender/age:", e);
+    }
+    
+
+    // 2. Fetch from API
+    console.log(`Fetching fresh gender/age data for: ${keyword}`);
+    const requestBody = {
+      startDate,
+      endDate,
+      timeUnit: 'date',
+      category: '50000001', // Using a broad category like '디지털/가전'
+      keyword,
+      device: '',
+      gender: '',
+      ages: [],
+    };
+
+    try {
+        const response = await axios.post('https://openapi.naver.com/v1/datalab/shopping-insight/category/keyword/gender-age', requestBody, {
+            headers: {
+              'X-Naver-Client-Id': process.env.NAVER_DATALAB_CLIENT_ID!,
+              'X-Naver-Client-Secret': process.env.NAVER_DATALAB_CLIENT_SECRET!,
+              'Content-Type': 'application/json',
+            },
+        });
+
+        const results = response.data.results[0];
+        if (!results) {
+            return { genderGroups: [], ageGroups: [] };
+        }
+        
+        const data: GenderAgeTrendData = {
+            genderGroups: results.gender.map((g: any) => ({ group: g.group, ratio: g.ratio })),
+            ageGroups: results.age.map((a: any) => ({ group: a.group, ratio: a.ratio })),
+        };
+
+        // 3. Update cache
+        await cacheRef.set({
+            data,
+            updatedAt: new Date(),
+        });
+        
+        return data;
+
+    } catch (err: any) {
+        console.error('Error fetching Naver DataLab gender/age data:', err.response?.data || err.message);
+        // On error, return empty data to prevent app crashes but still allow caching logic to work if needed.
+        const emptyData = { genderGroups: [], ageGroups: [] };
+        // Optionally, you might not want to cache failures.
+        // await cacheRef.set({ data: emptyData, updatedAt: new Date() });
+        return emptyData;
+    }
+  }
+);

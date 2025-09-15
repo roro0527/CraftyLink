@@ -4,8 +4,6 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "genkit:dev": "genkit start -- ts-node src/ai/dev.ts",
-    "genkit:watch": "genkit start -- ts-node --watch src/ai/dev.ts",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",

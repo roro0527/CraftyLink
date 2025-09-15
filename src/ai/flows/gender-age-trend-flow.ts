@@ -73,6 +73,7 @@ export const getGenderAgeTrend = ai.defineFlow(
 
         const results = response.data.results[0];
         if (!results) {
+            console.log("No gender/age results from Naver API for keyword:", keyword);
             return { genderGroups: [], ageGroups: [] };
         }
         

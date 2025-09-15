@@ -1,8 +1,10 @@
 import axios from "axios";
 import * as functions from "firebase-functions";
-import type { Firestore, Timestamp } from 'firebase-admin/firestore';
+import type { Firestore } from 'firebase-admin/firestore';
 
 const CACHE_TTL_MINUTES = 10;
+const NAVER_CLIENT_ID = process.env.NAVER_CLIENT_ID;
+const NAVER_CLIENT_SECRET = process.env.NAVER_CLIENT_SECRET;
 
 const removeHtmlTags = (str: string) => str ? str.replace(/<[^>]*>?/gm, '') : '';
 
@@ -16,20 +18,16 @@ export interface NewsArticle {
  * Fetches top news articles from Naver Search API for Cloud Functions.
  * @param {string} query - The search query.
  * @param {Firestore} firestore - An instance of Firestore.
- * @param {string} naverClientId - The Naver API Client ID.
- * @param {string} naverClientSecret - The Naver API Client Secret.
  * @returns {Promise<NewsArticle[]>} A list of news articles.
  */
 export async function fetchNaverNewsLogic(
     query: string,
-    firestore: Firestore,
-    naverClientId: string,
-    naverClientSecret: string
+    firestore: Firestore
 ): Promise<NewsArticle[]> {
     if (!query) {
         throw new Error("Missing required parameter: query");
     }
-     if (!naverClientId || !naverClientSecret) {
+     if (!NAVER_CLIENT_ID || !NAVER_CLIENT_SECRET) {
         throw new Error("Naver API credentials are not provided.");
     }
 
@@ -40,9 +38,8 @@ export async function fetchNaverNewsLogic(
         const cacheDoc = await cacheRef.get();
         if (cacheDoc.exists) {
             const cacheData = cacheDoc.data()!;
-            const { Timestamp } = await import('firebase-admin/firestore');
-            const now = Timestamp.now();
-            const updatedAt = cacheData.updatedAt as Timestamp;
+            const now = firestore.Timestamp.now();
+            const updatedAt = cacheData.updatedAt;
             const diffMinutes = (now.toMillis() - updatedAt.toMillis()) / (1000 * 60);
 
             if (diffMinutes < CACHE_TTL_MINUTES) {
@@ -57,8 +54,8 @@ export async function fetchNaverNewsLogic(
         const response = await axios.get(url, {
             params: { query: query, display: 5, sort: 'sim' },
             headers: {
-                "X-Naver-Client-Id": naverClientId,
-                "X-Naver-Client-Secret": naverClientSecret,
+                "X-Naver-Client-Id": NAVER_CLIENT_ID,
+                "X-Naver-Client-Secret": NAVER_CLIENT_SECRET,
             },
         });
         
@@ -74,10 +71,9 @@ export async function fetchNaverNewsLogic(
                 summary: removeHtmlTags(item.description),
             }));
 
-            const { Timestamp } = await import('firebase-admin/firestore');
             await cacheRef.set({
                 articles,
-                updatedAt: Timestamp.now(),
+                updatedAt: firestore.Timestamp.now(),
             });
             functions.logger.info(`Successfully cached news for query: ${query}`);
 

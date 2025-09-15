@@ -214,7 +214,7 @@ app.get("/getNaverNews", async (req, res) => {
         return res.status(500).send({ error: "Server configuration error: Naver API credentials missing." });
     }
     try {
-        const articles = await fetchNaverNewsLogic(query, firestore, NAVER_CLIENT_ID, NAVER_CLIENT_SECRET);
+        const articles = await fetchNaverNewsLogic(query, firestore);
         return res.status(200).json(articles);
     } catch (error: any) {
         functions.logger.error(`Error in /getNaverNews endpoint for query "${query}":`, error);
@@ -227,4 +227,4 @@ app.get("/getNaverNews", async (req, res) => {
 });
 
 
-export const api = functions.runWith({ secrets: ["NAVER_CLIENT_ID", "NAVER_CLIENT_SECRET", "YOUTUBE_API_KEY", "KAKAO_APP_KEY"]}).region("asia-northeast3").https.onRequest(app);
+export const api = functions.runWith({ secrets: ["NAVER_CLIENT_ID", "NAVER_CLIENT_SECRET", "YOUTUBE_API_KEY", "KAKAO_APP_KEY", "NAVER_DATALAB_CLIENT_ID", "NAVER_DATALAB_CLIENT_SECRET", "FIREBASE_SERVICE_ACCOUNT_KEY"]}).region("asia-northeast3").https.onRequest(app);

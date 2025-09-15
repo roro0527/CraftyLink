@@ -54,7 +54,7 @@ export const getSeasonalPattern = ai.defineFlow(
     const requestBody = {
       startDate,
       endDate,
-      timeUnit,
+      timeUnit: timeUnit || 'month',
       category: '50000001', // Using a broad category '디지털/가전'
       keyword,
       device: '',
@@ -73,6 +73,7 @@ export const getSeasonalPattern = ai.defineFlow(
 
       const trendData = response.data.results[0]?.data;
       if (!trendData) {
+        console.log("No seasonal results from Naver API for keyword:", keyword);
         return [];
       }
 

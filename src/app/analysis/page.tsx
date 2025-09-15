@@ -5,7 +5,7 @@ import * as React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { LoaderCircle, Search, PieChartIcon, BarChartIcon, LineChartIcon } from 'lucide-react';
+import { LoaderCircle, Search, PieChartIcon, LineChartIcon } from 'lucide-react';
 import { DatePickerWithRange } from '@/components/ui/date-picker';
 import { DateRange } from 'react-day-picker';
 import { addDays, format } from 'date-fns';
@@ -28,7 +28,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { getGenderAgeTrendAction, getSeasonalPatternAction } from '@/app/actions';
 import type { GenderAgeTrendData, SeasonalPatternData } from '@/lib/types';
-
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 
 const GENDER_COLORS = ['#0088FE', '#FF8042'];
 const AGE_COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff8042', '#0088FE', '#00C49F'];
@@ -37,9 +37,10 @@ export default function AnalysisPage() {
   const { toast } = useToast();
   const [keyword, setKeyword] = React.useState('');
   const [dateRange, setDateRange] = React.useState<DateRange | undefined>({
-    from: addDays(new Date(), -30),
+    from: addDays(new Date(), -90),
     to: new Date(),
   });
+  const [timeUnit, setTimeUnit] = React.useState<'month' | 'week'>('month');
 
   const [isLoading, setIsLoading] = React.useState(false);
   const [genderAgeData, setGenderAgeData] = React.useState<GenderAgeTrendData | null>(null);
@@ -71,8 +72,23 @@ export default function AnalysisPage() {
 
         const [genderAgeResult, seasonalResult] = await Promise.all([
             getGenderAgeTrendAction({ keyword, startDate, endDate }),
-            getSeasonalPatternAction({ keyword, startDate, endDate }),
+            getSeasonalPatternAction({ keyword, startDate, endDate, timeUnit }),
         ]);
+        
+        if (genderAgeResult.genderGroups.length === 0 && genderAgeResult.ageGroups.length === 0) {
+            toast({
+                variant: "default",
+                title: "성별/연령별 데이터 없음",
+                description: `'${keyword}'에 대한 쇼핑 인사이트 데이터가 없습니다.`,
+            });
+        }
+        if (seasonalResult.length === 0) {
+            toast({
+                variant: "default",
+                title: "시즌 패턴 데이터 없음",
+                description: `기간 내 '${keyword}'에 대한 쇼핑 인사이트 데이터가 없습니다.`,
+            });
+        }
 
         setGenderAgeData(genderAgeResult);
         setSeasonalData(seasonalResult);
@@ -97,8 +113,8 @@ export default function AnalysisPage() {
   return (
     <div className="container mx-auto p-4 md:p-6 lg:p-8">
       <header className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight mb-2">통계 분석</h1>
-        <p className="text-muted-foreground">키워드에 대한 심층적인 트렌드 분석을 확인하세요.</p>
+        <h1 className="text-3xl font-bold tracking-tight mb-2">쇼핑 인사이트 분석</h1>
+        <p className="text-muted-foreground">키워드에 대한 성별/연령별, 시즌별 쇼핑 트렌드를 분석합니다.</p>
       </header>
 
       <div className="flex flex-col md:flex-row items-center gap-4 mb-8 p-4 border rounded-lg bg-card">
@@ -111,6 +127,15 @@ export default function AnalysisPage() {
             onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
          />
          <DatePickerWithRange date={dateRange} setDate={setDateRange} className="h-11" />
+         <Select value={timeUnit} onValueChange={(value) => setTimeUnit(value as 'month' | 'week')}>
+            <SelectTrigger className="w-full md:w-[120px] h-11">
+                <SelectValue placeholder="단위" />
+            </SelectTrigger>
+            <SelectContent>
+                <SelectItem value="month">월간</SelectItem>
+                <SelectItem value="week">주간</SelectItem>
+            </SelectContent>
+         </Select>
          <Button onClick={handleSearch} disabled={isLoading} className="h-11">
             {isLoading ? (
               <LoaderCircle className="animate-spin" />
@@ -135,7 +160,7 @@ export default function AnalysisPage() {
             <Card>
                 <CardHeader>
                     <CardTitle className="flex items-center"><PieChartIcon className="mr-2" />성별/연령별 분석</CardTitle>
-                    <CardDescription>키워드에 대한 성별 및 연령대별 관심도 분포입니다.</CardDescription>
+                    <CardDescription>키워드에 대한 성별 및 연령대별 쇼핑 관심도입니다.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-8">
                     <div>
@@ -152,10 +177,10 @@ export default function AnalysisPage() {
                                     <Legend formatter={(value) => value === 'm' ? '남성' : '여성'} />
                                 </PieChart>
                             </ResponsiveContainer>
-                        ) : <p className="text-center text-muted-foreground">데이터 없음</p>}
+                        ) : <div className="h-[200px] flex items-center justify-center bg-muted rounded-md"><p className="text-center text-muted-foreground">데이터 없음</p></div>}
                     </div>
                     <div>
-                        <h3 className="font-semibold mb-2 text-center">연령대별 검색량</h3>
+                        <h3 className="font-semibold mb-2 text-center">연령대별 관심도</h3>
                          {formattedAgeData && formattedAgeData.length > 0 ? (
                             <ResponsiveContainer width="100%" height={250}>
                                 <BarChart data={formattedAgeData}>
@@ -170,7 +195,7 @@ export default function AnalysisPage() {
                                     </Bar>
                                 </BarChart>
                             </ResponsiveContainer>
-                        ) : <p className="text-center text-muted-foreground">데이터 없음</p>}
+                        ) : <div className="h-[250px] flex items-center justify-center bg-muted rounded-md"><p className="text-center text-muted-foreground">데이터 없음</p></div>}
                     </div>
                 </CardContent>
             </Card>
@@ -178,21 +203,21 @@ export default function AnalysisPage() {
             <Card>
                 <CardHeader>
                     <CardTitle className="flex items-center"><LineChartIcon className="mr-2" />시즌 패턴 분석</CardTitle>
-                    <CardDescription>기간에 따른 키워드의 검색량 추이입니다.</CardDescription>
+                    <CardDescription>기간에 따른 키워드의 쇼핑 클릭량 추이입니다.</CardDescription>
                 </CardHeader>
                 <CardContent>
                    {seasonalData && seasonalData.length > 0 ? (
-                        <ResponsiveContainer width="100%" height={400}>
+                        <ResponsiveContainer width="100%" height={500}>
                             <LineChart data={seasonalData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
                                 <CartesianGrid strokeDasharray="3 3" />
-                                <XAxis dataKey="date" tickFormatter={(tick) => format(new Date(tick), 'yy-MM-dd')} />
+                                <XAxis dataKey="date" tickFormatter={(tick) => timeUnit === 'month' ? format(new Date(tick), 'yy-MM') : format(new Date(tick), 'MM/dd')} />
                                 <YAxis />
                                 <Tooltip labelFormatter={(label) => format(new Date(label), 'yyyy-MM-dd')} />
                                 <Legend />
-                                <Line type="monotone" dataKey="value" name="검색량" stroke="#8884d8" activeDot={{ r: 8 }} />
+                                <Line type="monotone" dataKey="value" name="클릭량" stroke="#8884d8" activeDot={{ r: 8 }} />
                             </LineChart>
                         </ResponsiveContainer>
-                   ) : <div className="h-[400px] flex items-center justify-center bg-muted rounded-md"><p className="text-center text-muted-foreground">데이터 없음</p></div>}
+                   ) : <div className="h-[500px] flex items-center justify-center bg-muted rounded-md"><p className="text-center text-muted-foreground">데이터 없음</p></div>}
                 </CardContent>
             </Card>
         </div>
@@ -200,4 +225,3 @@ export default function AnalysisPage() {
     </div>
   );
 }
-

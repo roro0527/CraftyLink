@@ -1,4 +1,5 @@
 import axios from "axios";
+import type { Firestore, Timestamp } from 'firebase-admin/firestore';
 
 // Since this file can be used in non-Firebase environments, we cannot import firebase-functions.
 // We will use console.log for logging. A more robust solution could involve a logging abstraction.
@@ -14,39 +15,18 @@ export interface NewsArticle {
     summary: string;
 }
 
-// A generic Firestore interface to avoid direct dependency on firebase-admin or firebase sdk.
-// This makes the logic more portable.
-interface GenericFirestore {
-    collection(path: string): GenericCollection;
-}
-interface GenericCollection {
-    doc(path: string): GenericDocument;
-}
-interface GenericDocument {
-    get(): Promise<GenericDocumentSnapshot>;
-    set(data: any): Promise<any>;
-}
-interface GenericDocumentSnapshot {
-    exists: boolean;
-    data(): any;
-}
-interface GenericTimestamp {
-    toMillis(): number;
-}
-
-
 /**
  * Fetches top news articles from Naver Search API.
  * This is a shared logic function that can be used by both Cloud Functions and other server-side code.
  * @param {string} query - The search query.
- * @param {GenericFirestore} firestore - An instance of a Firestore-compatible object.
+ * @param {Firestore} firestore - An instance of a Firestore-compatible object.
  * @param {string} naverClientId - The Naver API Client ID.
  * @param {string} naverClientSecret - The Naver API Client Secret.
  * @returns {Promise<NewsArticle[]>} A list of news articles.
  */
 export async function fetchNaverNewsLogic(
     query: string,
-    firestore: GenericFirestore,
+    firestore: Firestore,
     naverClientId: string,
     naverClientSecret: string
 ): Promise<NewsArticle[]> {
@@ -65,7 +45,7 @@ export async function fetchNaverNewsLogic(
         const cacheDoc = await cacheRef.get();
         if (cacheDoc.exists) {
             const cacheData = cacheDoc.data()!;
-            const updatedAt = (cacheData.updatedAt as GenericTimestamp).toMillis();
+            const updatedAt = (cacheData.updatedAt as Timestamp).toMillis();
             const diffMinutes = (now - updatedAt) / (1000 * 60);
 
             if (diffMinutes < CACHE_TTL_MINUTES) {
@@ -97,12 +77,10 @@ export async function fetchNaverNewsLogic(
                 summary: removeHtmlTags(item.description),
             }));
 
-            // This part is tricky because Timestamp objects are specific to the environment.
-            // The Cloud Function environment will need to be adapted to create a Timestamp.
-            // For now, we'll assume a simple object can be set.
+            const { Timestamp } = await import('firebase-admin/firestore');
             await cacheRef.set({
                 articles,
-                updatedAt: { toMillis: () => now }, // Create a compatible object
+                updatedAt: Timestamp.fromMillis(now),
             });
             logger.info(`Successfully cached news for query: ${query}`);
 

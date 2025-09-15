@@ -7,7 +7,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { LoaderCircle, Search, Video, Trophy } from 'lucide-react';
+import { LoaderCircle, Search, Video, Trophy, Crown } from 'lucide-react';
 import { getYoutubeVideosAction, getKeywordRegionRankAction } from '../actions';
 import type { YoutubeVideo } from '@/lib/types';
 import { format, parseISO } from 'date-fns';
@@ -25,21 +25,27 @@ declare global {
   }
 }
 
+type RegionRank = {
+  geoCode?: string;
+  geoName?: string;
+  value?: number;
+};
+
 export default function RegionExplorePage() {
   const initialCenter: [number, number] = [36.3, 127.8];
-  const initialZoom = 13;
+  const initialZoom = 7;
 
   const [keyword, setKeyword] = React.useState('');
   const [videos, setVideos] = React.useState<YoutubeVideo[]>([]);
   const [isSearching, setIsSearching] = React.useState(false);
-  const [topRegion, setTopRegion] = React.useState<{ geoCode: string; geoName: string; value: number } | null>(null);
+  const [topRegions, setTopRegions] = React.useState<RegionRank[]>([]);
   const [bounds, setBounds] = React.useState<any>(null);
 
   const handleSearch = async () => {
     if (!keyword.trim()) return;
     setIsSearching(true);
     setVideos([]);
-    setTopRegion(null);
+    setTopRegions([]);
     setBounds(null);
 
     try {
@@ -50,16 +56,24 @@ export default function RegionExplorePage() {
       
       setVideos(videoResults);
 
-      if (regionRankResult && regionRankResult.geoCode) {
-        setTopRegion({
-          geoCode: regionRankResult.geoCode,
-          geoName: regionRankResult.geoName || '알 수 없음',
-          value: regionRankResult.value || 0,
-        });
+      if (regionRankResult && regionRankResult.length > 0) {
+        setTopRegions(regionRankResult);
         
-        // Naver Datalab provides age groups, not geo data, so we can't show it on map.
-        // We will just show the top group info.
-        setBounds(null); 
+        const topRegionName = regionRankResult[0].geoName;
+        const regionFeature = regionsData.features.find(
+          (feature) => feature.properties.nm === topRegionName
+        );
+
+        if (regionFeature && window.kakao && window.kakao.maps) {
+          const coords = regionFeature.geometry.coordinates[0];
+          const path = coords.map(c => new window.kakao.maps.LatLng(c[1], c[0]));
+          const newBounds = new window.kakao.maps.LatLngBounds();
+          path.forEach(p => newBounds.extend(p));
+          setBounds(newBounds);
+        } else {
+          // If no specific region, reset to default view
+          setBounds(null);
+        }
       }
 
     } catch (error) {
@@ -112,17 +126,28 @@ export default function RegionExplorePage() {
             </CardHeader>
             <CardContent>
                 {isSearching ? (
-                    <div className="space-y-2">
-                        <Skeleton className="h-6 w-2/4" />
-                        <Skeleton className="h-4 w-1/4" />
+                    <div className="space-y-4">
+                        <Skeleton className="h-6 w-3/4" />
+                        <Skeleton className="h-5 w-2/4" />
+                        <Skeleton className="h-5 w-2/4" />
                     </div>
-                ) : topRegion ? (
-                    <div>
-                        <p className="text-xl font-bold">{topRegion.geoName}</p>
-                        <p className="text-sm text-muted-foreground">클릭량 점수: {topRegion.value.toFixed(2)}</p>
-                    </div>
+                ) : topRegions.length > 0 ? (
+                    <ol className="space-y-3">
+                        {topRegions.map((region, index) => (
+                           <li key={index} className="flex items-center gap-3">
+                                <span className={`text-lg font-bold w-6 text-center ${index === 0 ? 'text-yellow-500' : 'text-muted-foreground'}`}>{index + 1}</span>
+                                <div className="flex-1">
+                                    <p className="font-semibold flex items-center gap-2">
+                                        {region.geoName}
+                                        {index === 0 && <Crown className="w-4 h-4 text-yellow-500" />}
+                                    </p>
+                                    <p className="text-sm text-muted-foreground">클릭량 점수: {region.value?.toFixed(2)}</p>
+                                </div>
+                           </li>
+                        ))}
+                    </ol>
                 ) : (
-                    <div className="text-sm text-muted-foreground">
+                    <div className="text-sm text-muted-foreground text-center py-4">
                        키워드를 검색하여 가장 인기있는 그룹을 확인하세요.
                     </div>
                 )}

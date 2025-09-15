@@ -13,8 +13,7 @@ export interface NewsArticle {
 }
 
 /**
- * Fetches top news articles from Naver Search API.
- * This is a shared logic function that can be used by both Cloud Functions and other server-side code.
+ * Fetches top news articles from Naver Search API for Cloud Functions.
  * @param {string} query - The search query.
  * @param {Firestore} firestore - An instance of Firestore.
  * @param {string} naverClientId - The Naver API Client ID.
@@ -36,16 +35,15 @@ export async function fetchNaverNewsLogic(
 
     const cacheKey = query.replace(/[^a-zA-Z0-9가-힣]/g, ""); // Sanitize key
     const cacheRef = firestore.collection("naverNews").doc(cacheKey);
-    const now = new Date().getTime();
-
 
     try {
         const cacheDoc = await cacheRef.get();
         if (cacheDoc.exists) {
             const cacheData = cacheDoc.data()!;
-            // Firestore Timestamps need to be handled correctly
-            const updatedAt = (cacheData.updatedAt as Timestamp).toMillis();
-            const diffMinutes = (now - updatedAt) / (1000 * 60);
+            const { Timestamp } = await import('firebase-admin/firestore');
+            const now = Timestamp.now();
+            const updatedAt = cacheData.updatedAt as Timestamp;
+            const diffMinutes = (now.toMillis() - updatedAt.toMillis()) / (1000 * 60);
 
             if (diffMinutes < CACHE_TTL_MINUTES) {
                 functions.logger.info(`Returning cached news for query: ${query}`);
@@ -76,12 +74,10 @@ export async function fetchNaverNewsLogic(
                 summary: removeHtmlTags(item.description),
             }));
 
-            // Use serverTimestamp() if running in a Firebase environment, otherwise use a regular Date.
-            // For simplicity, we'll just create a new Timestamp.
             const { Timestamp } = await import('firebase-admin/firestore');
             await cacheRef.set({
                 articles,
-                updatedAt: Timestamp.fromMillis(now),
+                updatedAt: Timestamp.now(),
             });
             functions.logger.info(`Successfully cached news for query: ${query}`);
 

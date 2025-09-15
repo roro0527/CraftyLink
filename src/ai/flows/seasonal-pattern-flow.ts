@@ -4,12 +4,9 @@
  * @fileOverview A keyword seasonal pattern analysis agent using Naver DataLab API.
  *
  * - getSeasonalPattern - A function that fetches seasonal trend data for a keyword.
- * - SeasonalPatternInput - The input type for the getSeasonalPattern function.
- * - SeasonalPatternData - The return type for the getSeasonalPattern function.
  */
 
 import { ai } from '@/ai/genkit';
-import { z } from 'zod';
 import axios from 'axios';
 import { getAdminFirestore } from '@/lib/firebase-admin';
 import { SeasonalPatternDataSchema, SeasonalPatternInputSchema } from '@/lib/types';
@@ -45,7 +42,7 @@ export const getSeasonalPattern = ai.defineFlow(
             }
         }
     } catch (e) {
-        console.error("Cache read error for seasonal:", e);
+        console.error("Cache read error for seasonal, proceeding to fetch from API:", e);
     }
     
 

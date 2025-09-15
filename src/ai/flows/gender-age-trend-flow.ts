@@ -4,12 +4,9 @@
  * @fileOverview A keyword gender/age analysis agent using Naver DataLab API.
  *
  * - getGenderAgeTrend - A function that fetches gender and age trend data for a keyword.
- * - GenderAgeTrendInput - The input type for the getGenderAgeTrend function.
- * - GenderAgeTrendData - The return type for the getGenderAgeTrend function.
  */
 
 import { ai } from '@/ai/genkit';
-import { z } from 'zod';
 import axios from 'axios';
 import { getAdminFirestore } from '@/lib/firebase-admin';
 import { GenderAgeTrendDataSchema, GenderAgeTrendInputSchema } from '@/lib/types';
@@ -45,7 +42,7 @@ export const getGenderAgeTrend = ai.defineFlow(
             }
         }
     } catch (e) {
-        console.error("Cache read error for gender/age:", e);
+        console.error("Cache read error for gender/age, proceeding to fetch from API:", e);
     }
     
 
@@ -72,7 +69,7 @@ export const getGenderAgeTrend = ai.defineFlow(
         });
 
         const results = response.data.results[0];
-        if (!results) {
+        if (!results || !results.gender || !results.age) {
             console.log("No gender/age results from Naver API for keyword:", keyword);
             return { genderGroups: [], ageGroups: [] };
         }
@@ -94,8 +91,6 @@ export const getGenderAgeTrend = ai.defineFlow(
         console.error('Error fetching Naver DataLab gender/age data:', err.response?.data || err.message);
         // On error, return empty data to prevent app crashes but still allow caching logic to work if needed.
         const emptyData = { genderGroups: [], ageGroups: [] };
-        // Optionally, you might not want to cache failures.
-        // await cacheRef.set({ data: emptyData, updatedAt: new Date() });
         return emptyData;
     }
   }

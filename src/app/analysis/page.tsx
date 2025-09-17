@@ -73,8 +73,8 @@ const AnalysisPage = () => {
       setLoading(true);
       setError(null);
       try {
-        const functionUrl = process.env.NEXT_PUBLIC_FIREBASE_FUNCTION_URL + '/getNaverData';
-        if (!process.env.NEXT_PUBLIC_FIREBASE_FUNCTION_URL) {
+        const functionUrl = process.env.NEXT_PUBLIC_FIREBASE_FUNCTION_URL;
+        if (!functionUrl) {
             console.warn("Firebase Function URL이 설정되지 않았습니다. .env.local 파일에 NEXT_PUBLIC_FIREBASE_FUNCTION_URL을 설정하면 실제 데이터를 가져옵니다. 지금은 목업 데이터를 표시합니다.");
             setData(mockData);
             setLoading(false);
@@ -254,7 +254,7 @@ const AnalysisPage = () => {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center"><Calendar className="mr-2" /> '에어컨' 시즌 패턴 분석</CardTitle>
-          </CardHeader>
+          </Header>
           <CardContent>{renderLineChart(data.seasonal, ['ratio'], "시즌 패턴 분석")}</CardContent>
         </Card>
         <Card>
@@ -285,5 +285,3 @@ const AnalysisPage = () => {
 };
 
 export default AnalysisPage;
-
-    

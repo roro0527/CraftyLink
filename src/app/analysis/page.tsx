@@ -1,8 +1,6 @@
-
 'use client';
 
 import * as React from 'react';
-import axios from 'axios';
 import {
   PieChart as RechartsPieChart,
   Pie,
@@ -22,104 +20,75 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { TrendingUp, TrendingDown, Users, Calendar, BarChart2, PieChartIcon } from 'lucide-react';
+import { getGenderAgeTrendAction, getSeasonalPatternAction } from '@/app/actions';
+import { DatePickerWithRange } from '@/components/ui/date-picker';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { addDays, format } from 'date-fns';
+import { useToast } from '@/hooks/use-toast';
+import type { GenderAgeTrendData, SeasonalPatternData } from '@/lib/types';
+
 
 const GENDER_COLORS = ['#0088FE', '#FF8042'];
 const AGE_COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff8042', '#0088FE', '#00C49F'];
-const KEYWORD_COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff7300', '#387908'];
-
-// Mock-up 데이터 구조. 실제 API 응답에 맞게 조정됩니다.
-const initialData = {
-  genderAge: null,
-  seasonal: null,
-  multiKeyword: null,
-  category: null,
-  risingFalling: null,
-};
-
-const mockData = {
-    genderAge: { 
-        gender: [ { group: 'm', ratio: 55 }, { group: 'f', ratio: 45 } ], 
-        age: [ { group: '10s', ratio: 10 }, { group: '20s', ratio: 30 }, { group: '30s', ratio: 25 }, { group: '40s', ratio: 20 }, { group: '50s', ratio: 15 } ] 
-    },
-    seasonal: [
-        { period: '2023-01-01', ratio: 10 }, { period: '2023-02-01', ratio: 12 }, { period: '2023-03-01', ratio: 15 },
-        { period: '2023-04-01', ratio: 30 }, { period: '2023-05-01', ratio: 60 }, { period: '2023-06-01', ratio: 90 },
-        { period: '2023-07-01', ratio: 100 }, { period: '2023-08-01', ratio: 95 }, { period: '2023-09-01', ratio: 50 },
-        { period: '2023-10-01', ratio: 30 }, { period: '2023-11-01', ratio: 20 }, { period: '2023-12-01', ratio: 18 },
-    ],
-    multiKeyword: [
-        { period: '2024-05-01', '갤럭시': 40, '아이폰': 60, '샤오미': 10 },
-        { period: '2024-05-02', '갤럭시': 45, '아이폰': 58, '샤오미': 12 },
-        { period: '2024-05-03', '갤럭시': 42, '아이폰': 65, '샤오미': 11 },
-    ],
-    category: [
-        { period: '2024-05-01', 'TV': 70, '냉장고': 50 },
-        { period: '2024-05-02', 'TV': 75, '냉장고': 55 },
-        { period: '2024-05-03', 'TV': 72, '냉장고': 58 },
-    ],
-    risingFalling: {
-        rising: [ { keyword: "반팔 티셔츠", change: 302 }, { keyword: "선풍기", change: 150 }, { keyword: "캠핑의자", change: 88 } ],
-        falling: [ { keyword: "전기장판", change: -450 }, { keyword: "가습기", change: -321 }, { keyword: "패딩", change: -250 } ],
-    }
-};
 
 const AnalysisPage = () => {
-  const [data, setData] = React.useState<any>(initialData);
+  const [keyword, setKeyword] = React.useState('노트북');
+  const [date, setDate] = React.useState<any>({
+    from: addDays(new Date(), -30),
+    to: new Date(),
+  });
+
+  const [genderAgeData, setGenderAgeData] = React.useState<GenderAgeTrendData | null>(null);
+  const [seasonalData, setSeasonalData] = React.useState<SeasonalPatternData | null>(null);
   const [loading, setLoading] = React.useState(true);
-  const [error, setError] = React.useState<string | null>(null);
+  const { toast } = useToast();
+
+  const fetchData = React.useCallback(async (currentKeyword: string, currentDate: any) => {
+    if (!currentKeyword || !currentDate?.from || !currentDate?.to) {
+      toast({ variant: 'destructive', title: '검색어와 기간을 모두 입력해주세요.'});
+      return;
+    }
+
+    setLoading(true);
+    setGenderAgeData(null);
+    setSeasonalData(null);
+
+    const startDate = format(currentDate.from, 'yyyy-MM-dd');
+    const endDate = format(currentDate.to, 'yyyy-MM-dd');
+
+    try {
+      const [genderAgeRes, seasonalRes] = await Promise.all([
+        getGenderAgeTrendAction({ keyword: currentKeyword, startDate, endDate }),
+        getSeasonalPatternAction({ keyword: currentKeyword, startDate, endDate, timeUnit: 'month' }),
+      ]);
+      
+      setGenderAgeData(genderAgeRes);
+      setSeasonalData(seasonalRes);
+
+    } catch (err: any) {
+      console.error("Error fetching analysis data:", err);
+      toast({
+        variant: 'destructive',
+        title: '데이터 분석 중 오류 발생',
+        description: err.message || '데이터를 불러오는 중 오류가 발생했습니다.'
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [toast]);
 
   React.useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      setError(null);
+    fetchData(keyword, date);
+  }, [fetchData, keyword, date]);
 
-      const functionUrl = process.env.NEXT_PUBLIC_FIREBASE_FUNCTION_URL;
-
-      // Check if the URL is not set or is a placeholder
-      if (!functionUrl || !functionUrl.startsWith('http')) {
-        console.warn("Firebase Function URL이 설정되지 않았습니다. .env.local 파일에 NEXT_PUBLIC_FIREBASE_FUNCTION_URL을 설정하면 실제 데이터를 가져옵니다. 지금은 목업 데이터를 표시합니다.");
-        setData(mockData);
-        setLoading(false);
-        return; // Stop execution if no valid URL
-      }
-      
-      try {
-        const [
-            genderAgeRes,
-            seasonalRes,
-            multiKeywordRes,
-            categoryRes,
-            risingFallingRes
-        ] = await Promise.all([
-          axios.post(functionUrl, { type: 'genderAge', payload: { keyword: '노트북' } }),
-          axios.post(functionUrl, { type: 'seasonal', payload: { keyword: '에어컨' } }),
-          axios.post(functionUrl, { type: 'multiKeyword', payload: { keywords: ['갤럭시', '아이폰', '샤오미'] } }),
-          axios.post(functionUrl, { type: 'category', payload: { categories: [{name: 'TV', param: ['50000001']}, {name: '냉장고', param: ['50000002']}] } }),
-          axios.post(functionUrl, { type: 'risingFalling' }),
-        ]);
-
-        setData({
-          genderAge: genderAgeRes.data,
-          seasonal: seasonalRes.data,
-          multiKeyword: multiKeywordRes.data,
-          category: categoryRes.data,
-          risingFalling: risingFallingRes.data,
-        });
-      } catch (err: any) {
-        console.error("Error fetching analysis data:", err);
-        setError(err.response?.data?.error || err.message || '데이터를 불러오는 중 오류가 발생했습니다.');
-        setData(mockData); // 에러 발생 시 목업 데이터 보여주기
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);
+  const handleSearch = () => {
+    fetchData(keyword, date);
+  };
 
   const renderGenderChart = () => {
-    if (!data.genderAge || !data.genderAge.gender) return <div className="h-48 flex items-center justify-center bg-muted rounded-md"><p className="text-muted-foreground">데이터 없음</p></div>;
-    const chartData = data.genderAge.gender.map((g: any) => ({ name: g.group === 'm' ? '남성' : '여성', value: g.ratio }));
+    if (!genderAgeData || !genderAgeData.genderGroups || genderAgeData.genderGroups.length === 0) return <div className="h-48 flex items-center justify-center bg-muted rounded-md"><p className="text-muted-foreground">데이터 없음</p></div>;
+    const chartData = genderAgeData.genderGroups.map((g: any) => ({ name: g.group === 'm' ? '남성' : '여성', value: g.ratio }));
     return (
       <ResponsiveContainer width="100%" height={200}>
         <RechartsPieChart>
@@ -136,8 +105,8 @@ const AnalysisPage = () => {
   };
 
   const renderAgeChart = () => {
-    if (!data.genderAge || !data.genderAge.age) return <div className="h-48 flex items-center justify-center bg-muted rounded-md"><p className="text-muted-foreground">데이터 없음</p></div>;
-    const chartData = data.genderAge.age.map((a: any) => ({ name: a.group.replace('s', '대'), value: a.ratio }));
+    if (!genderAgeData || !genderAgeData.ageGroups || genderAgeData.ageGroups.length === 0) return <div className="h-48 flex items-center justify-center bg-muted rounded-md"><p className="text-muted-foreground">데이터 없음</p></div>;
+    const chartData = genderAgeData.ageGroups.map((a: any) => ({ name: a.group.replace('s', '대'), value: a.ratio }));
     return (
       <ResponsiveContainer width="100%" height={200}>
         <BarChart data={chartData}>
@@ -155,63 +124,30 @@ const AnalysisPage = () => {
     );
   };
 
-  const renderLineChart = (chartData: any, dataKeys: string[], title: string) => {
-    if (!chartData || chartData.length === 0) return <div className="h-72 flex items-center justify-center bg-muted rounded-md"><p className="text-muted-foreground">데이터 없음</p></div>;
+  const renderSeasonalChart = () => {
+    if (!seasonalData || seasonalData.length === 0) return <div className="h-72 flex items-center justify-center bg-muted rounded-md"><p className="text-muted-foreground">데이터 없음</p></div>;
     return (
       <>
         <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={chartData}>
+          <LineChart data={seasonalData}>
             <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="period" />
+            <XAxis dataKey="date" />
             <YAxis />
             <Tooltip />
             <Legend />
-            {dataKeys.map((key, index) => (
-              <Line key={key} type="monotone" dataKey={key} stroke={KEYWORD_COLORS[index % KEYWORD_COLORS.length]} />
-            ))}
+            <Line type="monotone" dataKey="value" name="검색량" stroke="#8884d8" />
           </LineChart>
         </ResponsiveContainer>
-        {title === "시즌 패턴 분석" && <CardDescription className="text-center mt-2">네이버 데이터랩은 절대 검색량이 아닌 상대 지표를 제공합니다.</CardDescription>}
+        <CardDescription className="text-center mt-2">네이버 데이터랩은 절대 검색량이 아닌 상대 지표를 제공합니다.</CardDescription>
       </>
     );
-  };
-
-  const renderRisingFallingKeywords = () => {
-      if (!data.risingFalling) return <div className="h-48 flex items-center justify-center bg-muted rounded-md"><p className="text-muted-foreground">데이터 없음</p></div>;
-      const { rising, falling } = data.risingFalling;
-      return (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                  <h3 className="font-semibold mb-2 flex items-center"><TrendingUp className="mr-2 text-green-500" /> 급등 키워드 Top 3</h3>
-                  <ul className="space-y-2">
-                      {rising && rising.length > 0 ? rising.map((item: any, i: number) => (
-                          <li key={i} className="flex justify-between items-center p-2 bg-muted rounded-md">
-                              <span>{item.keyword}</span>
-                              <Badge variant="default" className="bg-green-500 hover:bg-green-600">+{item.change}</Badge>
-                          </li>
-                      )) : <p className="text-muted-foreground">급등 키워드가 없습니다.</p>}
-                  </ul>
-              </div>
-              <div>
-                  <h3 className="font-semibold mb-2 flex items-center"><TrendingDown className="mr-2 text-red-500" /> 급락 키워드 Top 3</h3>
-                  <ul className="space-y-2">
-                      {falling && falling.length > 0 ? falling.map((item: any, i: number) => (
-                          <li key={i} className="flex justify-between items-center p-2 bg-muted rounded-md">
-                              <span>{item.keyword}</span>
-                              <Badge variant="destructive">{item.change}</Badge>
-                          </li>
-                      )) : <p className="text-muted-foreground">급락 키워드가 없습니다.</p>}
-                  </ul>
-              </div>
-          </div>
-      );
   };
 
   const renderContent = () => {
     if (loading) {
       return (
         <div className="grid md:grid-cols-2 gap-6">
-          {[...Array(6)].map((_, i) => (
+          {[...Array(2)].map((_, i) => (
             <Card key={i}>
               <CardHeader><Skeleton className="h-6 w-40" /></CardHeader>
               <CardContent><Skeleton className="h-64 w-full" /></CardContent>
@@ -221,27 +157,11 @@ const AnalysisPage = () => {
       );
     }
 
-    if (error && !data) {
-      return (
-        <div className="text-center py-20 bg-destructive/10 text-destructive rounded-lg">
-          <h2 className="text-xl font-bold">오류 발생</h2>
-          <p>{error}</p>
-        </div>
-      );
-    }
-
     return (
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle className="flex items-center"><TrendingUp className="mr-2"/> 급등/급락 키워드</CardTitle>
-            <CardDescription>전월 대비 검색량 순위 변화가 높은 키워드입니다.</CardDescription>
-          </CardHeader>
-          <CardContent>{renderRisingFallingKeywords()}</CardContent>
-        </Card>
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center"><Users className="mr-2" /> '노트북' 성별/연령별 분석</CardTitle>
+            <CardTitle className="flex items-center"><Users className="mr-2" /> 성별/연령별 분석</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             <div>
@@ -256,21 +176,9 @@ const AnalysisPage = () => {
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center"><Calendar className="mr-2" /> '에어컨' 시즌 패턴 분석</CardTitle>
+            <CardTitle className="flex items-center"><Calendar className="mr-2" /> 시즌 패턴 분석</CardTitle>
           </CardHeader>
-          <CardContent>{renderLineChart(data.seasonal, ['ratio'], "시즌 패턴 분석")}</CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center"><BarChart2 className="mr-2" /> 다중 키워드 비교</CardTitle>
-          </CardHeader>
-          <CardContent>{renderLineChart(data.multiKeyword, ['갤럭시', '아이폰', '샤오미'], "다중 키워드")}</CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center"><PieChartIcon className="mr-2" /> 쇼핑 카테고리 비교</CardTitle>
-          </CardHeader>
-          <CardContent>{renderLineChart(data.category, ['TV', '냉장고'], "카테고리")}</CardContent>
+          <CardContent>{renderSeasonalChart()}</CardContent>
         </Card>
       </div>
     );
@@ -281,7 +189,24 @@ const AnalysisPage = () => {
       <header className="mb-8">
         <h1 className="text-3xl font-bold tracking-tight">분석 결과 페이지</h1>
       </header>
-      {error && <div className="mb-4 p-4 bg-destructive/10 text-destructive rounded-lg"><p><strong>참고:</strong> API 호출 중 오류가 발생하여 일부 또는 전체 데이터가 목업(예시) 데이터로 표시될 수 있습니다. Firebase Function URL 및 API 키 설정을 확인해주세요.</p><p className="text-sm mt-1">오류: {error}</p></div>}
+       <Card className="mb-8">
+          <CardHeader>
+            <CardTitle>검색 조건</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col md:flex-row items-center gap-4">
+            <Input 
+              placeholder="키워드 입력" 
+              value={keyword}
+              onChange={(e) => setKeyword(e.target.value)}
+              className="max-w-xs"
+            />
+            <DatePickerWithRange date={date} setDate={setDate} />
+            <Button onClick={handleSearch} disabled={loading}>
+              {loading ? '분석 중...' : '분석하기'}
+            </Button>
+          </CardContent>
+        </Card>
+
       {renderContent()}
     </div>
   );

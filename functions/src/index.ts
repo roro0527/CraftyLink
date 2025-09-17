@@ -5,7 +5,6 @@
  * This file defines two main HTTP endpoints:
  * 1. /getTopVideos: Fetches top YouTube videos for a given location, using Kakao API for geocoding.
  * 2. /getNaverNews: Fetches top news articles from Naver Search API for a given keyword.
- * 3. /getNaverData: A comprehensive endpoint to fetch various trend data from Naver Datalab API.
  *
  * All endpoints include caching, rate limiting, and robust error handling.
  */
@@ -54,12 +53,6 @@ const KAKAO_API_KEY = process.env.KAKAO_APP_KEY;
 // --- Naver API Setup ---
 const NAVER_CLIENT_ID = process.env.NAVER_CLIENT_ID;
 const NAVER_CLIENT_SECRET = process.env.NAVER_CLIENT_SECRET;
-const NAVER_DATALAB_ID = functions.config().naver?.datalab_id || process.env.NAVER_DATALAB_CLIENT_ID;
-const NAVER_DATALAB_SECRET = functions.config().naver?.datalab_secret || process.env.NAVER_DATALAB_CLIENT_SECRET;
-
-// --- Cache Configuration ---
-const CACHE_TTL_HOURS = 24;
-
 
 /**
  * Fetches the city name from geographic coordinates using Kakao's coord2address API.
@@ -137,195 +130,6 @@ async function fetchTopVideos(city: string, lat: number, lng: number, radius: nu
     }
 }
 
-// Helper for caching
-const withCache = async (cacheKey: string, fetchFn: () => Promise<any>) => {
-    const cacheRef = firestore.collection("naverDatalabCache").doc(cacheKey);
-    const doc = await cacheRef.get();
-    if (doc.exists) {
-        const data = doc.data()!;
-        const ageHours = (Date.now() - data.timestamp) / 3600000;
-        if (ageHours < CACHE_TTL_HOURS) {
-            functions.logger.info(`[Cache] HIT for ${cacheKey}`);
-            return data.result;
-        }
-    }
-    functions.logger.info(`[Cache] MISS for ${cacheKey}`);
-    const result = await fetchFn();
-    await cacheRef.set({ result, timestamp: Date.now() });
-    return result;
-};
-
-
-// Generic Naver Datalab API caller
-const callNaverDatalabAPI = async (endpoint: string, body: any) => {
-    const url = `https://openapi.naver.com/v1/datalab/${endpoint}`;
-    const response = await axios.post(url, body, {
-        headers: {
-            'X-Naver-Client-Id': NAVER_DATALAB_ID,
-            'X-Naver-Client-Secret': NAVER_DATALAB_SECRET,
-            'Content-Type': 'application/json',
-        },
-    });
-    return response.data;
-};
-
-// --- API Logic Handlers ---
-
-const handleGenderAge = (payload: any) => {
-    const { keyword } = payload;
-    const body = { startDate: "2023-01-01", endDate: new Date().toISOString().split('T')[0], timeUnit: 'month', keyword, category: "50000001" };
-    return callNaverDatalabAPI('shopping-insight/category/keyword/gender-age', body).then(d => d.results[0]);
-};
-
-const handleSeasonal = (payload: any) => {
-    const { keyword } = payload;
-    const body = { startDate: "2023-01-01", endDate: new Date().toISOString().split('T')[0], timeUnit: 'month', keyword, category: "50000001" };
-    return callNaverDatalabAPI('shopping-insight/category/keyword/seasonal', body).then(d => d.results[0].data);
-};
-
-const handleMultiKeyword = async (payload: any) => {
-    const { keywords } = payload;
-    const body = { startDate: "2023-01-01", endDate: new Date().toISOString().split('T')[0], timeUnit: 'date', keywordGroups: keywords.map((k: string) => ({ groupName: k, keywords: [k] })) };
-    const data = await callNaverDatalabAPI('search', body);
-    
-    // Re-format data for easier chart consumption
-    const unifiedData: { [period: string]: { period: string; [key: string]: number } } = {};
-    data.results.forEach((result: any) => {
-        const keywordName = result.title;
-        result.data.forEach((point: { period: string; ratio: number }) => {
-            if (!unifiedData[point.period]) {
-                unifiedData[point.period] = { period: point.period };
-            }
-            unifiedData[point.period][keywordName] = point.ratio;
-        });
-    });
-    return Object.values(unifiedData);
-};
-
-
-const handleCategory = async (payload: any) => {
-    const { categories } = payload;
-    const body = { startDate: "2023-01-01", endDate: new Date().toISOString().split('T')[0], timeUnit: 'date', category: categories.map((c: any) => ({ name: c.name, param: c.param })) };
-    const data = await callNaverDatalabAPI('shopping-insight/category/trend', body);
-
-    const unifiedData: { [period: string]: { period: string; [key: string]: number } } = {};
-     data.results.forEach((result: any) => {
-        const categoryName = result.title;
-        result.data.forEach((point: { period: string; ratio: number }) => {
-            if (!unifiedData[point.period]) {
-                unifiedData[point.period] = { period: point.period };
-            }
-            unifiedData[point.period][categoryName] = point.ratio;
-        });
-    });
-    return Object.values(unifiedData);
-};
-
-
-const handleRisingFalling = async () => {
-    const today = new Date();
-    const endDate = today.toISOString().split('T')[0];
-    const startDate = new Date(today.setDate(today.getDate() - 30)).toISOString().split('T')[0];
-    const prevEndDate = startDate;
-    const prevStartDate = new Date(new Date().setDate(new Date(startDate).getDate() - 30)).toISOString().split('T')[0];
-
-    const category = "50000000"; // 패션 전체
-    const timeUnit = "date";
-    const device = "";
-    const gender = "";
-    const ages = [] as string[];
-
-    const fetchRank = (startDate: string, endDate: string) => callNaverDatalabAPI('shopping-insight/category/keyword/rank', {
-        startDate,
-        endDate,
-        timeUnit,
-        category,
-        device,
-        gender,
-        ages,
-        page: 1,
-        count: 500
-    });
-
-    try {
-        const [currentMonthData, prevMonthData] = await Promise.all([
-            fetchRank(startDate, endDate),
-            fetchRank(prevStartDate, prevEndDate)
-        ]);
-
-        const currentRanks: { [keyword: string]: number } = {};
-        currentMonthData.results[0].data.forEach((item: { keyword: string, rank: number }) => {
-            currentRanks[item.keyword] = item.rank;
-        });
-
-        const prevRanks: { [keyword: string]: number } = {};
-        prevMonthData.results[0].data.forEach((item: { keyword: string, rank: number }) => {
-            prevRanks[item.keyword] = item.rank;
-        });
-        
-        const rankChanges: { keyword: string, change: number }[] = [];
-        
-        // Calculate rank changes for all keywords present in the current month
-        for (const keyword in currentRanks) {
-            const currentRank = currentRanks[keyword];
-            const prevRank = prevRanks[keyword] || 501; // Not ranked in prev month is treated as rank 501
-            rankChanges.push({ keyword, change: prevRank - currentRank });
-        }
-
-        // Sort by change (desc for rising, asc for falling)
-        rankChanges.sort((a, b) => b.change - a.change);
-
-        const rising = rankChanges.slice(0, 3);
-        const falling = rankChanges.filter(k => k.change < 0).slice(-3).reverse();
-
-        return { rising, falling };
-
-    } catch (error) {
-        functions.logger.error("Error in handleRisingFalling:", error);
-        // Return empty arrays in case of an error
-        return { rising: [], falling: [] };
-    }
-};
-
-
-app.post("/getNaverData", async (req, res) => {
-    const { type, payload } = req.body;
-    if (!type) {
-        return res.status(400).json({ error: "Missing 'type' in request body." });
-    }
-
-    try {
-        const cacheKey = `${type}-${JSON.stringify(payload || {}).replace(/[^a-zA-Z0-9]/g, '')}`;
-        let result;
-
-        const handler = {
-            genderAge: () => handleGenderAge(payload),
-            seasonal: () => handleSeasonal(payload),
-            multiKeyword: () => handleMultiKeyword(payload),
-            category: () => handleCategory(payload),
-            risingFalling: () => handleRisingFalling(),
-        }[type];
-        
-        if (!handler) {
-            return res.status(400).json({ error: `Invalid analysis type: ${type}` });
-        }
-        
-        // Disable cache for rising/falling as it should be dynamic
-        if (type === 'risingFalling') {
-            result = await handler();
-        } else {
-            result = await withCache(cacheKey, handler);
-        }
-        
-        return res.status(200).json(result);
-
-    } catch (error: any) {
-        functions.logger.error(`Error in /getNaverData for type "${type}":`, error.response?.data || error.message);
-        const message = error.response?.data?.errorMessage || "An unexpected error occurred.";
-        return res.status(500).json({ error: message });
-    }
-});
-
 
 app.get("/getTopVideos", async (req, res) => {
   // ... (code from previous state, can be kept or removed)
@@ -343,7 +147,7 @@ app.get("/getNaverNews", async (req, res) => {
     }
 
     try {
-        const articles = await fetchNaverNewsLogic(query, firestore, NAVER_CLIENT_ID, NAVER_CLIENT_SECRET);
+        const articles = await fetchNaverNewsLogic(query, firestore);
         return res.status(200).json(articles);
     } catch (error: any) {
         functions.logger.error("Error fetching Naver news:", error);

@@ -28,6 +28,7 @@ export async function fetchNaverNewsLogic(
         throw new Error("Missing required parameter: query");
     }
      if (!NAVER_CLIENT_ID || !NAVER_CLIENT_SECRET) {
+        functions.logger.error("Naver API credentials are not provided.");
         throw new Error("Naver API credentials are not provided.");
     }
 

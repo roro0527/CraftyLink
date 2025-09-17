@@ -15,9 +15,9 @@ import type { SeasonalPatternData, SeasonalPatternInput } from '@/lib/types';
 
 const CACHE_TTL_HOURS = 24;
 
-export const getSeasonalPattern = ai.defineFlow(
+const seasonalPatternFlow = ai.defineFlow(
   {
-    name: 'getSeasonalPattern',
+    name: 'seasonalPatternFlow',
     inputSchema: SeasonalPatternInputSchema,
     outputSchema: SeasonalPatternDataSchema,
   },
@@ -93,3 +93,7 @@ export const getSeasonalPattern = ai.defineFlow(
     }
   }
 );
+
+export async function getSeasonalPattern(input: SeasonalPatternInput): Promise<SeasonalPatternData> {
+  return seasonalPatternFlow(input);
+}

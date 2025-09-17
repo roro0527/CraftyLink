@@ -15,9 +15,9 @@ import type { GenderAgeTrendData, GenderAgeTrendInput } from '@/lib/types';
 
 const CACHE_TTL_HOURS = 24;
 
-export const getGenderAgeTrend = ai.defineFlow(
+const genderAgeTrendFlow = ai.defineFlow(
   {
-    name: 'getGenderAgeTrend',
+    name: 'genderAgeTrendFlow',
     inputSchema: GenderAgeTrendInputSchema,
     outputSchema: GenderAgeTrendDataSchema,
   },
@@ -69,23 +69,30 @@ export const getGenderAgeTrend = ai.defineFlow(
         });
 
         const results = response.data.results[0];
-        if (!results || !results.gender || !results.age) {
+        if (!results || !results.data || results.data.length === 0) {
             console.log("No gender/age results from Naver API for keyword:", keyword);
             return { genderGroups: [], ageGroups: [] };
         }
         
         const data: GenderAgeTrendData = {
-            genderGroups: results.gender.map((g: any) => ({ group: g.group, ratio: g.ratio })),
+            genderGroups: results.data.map((g: any) => ({ group: g.group, ratio: g.ratio })),
             ageGroups: results.age.map((a: any) => ({ group: a.group, ratio: a.ratio })),
         };
+        
+        const genderAgeData = response.data.results[0];
+        const transformedData: GenderAgeTrendData = {
+          genderGroups: genderAgeData.gender,
+          ageGroups: genderAgeData.age
+        };
+
 
         // 3. Update cache
         await cacheRef.set({
-            data,
+            data: transformedData,
             updatedAt: new Date(),
         });
         
-        return data;
+        return transformedData;
 
     } catch (err: any) {
         console.error('Error fetching Naver DataLab gender/age data:', err.response?.data || err.message);
@@ -95,3 +102,8 @@ export const getGenderAgeTrend = ai.defineFlow(
     }
   }
 );
+
+
+export async function getGenderAgeTrend(input: GenderAgeTrendInput): Promise<GenderAgeTrendData> {
+  return genderAgeTrendFlow(input);
+}

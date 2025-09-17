@@ -72,15 +72,18 @@ const AnalysisPage = () => {
     const fetchData = async () => {
       setLoading(true);
       setError(null);
-      try {
-        const functionUrl = process.env.NEXT_PUBLIC_FIREBASE_FUNCTION_URL;
-        if (!functionUrl) {
-            console.warn("Firebase Function URL이 설정되지 않았습니다. .env.local 파일에 NEXT_PUBLIC_FIREBASE_FUNCTION_URL을 설정하면 실제 데이터를 가져옵니다. 지금은 목업 데이터를 표시합니다.");
-            setData(mockData);
-            setLoading(false);
-            return;
-        }
 
+      const functionUrl = process.env.NEXT_PUBLIC_FIREBASE_FUNCTION_URL;
+
+      // Check if the URL is not set or is a placeholder
+      if (!functionUrl || !functionUrl.startsWith('http')) {
+        console.warn("Firebase Function URL이 설정되지 않았습니다. .env.local 파일에 NEXT_PUBLIC_FIREBASE_FUNCTION_URL을 설정하면 실제 데이터를 가져옵니다. 지금은 목업 데이터를 표시합니다.");
+        setData(mockData);
+        setLoading(false);
+        return; // Stop execution if no valid URL
+      }
+      
+      try {
         const [
             genderAgeRes,
             seasonalRes,

@@ -36,6 +36,33 @@ const initialData = {
   risingFalling: null,
 };
 
+const mockData = {
+    genderAge: { 
+        gender: [ { group: 'm', ratio: 55 }, { group: 'f', ratio: 45 } ], 
+        age: [ { group: '10s', ratio: 10 }, { group: '20s', ratio: 30 }, { group: '30s', ratio: 25 }, { group: '40s', ratio: 20 }, { group: '50s', ratio: 15 } ] 
+    },
+    seasonal: [
+        { period: '2023-01-01', ratio: 10 }, { period: '2023-02-01', ratio: 12 }, { period: '2023-03-01', ratio: 15 },
+        { period: '2023-04-01', ratio: 30 }, { period: '2023-05-01', ratio: 60 }, { period: '2023-06-01', ratio: 90 },
+        { period: '2023-07-01', ratio: 100 }, { period: '2023-08-01', ratio: 95 }, { period: '2023-09-01', ratio: 50 },
+        { period: '2023-10-01', ratio: 30 }, { period: '2023-11-01', ratio: 20 }, { period: '2023-12-01', ratio: 18 },
+    ],
+    multiKeyword: [
+        { period: '2024-05-01', '갤럭시': 40, '아이폰': 60, '샤오미': 10 },
+        { period: '2024-05-02', '갤럭시': 45, '아이폰': 58, '샤오미': 12 },
+        { period: '2024-05-03', '갤럭시': 42, '아이폰': 65, '샤오미': 11 },
+    ],
+    category: [
+        { period: '2024-05-01', 'TV': 70, '냉장고': 50 },
+        { period: '2024-05-02', 'TV': 75, '냉장고': 55 },
+        { period: '2024-05-03', 'TV': 72, '냉장고': 58 },
+    ],
+    risingFalling: {
+        rising: [ { keyword: "선풍기", change: 150.5 }, { keyword: "캠핑의자", change: 88.2 }, { keyword: "수영복", change: 75.0 } ],
+        falling: [ { keyword: "전기장판", change: -80.1 }, { keyword: "가습기", change: -72.3 }, { keyword: "패딩", change: -65.8 } ],
+    }
+};
+
 const AnalysisPage = () => {
   const [data, setData] = React.useState(initialData);
   const [loading, setLoading] = React.useState(true);
@@ -48,7 +75,10 @@ const AnalysisPage = () => {
       try {
         const functionUrl = process.env.NEXT_PUBLIC_FIREBASE_FUNCTION_URL;
         if (!functionUrl || functionUrl === 'http://your-function-url') {
-            throw new Error("Firebase Function URL이 설정되지 않았습니다. .env.local 파일에 NEXT_PUBLIC_FIREBASE_FUNCTION_URL을 올바르게 설정해주세요.");
+            console.warn("Firebase Function URL이 설정되지 않았습니다. .env.local 파일에 NEXT_PUBLIC_FIREBASE_FUNCTION_URL을 설정하면 실제 데이터를 가져옵니다. 지금은 목업 데이터를 표시합니다.");
+            setData(mockData);
+            setLoading(false);
+            return;
         }
 
         const [

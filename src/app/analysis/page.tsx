@@ -21,7 +21,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
-import { TrendingUp, TrendingDown, Users, Calendar, BarChart2, PieChartIcon, Search } from 'lucide-react';
+import { TrendingUp, TrendingDown, Users, Calendar, BarChart2, PieChartIcon } from 'lucide-react';
 
 const GENDER_COLORS = ['#0088FE', '#FF8042'];
 const AGE_COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff8042', '#0088FE', '#00C49F'];
@@ -47,8 +47,8 @@ const AnalysisPage = () => {
       setError(null);
       try {
         const functionUrl = process.env.NEXT_PUBLIC_FIREBASE_FUNCTION_URL;
-        if (!functionUrl) {
-            throw new Error("Firebase Function URL is not configured. Please set NEXT_PUBLIC_FIREBASE_FUNCTION_URL in your environment.");
+        if (!functionUrl || functionUrl === 'http://your-function-url') {
+            throw new Error("Firebase Function URL이 설정되지 않았습니다. .env.local 파일에 NEXT_PUBLIC_FIREBASE_FUNCTION_URL을 올바르게 설정해주세요.");
         }
 
         const [

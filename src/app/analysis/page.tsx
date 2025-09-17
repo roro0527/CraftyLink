@@ -201,8 +201,8 @@ const AnalysisPage = () => {
                   </ul>
               </div>
           </div>
-      )
-  }
+      );
+  };
 
   const renderContent = () => {
     if (loading) {
@@ -254,7 +254,7 @@ const AnalysisPage = () => {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center"><Calendar className="mr-2" /> '에어컨' 시즌 패턴 분석</CardTitle>
-          </Header>
+          </CardHeader>
           <CardContent>{renderLineChart(data.seasonal, ['ratio'], "시즌 패턴 분석")}</CardContent>
         </Card>
         <Card>

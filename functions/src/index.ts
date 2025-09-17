@@ -205,7 +205,7 @@ const handleMultiKeyword = async (payload: any) => {
 
 const handleCategory = async (payload: any) => {
     const { categories } = payload;
-    const body = { startDate: "2023-01-01", endDate: new Date().toISOString().split('T')[0], timeUnit: 'date', category: categories.map((c: any) => c.param) };
+    const body = { startDate: "2023-01-01", endDate: new Date().toISOString().split('T')[0], timeUnit: 'date', category: categories.map((c: any) => ({ name: c.name, param: c.param })) };
     const data = await callNaverDatalabAPI('shopping-insight/category/trend', body);
 
     const unifiedData: { [period: string]: { period: string; [key: string]: number } } = {};
@@ -224,21 +224,67 @@ const handleCategory = async (payload: any) => {
 
 const handleRisingFalling = async () => {
     const today = new Date();
-    const oneMonthAgo = new Date(today.getFullYear(), today.getMonth() - 1, today.getDate());
-    const twoMonthsAgo = new Date(today.getFullYear(), today.getMonth() - 2, today.getDate());
-    
-    const endDate = oneMonthAgo.toISOString().split('T')[0];
-    const startDate = twoMonthsAgo.toISOString().split('T')[0];
+    const endDate = today.toISOString().split('T')[0];
+    const startDate = new Date(today.setDate(today.getDate() - 30)).toISOString().split('T')[0];
+    const prevEndDate = startDate;
+    const prevStartDate = new Date(new Date().setDate(new Date(startDate).getDate() - 30)).toISOString().split('T')[0];
 
-    const prevMonthData = await callNaverDatalabAPI('shopping-insight/category/trend', { startDate, endDate, timeUnit: 'month', category: "50000001" });
-    const currentMonthData = await callNaverDatalabAPI('shopping-insight/category/trend', { startDate: endDate, endDate: today.toISOString().split('T')[0], timeUnit: 'month', category: "50000001" });
-    
-    // This is a simplified logic. Real implementation would need to compare keyword ranks across time.
-    // For this example, we'll return mock data.
-    return {
-        rising: [ { keyword: "선풍기", change: 150.5 }, { keyword: "캠핑의자", change: 88.2 }, { keyword: "수영복", change: 75.0 } ],
-        falling: [ { keyword: "전기장판", change: -80.1 }, { keyword: "가습기", change: -72.3 }, { keyword: "패딩", change: -65.8 } ],
-    };
+    const category = "50000000"; // 패션 전체
+    const timeUnit = "date";
+    const device = "";
+    const gender = "";
+    const ages = [] as string[];
+
+    const fetchRank = (startDate: string, endDate: string) => callNaverDatalabAPI('shopping-insight/category/keyword/rank', {
+        startDate,
+        endDate,
+        timeUnit,
+        category,
+        device,
+        gender,
+        ages,
+        page: 1,
+        count: 500
+    });
+
+    try {
+        const [currentMonthData, prevMonthData] = await Promise.all([
+            fetchRank(startDate, endDate),
+            fetchRank(prevStartDate, prevEndDate)
+        ]);
+
+        const currentRanks: { [keyword: string]: number } = {};
+        currentMonthData.results[0].data.forEach((item: { keyword: string, rank: number }) => {
+            currentRanks[item.keyword] = item.rank;
+        });
+
+        const prevRanks: { [keyword: string]: number } = {};
+        prevMonthData.results[0].data.forEach((item: { keyword: string, rank: number }) => {
+            prevRanks[item.keyword] = item.rank;
+        });
+        
+        const rankChanges: { keyword: string, change: number }[] = [];
+        
+        // Calculate rank changes for all keywords present in the current month
+        for (const keyword in currentRanks) {
+            const currentRank = currentRanks[keyword];
+            const prevRank = prevRanks[keyword] || 501; // Not ranked in prev month is treated as rank 501
+            rankChanges.push({ keyword, change: prevRank - currentRank });
+        }
+
+        // Sort by change (desc for rising, asc for falling)
+        rankChanges.sort((a, b) => b.change - a.change);
+
+        const rising = rankChanges.slice(0, 3);
+        const falling = rankChanges.filter(k => k.change < 0).slice(-3).reverse();
+
+        return { rising, falling };
+
+    } catch (error) {
+        functions.logger.error("Error in handleRisingFalling:", error);
+        // Return empty arrays in case of an error
+        return { rising: [], falling: [] };
+    }
 };
 
 
@@ -263,8 +309,14 @@ app.post("/getNaverData", async (req, res) => {
         if (!handler) {
             return res.status(400).json({ error: `Invalid analysis type: ${type}` });
         }
-
-        result = await withCache(cacheKey, handler);
+        
+        // Disable cache for rising/falling as it should be dynamic
+        if (type === 'risingFalling') {
+            result = await handler();
+        } else {
+            result = await withCache(cacheKey, handler);
+        }
+        
         return res.status(200).json(result);
 
     } catch (error: any) {
@@ -280,7 +332,23 @@ app.get("/getTopVideos", async (req, res) => {
 });
 
 app.get("/getNaverNews", async (req, res) => {
-    // ... (code from previous state, can be kept or removed)
+  const { query } = req.query;
+
+    if (typeof query !== 'string') {
+        return res.status(400).send({ error: "Query parameter is missing or invalid." });
+    }
+    if (!NAVER_CLIENT_ID || !NAVER_CLIENT_SECRET) {
+        functions.logger.error("Naver API credentials are not configured in Cloud Functions.");
+        return res.status(500).send({ error: "Server configuration error." });
+    }
+
+    try {
+        const articles = await fetchNaverNewsLogic(query, firestore, NAVER_CLIENT_ID, NAVER_CLIENT_SECRET);
+        return res.status(200).json(articles);
+    } catch (error: any) {
+        functions.logger.error("Error fetching Naver news:", error);
+        return res.status(500).send({ error: "Failed to fetch news." });
+    }
 });
 
 
@@ -288,3 +356,5 @@ export const api = functions.runWith({ secrets: ["NAVER_CLIENT_ID", "NAVER_CLIEN
 
 // Clean up old function exports if they are no longer used
 // export { getNaverNews, getTopVideos };
+
+    

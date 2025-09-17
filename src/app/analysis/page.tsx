@@ -58,13 +58,13 @@ const mockData = {
         { period: '2024-05-03', 'TV': 72, '냉장고': 58 },
     ],
     risingFalling: {
-        rising: [ { keyword: "선풍기", change: 150.5 }, { keyword: "캠핑의자", change: 88.2 }, { keyword: "수영복", change: 75.0 } ],
-        falling: [ { keyword: "전기장판", change: -80.1 }, { keyword: "가습기", change: -72.3 }, { keyword: "패딩", change: -65.8 } ],
+        rising: [ { keyword: "반팔 티셔츠", change: 302 }, { keyword: "선풍기", change: 150 }, { keyword: "캠핑의자", change: 88 } ],
+        falling: [ { keyword: "전기장판", change: -450 }, { keyword: "가습기", change: -321 }, { keyword: "패딩", change: -250 } ],
     }
 };
 
 const AnalysisPage = () => {
-  const [data, setData] = React.useState(initialData);
+  const [data, setData] = React.useState<any>(initialData);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
 
@@ -73,8 +73,8 @@ const AnalysisPage = () => {
       setLoading(true);
       setError(null);
       try {
-        const functionUrl = process.env.NEXT_PUBLIC_FIREBASE_FUNCTION_URL;
-        if (!functionUrl || functionUrl === 'http://your-function-url') {
+        const functionUrl = process.env.NEXT_PUBLIC_FIREBASE_FUNCTION_URL + '/getNaverData';
+        if (!process.env.NEXT_PUBLIC_FIREBASE_FUNCTION_URL) {
             console.warn("Firebase Function URL이 설정되지 않았습니다. .env.local 파일에 NEXT_PUBLIC_FIREBASE_FUNCTION_URL을 설정하면 실제 데이터를 가져옵니다. 지금은 목업 데이터를 표시합니다.");
             setData(mockData);
             setLoading(false);
@@ -105,6 +105,7 @@ const AnalysisPage = () => {
       } catch (err: any) {
         console.error("Error fetching analysis data:", err);
         setError(err.response?.data?.error || err.message || '데이터를 불러오는 중 오류가 발생했습니다.');
+        setData(mockData); // 에러 발생 시 목업 데이터 보여주기
       } finally {
         setLoading(false);
       }
@@ -183,7 +184,7 @@ const AnalysisPage = () => {
                       {rising && rising.length > 0 ? rising.map((item: any, i: number) => (
                           <li key={i} className="flex justify-between items-center p-2 bg-muted rounded-md">
                               <span>{item.keyword}</span>
-                              <Badge variant="default" className="bg-green-500 hover:bg-green-600">+{item.change.toFixed(1)}%</Badge>
+                              <Badge variant="default" className="bg-green-500 hover:bg-green-600">+{item.change}</Badge>
                           </li>
                       )) : <p className="text-muted-foreground">급등 키워드가 없습니다.</p>}
                   </ul>
@@ -194,7 +195,7 @@ const AnalysisPage = () => {
                       {falling && falling.length > 0 ? falling.map((item: any, i: number) => (
                           <li key={i} className="flex justify-between items-center p-2 bg-muted rounded-md">
                               <span>{item.keyword}</span>
-                              <Badge variant="destructive">{-item.change.toFixed(1)}%</Badge>
+                              <Badge variant="destructive">{item.change}</Badge>
                           </li>
                       )) : <p className="text-muted-foreground">급락 키워드가 없습니다.</p>}
                   </ul>
@@ -217,7 +218,7 @@ const AnalysisPage = () => {
       );
     }
 
-    if (error) {
+    if (error && !data) {
       return (
         <div className="text-center py-20 bg-destructive/10 text-destructive rounded-lg">
           <h2 className="text-xl font-bold">오류 발생</h2>
@@ -231,7 +232,7 @@ const AnalysisPage = () => {
         <Card className="lg:col-span-2">
           <CardHeader>
             <CardTitle className="flex items-center"><TrendingUp className="mr-2"/> 급등/급락 키워드</CardTitle>
-            <CardDescription>전월 대비 검색량 변화율이 높은 키워드입니다.</CardDescription>
+            <CardDescription>전월 대비 검색량 순위 변화가 높은 키워드입니다.</CardDescription>
           </CardHeader>
           <CardContent>{renderRisingFallingKeywords()}</CardContent>
         </Card>
@@ -277,9 +278,12 @@ const AnalysisPage = () => {
       <header className="mb-8">
         <h1 className="text-3xl font-bold tracking-tight">분석 결과 페이지</h1>
       </header>
+      {error && <div className="mb-4 p-4 bg-destructive/10 text-destructive rounded-lg"><p><strong>참고:</strong> API 호출 중 오류가 발생하여 일부 또는 전체 데이터가 목업(예시) 데이터로 표시될 수 있습니다. Firebase Function URL 및 API 키 설정을 확인해주세요.</p><p className="text-sm mt-1">오류: {error}</p></div>}
       {renderContent()}
     </div>
   );
 };
 
 export default AnalysisPage;
+
+    

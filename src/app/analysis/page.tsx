@@ -2,226 +2,254 @@
 'use client';
 
 import * as React from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { LoaderCircle, Search, PieChartIcon, LineChartIcon } from 'lucide-react';
-import { DatePickerWithRange } from '@/components/ui/date-picker';
-import { DateRange } from 'react-day-picker';
-import { addDays, format } from 'date-fns';
+import axios from 'axios';
 import {
-  PieChart,
+  PieChart as RechartsPieChart,
   Pie,
   Cell,
-  ResponsiveContainer,
   BarChart,
   Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  Legend,
   LineChart,
   Line,
-  CartesianGrid
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
 } from 'recharts';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useToast } from '@/hooks/use-toast';
-import { getGenderAgeTrendAction, getSeasonalPatternAction } from '@/app/actions';
-import type { GenderAgeTrendData, SeasonalPatternData } from '@/lib/types';
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
+import { TrendingUp, TrendingDown, Users, Calendar, BarChart2, PieChartIcon, Search } from 'lucide-react';
 
 const GENDER_COLORS = ['#0088FE', '#FF8042'];
 const AGE_COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff8042', '#0088FE', '#00C49F'];
+const KEYWORD_COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff7300', '#387908'];
 
-export default function AnalysisPage() {
-  const { toast } = useToast();
-  const [keyword, setKeyword] = React.useState('');
-  const [dateRange, setDateRange] = React.useState<DateRange | undefined>({
-    from: addDays(new Date(), -90),
-    to: new Date(),
-  });
-  const [timeUnit, setTimeUnit] = React.useState<'month' | 'week'>('month');
+// Mock-up 데이터 구조. 실제 API 응답에 맞게 조정됩니다.
+const initialData = {
+  genderAge: null,
+  seasonal: null,
+  multiKeyword: null,
+  category: null,
+  risingFalling: null,
+};
 
-  const [isLoading, setIsLoading] = React.useState(false);
-  const [genderAgeData, setGenderAgeData] = React.useState<GenderAgeTrendData | null>(null);
-  const [seasonalData, setSeasonalData] = React.useState<SeasonalPatternData | null>(null);
+const AnalysisPage = () => {
+  const [data, setData] = React.useState(initialData);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
 
-  const handleSearch = async () => {
-    if (!keyword.trim()) {
-      toast({
-        variant: 'destructive',
-        title: '검색어를 입력해주세요.',
-      });
-      return;
-    }
-    if (!dateRange?.from || !dateRange?.to) {
-        toast({
-            variant: 'destructive',
-            title: '기간을 선택해주세요.',
-        });
-        return;
-    }
+  React.useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const functionUrl = process.env.NEXT_PUBLIC_FIREBASE_FUNCTION_URL;
+        if (!functionUrl) {
+            throw new Error("Firebase Function URL is not configured. Please set NEXT_PUBLIC_FIREBASE_FUNCTION_URL in your environment.");
+        }
 
-    setIsLoading(true);
-    setGenderAgeData(null);
-    setSeasonalData(null);
-
-    try {
-        const startDate = format(dateRange.from, 'yyyy-MM-dd');
-        const endDate = format(dateRange.to, 'yyyy-MM-dd');
-
-        const [genderAgeResult, seasonalResult] = await Promise.all([
-            getGenderAgeTrendAction({ keyword, startDate, endDate }),
-            getSeasonalPatternAction({ keyword, startDate, endDate, timeUnit }),
+        const [
+            genderAgeRes,
+            seasonalRes,
+            multiKeywordRes,
+            categoryRes,
+            risingFallingRes
+        ] = await Promise.all([
+          axios.post(functionUrl, { type: 'genderAge', payload: { keyword: '노트북' } }),
+          axios.post(functionUrl, { type: 'seasonal', payload: { keyword: '에어컨' } }),
+          axios.post(functionUrl, { type: 'multiKeyword', payload: { keywords: ['갤럭시', '아이폰', '샤오미'] } }),
+          axios.post(functionUrl, { type: 'category', payload: { categories: [{name: 'TV', param: ['50000001']}, {name: '냉장고', param: ['50000002']}] } }),
+          axios.post(functionUrl, { type: 'risingFalling' }),
         ]);
-        
-        if (genderAgeResult.genderGroups.length === 0 && genderAgeResult.ageGroups.length === 0) {
-            toast({
-                variant: "default",
-                title: "성별/연령별 데이터 없음",
-                description: `'${keyword}'에 대한 쇼핑 인사이트 데이터가 없습니다.`,
-            });
-        }
-        if (seasonalResult.length === 0) {
-            toast({
-                variant: "default",
-                title: "시즌 패턴 데이터 없음",
-                description: `기간 내 '${keyword}'에 대한 쇼핑 인사이트 데이터가 없습니다.`,
-            });
-        }
 
-        setGenderAgeData(genderAgeResult);
-        setSeasonalData(seasonalResult);
-
-    } catch (error) {
-        console.error("Error during analysis:", error);
-        toast({
-            variant: "destructive",
-            title: "분석 중 오류 발생",
-            description: "데이터를 가져오는 데 실패했습니다. 다시 시도해주세요.",
+        setData({
+          genderAge: genderAgeRes.data,
+          seasonal: seasonalRes.data,
+          multiKeyword: multiKeywordRes.data,
+          category: categoryRes.data,
+          risingFalling: risingFallingRes.data,
         });
-    } finally {
-        setIsLoading(false);
-    }
+      } catch (err: any) {
+        console.error("Error fetching analysis data:", err);
+        setError(err.response?.data?.error || err.message || '데이터를 불러오는 중 오류가 발생했습니다.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  const renderGenderChart = () => {
+    if (!data.genderAge || !data.genderAge.gender) return <div className="h-48 flex items-center justify-center bg-muted rounded-md"><p className="text-muted-foreground">데이터 없음</p></div>;
+    const chartData = data.genderAge.gender.map((g: any) => ({ name: g.group === 'm' ? '남성' : '여성', value: g.ratio }));
+    return (
+      <ResponsiveContainer width="100%" height={200}>
+        <RechartsPieChart>
+          <Pie data={chartData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label>
+            {chartData.map((_entry: any, index: number) => (
+              <Cell key={`cell-${index}`} fill={GENDER_COLORS[index % GENDER_COLORS.length]} />
+            ))}
+          </Pie>
+          <Tooltip formatter={(value: number) => `${value.toFixed(1)}%`} />
+          <Legend />
+        </RechartsPieChart>
+      </ResponsiveContainer>
+    );
   };
-  
-  const formattedAgeData = genderAgeData?.ageGroups.map(item => ({
-    name: item.group.replace('s', '대'),
-    value: item.ratio
-  })).sort((a, b) => parseInt(a.name) - parseInt(b.name));
+
+  const renderAgeChart = () => {
+    if (!data.genderAge || !data.genderAge.age) return <div className="h-48 flex items-center justify-center bg-muted rounded-md"><p className="text-muted-foreground">데이터 없음</p></div>;
+    const chartData = data.genderAge.age.map((a: any) => ({ name: a.group.replace('s', '대'), value: a.ratio }));
+    return (
+      <ResponsiveContainer width="100%" height={200}>
+        <BarChart data={chartData}>
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="name" />
+          <YAxis />
+          <Tooltip formatter={(value: number) => `${value.toFixed(1)}%`} />
+          <Bar dataKey="value">
+            {chartData.map((_entry: any, index: number) => (
+              <Cell key={`cell-${index}`} fill={AGE_COLORS[index % AGE_COLORS.length]} />
+            ))}
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
+    );
+  };
+
+  const renderLineChart = (chartData: any, dataKeys: string[], title: string) => {
+    if (!chartData || chartData.length === 0) return <div className="h-72 flex items-center justify-center bg-muted rounded-md"><p className="text-muted-foreground">데이터 없음</p></div>;
+    return (
+      <>
+        <ResponsiveContainer width="100%" height={300}>
+          <LineChart data={chartData}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="period" />
+            <YAxis />
+            <Tooltip />
+            <Legend />
+            {dataKeys.map((key, index) => (
+              <Line key={key} type="monotone" dataKey={key} stroke={KEYWORD_COLORS[index % KEYWORD_COLORS.length]} />
+            ))}
+          </LineChart>
+        </ResponsiveContainer>
+        {title === "시즌 패턴 분석" && <CardDescription className="text-center mt-2">네이버 데이터랩은 절대 검색량이 아닌 상대 지표를 제공합니다.</CardDescription>}
+      </>
+    );
+  };
+
+  const renderRisingFallingKeywords = () => {
+      if (!data.risingFalling) return <div className="h-48 flex items-center justify-center bg-muted rounded-md"><p className="text-muted-foreground">데이터 없음</p></div>;
+      const { rising, falling } = data.risingFalling;
+      return (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                  <h3 className="font-semibold mb-2 flex items-center"><TrendingUp className="mr-2 text-green-500" /> 급등 키워드 Top 3</h3>
+                  <ul className="space-y-2">
+                      {rising && rising.length > 0 ? rising.map((item: any, i: number) => (
+                          <li key={i} className="flex justify-between items-center p-2 bg-muted rounded-md">
+                              <span>{item.keyword}</span>
+                              <Badge variant="default" className="bg-green-500 hover:bg-green-600">+{item.change.toFixed(1)}%</Badge>
+                          </li>
+                      )) : <p className="text-muted-foreground">급등 키워드가 없습니다.</p>}
+                  </ul>
+              </div>
+              <div>
+                  <h3 className="font-semibold mb-2 flex items-center"><TrendingDown className="mr-2 text-red-500" /> 급락 키워드 Top 3</h3>
+                  <ul className="space-y-2">
+                      {falling && falling.length > 0 ? falling.map((item: any, i: number) => (
+                          <li key={i} className="flex justify-between items-center p-2 bg-muted rounded-md">
+                              <span>{item.keyword}</span>
+                              <Badge variant="destructive">{-item.change.toFixed(1)}%</Badge>
+                          </li>
+                      )) : <p className="text-muted-foreground">급락 키워드가 없습니다.</p>}
+                  </ul>
+              </div>
+          </div>
+      )
+  }
+
+  const renderContent = () => {
+    if (loading) {
+      return (
+        <div className="grid md:grid-cols-2 gap-6">
+          {[...Array(6)].map((_, i) => (
+            <Card key={i}>
+              <CardHeader><Skeleton className="h-6 w-40" /></CardHeader>
+              <CardContent><Skeleton className="h-64 w-full" /></CardContent>
+            </Card>
+          ))}
+        </div>
+      );
+    }
+
+    if (error) {
+      return (
+        <div className="text-center py-20 bg-destructive/10 text-destructive rounded-lg">
+          <h2 className="text-xl font-bold">오류 발생</h2>
+          <p>{error}</p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle className="flex items-center"><TrendingUp className="mr-2"/> 급등/급락 키워드</CardTitle>
+            <CardDescription>전월 대비 검색량 변화율이 높은 키워드입니다.</CardDescription>
+          </CardHeader>
+          <CardContent>{renderRisingFallingKeywords()}</CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center"><Users className="mr-2" /> '노트북' 성별/연령별 분석</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div>
+              <h3 className="font-semibold text-center mb-2">성별 비율</h3>
+              {renderGenderChart()}
+            </div>
+            <div>
+              <h3 className="font-semibold text-center mb-2">연령대별 관심도</h3>
+              {renderAgeChart()}
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center"><Calendar className="mr-2" /> '에어컨' 시즌 패턴 분석</CardTitle>
+          </CardHeader>
+          <CardContent>{renderLineChart(data.seasonal, ['ratio'], "시즌 패턴 분석")}</CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center"><BarChart2 className="mr-2" /> 다중 키워드 비교</CardTitle>
+          </CardHeader>
+          <CardContent>{renderLineChart(data.multiKeyword, ['갤럭시', '아이폰', '샤오미'], "다중 키워드")}</CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center"><PieChartIcon className="mr-2" /> 쇼핑 카테고리 비교</CardTitle>
+          </CardHeader>
+          <CardContent>{renderLineChart(data.category, ['TV', '냉장고'], "카테고리")}</CardContent>
+        </Card>
+      </div>
+    );
+  };
 
   return (
-    <div className="container mx-auto p-4 md:p-6 lg:p-8">
+    <div className="container mx-auto p-4 md:p-8">
       <header className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight mb-2">쇼핑 인사이트 분석</h1>
-        <p className="text-muted-foreground">키워드에 대한 성별/연령별, 시즌별 쇼핑 트렌드를 분석합니다.</p>
+        <h1 className="text-3xl font-bold tracking-tight">분석 결과 페이지</h1>
       </header>
-
-      <div className="flex flex-col md:flex-row items-center gap-4 mb-8 p-4 border rounded-lg bg-card">
-         <Input
-            type="text"
-            placeholder="분석할 키워드를 입력하세요..."
-            value={keyword}
-            onChange={(e) => setKeyword(e.target.value)}
-            className="h-11 text-base max-w-xs"
-            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-         />
-         <DatePickerWithRange date={dateRange} setDate={setDateRange} className="h-11" />
-         <Select value={timeUnit} onValueChange={(value) => setTimeUnit(value as 'month' | 'week')}>
-            <SelectTrigger className="w-full md:w-[120px] h-11">
-                <SelectValue placeholder="단위" />
-            </SelectTrigger>
-            <SelectContent>
-                <SelectItem value="month">월간</SelectItem>
-                <SelectItem value="week">주간</SelectItem>
-            </SelectContent>
-         </Select>
-         <Button onClick={handleSearch} disabled={isLoading} className="h-11">
-            {isLoading ? (
-              <LoaderCircle className="animate-spin" />
-            ) : (
-              <Search />
-            )}
-            <span className="ml-2">분석하기</span>
-         </Button>
-      </div>
-
-      {isLoading ? (
-        <div className="grid md:grid-cols-2 gap-6">
-            <Card><CardHeader><Skeleton className="h-6 w-40" /></CardHeader><CardContent><Skeleton className="h-80 w-full" /></CardContent></Card>
-            <Card><CardHeader><Skeleton className="h-6 w-40" /></CardHeader><CardContent><Skeleton className="h-80 w-full" /></CardContent></Card>
-        </div>
-      ) : !genderAgeData && !seasonalData ? (
-        <div className="text-center py-20 bg-muted rounded-lg">
-            <p className="text-muted-foreground">분석할 키워드를 입력하고, 기간을 선택한 후 '분석하기' 버튼을 클릭하세요.</p>
-        </div>
-      ) : (
-        <div className="grid md:grid-cols-2 gap-6">
-            <Card>
-                <CardHeader>
-                    <CardTitle className="flex items-center"><PieChartIcon className="mr-2" />성별/연령별 분석</CardTitle>
-                    <CardDescription>키워드에 대한 성별 및 연령대별 쇼핑 관심도입니다.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-8">
-                    <div>
-                        <h3 className="font-semibold mb-2 text-center">성별 비율</h3>
-                        {genderAgeData && genderAgeData.genderGroups.length > 0 ? (
-                            <ResponsiveContainer width="100%" height={200}>
-                                <PieChart>
-                                    <Pie data={genderAgeData.genderGroups} dataKey="ratio" nameKey="group" cx="50%" cy="50%" outerRadius={80} label>
-                                        {genderAgeData.genderGroups.map((entry, index) => (
-                                            <Cell key={`cell-${index}`} fill={GENDER_COLORS[index % GENDER_COLORS.length]} />
-                                        ))}
-                                    </Pie>
-                                    <Tooltip formatter={(value, name) => [`${value.toFixed(1)}%`, name === 'm' ? '남성' : '여성']} />
-                                    <Legend formatter={(value) => value === 'm' ? '남성' : '여성'} />
-                                </PieChart>
-                            </ResponsiveContainer>
-                        ) : <div className="h-[200px] flex items-center justify-center bg-muted rounded-md"><p className="text-center text-muted-foreground">데이터 없음</p></div>}
-                    </div>
-                    <div>
-                        <h3 className="font-semibold mb-2 text-center">연령대별 관심도</h3>
-                         {formattedAgeData && formattedAgeData.length > 0 ? (
-                            <ResponsiveContainer width="100%" height={250}>
-                                <BarChart data={formattedAgeData}>
-                                    <CartesianGrid strokeDasharray="3 3" />
-                                    <XAxis dataKey="name" />
-                                    <YAxis />
-                                    <Tooltip formatter={(value) => [`${value.toFixed(1)}%`, '비율']} />
-                                    <Bar dataKey="value" name="비율">
-                                        {formattedAgeData.map((entry, index) => (
-                                            <Cell key={`cell-${index}`} fill={AGE_COLORS[index % AGE_COLORS.length]} />
-                                        ))}
-                                    </Bar>
-                                </BarChart>
-                            </ResponsiveContainer>
-                        ) : <div className="h-[250px] flex items-center justify-center bg-muted rounded-md"><p className="text-center text-muted-foreground">데이터 없음</p></div>}
-                    </div>
-                </CardContent>
-            </Card>
-
-            <Card>
-                <CardHeader>
-                    <CardTitle className="flex items-center"><LineChartIcon className="mr-2" />시즌 패턴 분석</CardTitle>
-                    <CardDescription>기간에 따른 키워드의 쇼핑 클릭량 추이입니다.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                   {seasonalData && seasonalData.length > 0 ? (
-                        <ResponsiveContainer width="100%" height={500}>
-                            <LineChart data={seasonalData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
-                                <CartesianGrid strokeDasharray="3 3" />
-                                <XAxis dataKey="date" tickFormatter={(tick) => timeUnit === 'month' ? format(new Date(tick), 'yy-MM') : format(new Date(tick), 'MM/dd')} />
-                                <YAxis />
-                                <Tooltip labelFormatter={(label) => format(new Date(label), 'yyyy-MM-dd')} />
-                                <Legend />
-                                <Line type="monotone" dataKey="value" name="클릭량" stroke="#8884d8" activeDot={{ r: 8 }} />
-                            </LineChart>
-                        </ResponsiveContainer>
-                   ) : <div className="h-[500px] flex items-center justify-center bg-muted rounded-md"><p className="text-center text-muted-foreground">데이터 없음</p></div>}
-                </CardContent>
-            </Card>
-        </div>
-      )}
+      {renderContent()}
     </div>
   );
-}
+};
+
+export default AnalysisPage;

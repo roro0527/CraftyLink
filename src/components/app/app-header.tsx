@@ -37,7 +37,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({}) => {
               <Button asChild variant="ghost" className="text-base"><Link href="/">홈</Link></Button>
               <Button asChild variant="ghost" className="text-base"><Link href="/keyword">키워드</Link></Button>
               <Button asChild variant="ghost" className="text-base"><Link href="/compare">비교</Link></Button>
-              <Button asChild variant="ghost" className="text-base"><Link href="/analysis">분석</Link></Button>
+              <Button asChild variant="ghost" className="text-base"><Link href="/region-explore">탐색</Link></Button>
             </nav>
           </div>
         </div>

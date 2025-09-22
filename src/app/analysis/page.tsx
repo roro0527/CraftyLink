@@ -17,9 +17,8 @@ import {
 } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Calendar, LoaderCircle, Search, Users } from 'lucide-react';
-import { getKeywordTrendsAction, getGenderAgeTrendAction } from '../actions';
-import type { KeywordTrendPoint } from '@/lib/types';
+import { LoaderCircle, Search, Users } from 'lucide-react';
+import { getGenderAgeTrendAction } from '../actions';
 import type { GenderAgeTrendData } from '@/ai/flows/gender-age-trend-flow';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -46,7 +45,6 @@ const GENDER_CHART_COLORS = {
 
 
 interface AnalysisData {
-    trends: KeywordTrendPoint[] | null;
     genderAge: GenderAgeTrendData | null;
     multiKeyword: any;
     category: any;
@@ -78,13 +76,9 @@ const AnalysisPage = () => {
             setLoading(true);
             
             try {
-                 const [trendsRes, genderAgeRes] = await Promise.all([
-                    getKeywordTrendsAction({ keyword, timeRange: '1m' }),
-                    getGenderAgeTrendAction({ keyword }),
-                ]);
+                 const genderAgeRes = await getGenderAgeTrendAction({ keyword });
 
                 setData({
-                    trends: trendsRes,
                     genderAge: genderAgeRes,
                     multiKeyword: mockData.multiKeyword,
                     category: mockData.category,
@@ -97,7 +91,6 @@ const AnalysisPage = () => {
                     description: '분석 데이터를 가져오는 데 실패했습니다. 다시 시도해주세요.',
                 });
                 setData({
-                    trends: null,
                     genderAge: null,
                     multiKeyword: mockData.multiKeyword,
                     category: mockData.category,
@@ -145,7 +138,6 @@ const AnalysisPage = () => {
                         ))}
                     </LineChart>
                 </ResponsiveContainer>
-                {title === '검색량 추이 분석' && <CardDescription className="text-center mt-2">네이버 데이터랩은 절대 검색량이 아닌 상대 지표를 제공합니다.</CardDescription>}
             </>
         );
     };
@@ -209,13 +201,6 @@ const AnalysisPage = () => {
 
         return (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="flex items-center"><Calendar className="mr-2" /> 검색량 추이 분석</CardTitle>
-                        <CardDescription>키워드: {keyword}</CardDescription>
-                    </CardHeader>
-                    <CardContent>{renderLineChart(data?.trends, '검색량 추이 분석')}</CardContent>
-                </Card>
                 <Card>
                     <CardHeader>
                         <CardTitle className="flex items-center"><Users className="mr-2" /> 성별 검색 비율</CardTitle>

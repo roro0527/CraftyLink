@@ -11,19 +11,20 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
 } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Calendar, LoaderCircle, Search } from 'lucide-react';
-import { format, subYears } from 'date-fns';
-import { getKeywordTrendsAction } from '../actions';
+import { Calendar, LoaderCircle, Search, Users } from 'lucide-react';
+import { getKeywordTrendsAction, getGenderAgeTrendAction } from '../actions';
 import type { KeywordTrendPoint } from '@/lib/types';
+import type { GenderAgeTrendData } from '@/ai/flows/gender-age-trend-flow';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 
-
-// Note: multiKeyword and category are temporarily mocked
 const mockData = {
     multiKeyword: {
         '갤럭시': [{ date: '2023-12-01', value: 70 }, { date: '2023-12-02', value: 72 }],
@@ -38,9 +39,15 @@ const mockData = {
 };
 
 const MULTI_KEYWORD_COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#FF8042', '#0088FE'];
+const GENDER_CHART_COLORS = {
+  '남성': '#8884d8',
+  '여성': '#82ca9d',
+};
+
 
 interface AnalysisData {
     trends: KeywordTrendPoint[] | null;
+    genderAge: GenderAgeTrendData | null;
     multiKeyword: any;
     category: any;
 }
@@ -71,10 +78,14 @@ const AnalysisPage = () => {
             setLoading(true);
             
             try {
-                const trendsRes = await getKeywordTrendsAction({ keyword, timeRange: '1m' });
+                 const [trendsRes, genderAgeRes] = await Promise.all([
+                    getKeywordTrendsAction({ keyword, timeRange: '1m' }),
+                    getGenderAgeTrendAction({ keyword }),
+                ]);
 
                 setData({
                     trends: trendsRes,
+                    genderAge: genderAgeRes,
                     multiKeyword: mockData.multiKeyword,
                     category: mockData.category,
                 });
@@ -87,6 +98,7 @@ const AnalysisPage = () => {
                 });
                 setData({
                     trends: null,
+                    genderAge: null,
                     multiKeyword: mockData.multiKeyword,
                     category: mockData.category,
                 });
@@ -138,13 +150,55 @@ const AnalysisPage = () => {
         );
     };
 
+    const renderGenderChart = (chartData: GenderAgeTrendData | null) => {
+        if (!chartData?.gender || chartData.gender.reduce((sum, item) => sum + item.ratio, 0) === 0) {
+            return <div className="h-72 flex items-center justify-center bg-muted rounded-md"><p className="text-muted-foreground">데이터 없음</p></div>;
+        }
+
+        const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }: any) => {
+            const RADIAN = Math.PI / 180;
+            const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+            const x = cx + radius * Math.cos(-midAngle * RADIAN);
+            const y = cy + radius * Math.sin(-midAngle * RADIAN);
+            return (
+                <text x={x} y={y} fill="white" textAnchor={x > cx ? 'start' : 'end'} dominantBaseline="central">
+                    {`${(percent * 100).toFixed(0)}%`}
+                </text>
+            );
+        };
+
+        return (
+             <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                    <Pie
+                        data={chartData.gender}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={renderCustomizedLabel}
+                        outerRadius={110}
+                        fill="#8884d8"
+                        dataKey="ratio"
+                        nameKey="group"
+                    >
+                        {chartData.gender.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={GENDER_CHART_COLORS[entry.group as keyof typeof GENDER_CHART_COLORS]} />
+                        ))}
+                    </Pie>
+                    <Tooltip />
+                    <Legend />
+                </PieChart>
+            </ResponsiveContainer>
+        );
+    };
+
 
     const renderContent = () => {
         if (loading) {
             return (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {[...Array(4)].map((_, i) => (
-                        <Card key={i} className={i > 0 ? "lg:col-span-2" : ""}>
+                        <Card key={i}>
                             <CardHeader><Skeleton className="h-6 w-40" /></CardHeader>
                             <CardContent><Skeleton className="h-64 w-full" /></CardContent>
                         </Card>
@@ -154,7 +208,7 @@ const AnalysisPage = () => {
         }
 
         return (
-            <div className="grid grid-cols-1 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <Card>
                     <CardHeader>
                         <CardTitle className="flex items-center"><Calendar className="mr-2" /> 검색량 추이 분석</CardTitle>
@@ -164,11 +218,18 @@ const AnalysisPage = () => {
                 </Card>
                 <Card>
                     <CardHeader>
+                        <CardTitle className="flex items-center"><Users className="mr-2" /> 성별 검색 비율</CardTitle>
+                        <CardDescription>키워드: {keyword}</CardDescription>
+                    </CardHeader>
+                    <CardContent>{renderGenderChart(data?.genderAge)}</CardContent>
+                </Card>
+                <Card className="lg:col-span-2">
+                    <CardHeader>
                         <CardTitle>다중 키워드 비교</CardTitle>
                     </CardHeader>
                     <CardContent>{renderLineChart(data?.multiKeyword, '다중 키워드 비교')}</CardContent>
                 </Card>
-                <Card>
+                <Card className="lg:col-span-2">
                     <CardHeader>
                         <CardTitle>쇼핑 카테고리 비교</CardTitle>
                     </CardHeader>

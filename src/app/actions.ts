@@ -8,6 +8,7 @@ import { getYoutubeVideos, type YoutubeVideosInput, type YoutubeVideosData } fro
 import { getRegionalTrends, type RegionalTrendsInput, type RegionalTrendsOutput } from '@/ai/flows/regional-trends-flow';
 import { getKeywordRegionRank, type KeywordRegionRankInput, type KeywordRegionRankOutput } from '@/ai/flows/keyword-region-rank-flow';
 import { getNaverNews, type NaverNewsInput, type RelatedNewsData } from '@/ai/flows/naver-news-flow';
+import { getGenderAgeTrend, type GenderAgeTrendInput, type GenderAgeTrendData } from '@/ai/flows/gender-age-trend-flow';
 
 
 export async function suggestSuperParametersAction(
@@ -37,6 +38,17 @@ export async function getKeywordTrendsAction(input: KeywordTrendsInput): Promise
     throw error;
   }
 }
+
+export async function getGenderAgeTrendAction(input: GenderAgeTrendInput): Promise<GenderAgeTrendData> {
+    try {
+      const trends = await getGenderAgeTrend(input);
+      return trends;
+    } catch (error) {
+      console.error('Error fetching gender and age trend data:', error);
+      throw new Error('Failed to fetch gender and age trend data.');
+    }
+}
+
 
 export async function getRelatedKeywordsAction(input: { keyword: string }): Promise<string[]> {
     try {

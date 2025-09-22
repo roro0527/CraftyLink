@@ -12,7 +12,6 @@ import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 import { subDays, format, parse } from 'date-fns';
 import axios from 'axios';
-import type { KeywordTrendPoint } from '@/lib/types';
 
 
 const KeywordTrendsInputSchema = z.object({

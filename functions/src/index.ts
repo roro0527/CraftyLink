@@ -157,8 +157,3 @@ app.get("/getNaverNews", async (req, res) => {
 
 
 export const api = functions.runWith({ secrets: ["NAVER_CLIENT_ID", "NAVER_CLIENT_SECRET", "YOUTUBE_API_KEY", "KAKAO_APP_KEY", "NAVER_DATALAB_CLIENT_ID", "NAVER_DATALAB_CLIENT_SECRET", "FIREBASE_SERVICE_ACCOUNT_KEY"]}).region("asia-northeast3").https.onRequest(app);
-
-// Clean up old function exports if they are no longer used
-// export { getNaverNews, getTopVideos };
-
-    

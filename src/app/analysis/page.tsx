@@ -20,39 +20,17 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Skeleton } from '@/components/ui/skeleton';
 import { TrendingUp, Users, Calendar, TrendingDown } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import axios from 'axios';
+import { format, subYears } from 'date-fns';
+import { getGenderAgeTrendAction, getSeasonalPatternAction } from '../actions';
+import type { GenderAgeTrendData, SeasonalPatternData } from '@/lib/types';
+
 
 const GENDER_COLORS = ['#0088FE', '#FF8042'];
 const AGE_COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff8042', '#0088FE', '#00C49F'];
 
+// Note: multiKeyword, category, and risingFalling are temporarily mocked
+// as there are no corresponding server actions implemented yet.
 const mockData = {
-    genderAge: {
-        genderGroups: [
-            { group: 'm', ratio: 60 },
-            { group: 'f', ratio: 40 },
-        ],
-        ageGroups: [
-            { group: '10s', ratio: 15 },
-            { group: '20s', ratio: 35 },
-            { group: '30s', ratio: 25 },
-            { group: '40s', ratio: 15 },
-            { group: '50s', ratio: 10 },
-        ],
-    },
-    seasonal: [
-        { date: '2023-01', value: 30 },
-        { date: '2023-02', value: 45 },
-        { date: '2023-03', value: 60 },
-        { date: '2023-04', value: 55 },
-        { date: '2023-05', value: 70 },
-        { date: '2023-06', value: 85 },
-        { date: '2023-07', value: 95 },
-        { date: '2023-08', value: 90 },
-        { date: '2023-09', value: 75 },
-        { date: '2023-10', value: 60 },
-        { date: '2023-11', value: 50 },
-        { date: '2023-12', value: 65 },
-    ],
     multiKeyword: {
         '갤럭시': [{ date: '2023-12-01', value: 70 }, { date: '2023-12-02', value: 72 }],
         '아이폰': [{ date: '2023-12-01', value: 80 }, { date: '2023-12-02', value: 85 }],
@@ -71,47 +49,54 @@ const mockData = {
 
 const MULTI_KEYWORD_COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#FF8042', '#0088FE'];
 
+interface AnalysisData {
+    genderAge: GenderAgeTrendData | null;
+    seasonal: SeasonalPatternData | null;
+    multiKeyword: any;
+    category: any;
+    risingFalling: any;
+}
+
+
 const AnalysisPage = () => {
-    const [data, setData] = React.useState<any>(null);
+    const [data, setData] = React.useState<AnalysisData | null>(null);
     const [loading, setLoading] = React.useState(true);
 
     React.useEffect(() => {
         const fetchData = async () => {
             setLoading(true);
-            const functionUrl = process.env.NEXT_PUBLIC_FIREBASE_FUNCTION_URL;
-
-            if (!functionUrl || !functionUrl.startsWith('http')) {
-                console.warn("Firebase Function URL이 설정되지 않았습니다. .env.local 파일에 NEXT_PUBLIC_FIREBASE_FUNCTION_URL을 올바르게 설정해주세요. 목업 데이터를 사용합니다.");
-                setData(mockData);
-                setLoading(false);
-                return;
-            }
-
+            
             try {
+                const endDate = new Date();
+                const startDate = subYears(endDate, 1);
+                const formattedStartDate = format(startDate, 'yyyy-MM-dd');
+                const formattedEndDate = format(endDate, 'yyyy-MM-dd');
+
                 const [
                     genderAgeRes,
                     seasonalRes,
-                    multiKeywordRes,
-                    categoryRes,
-                    risingFallingRes
                 ] = await Promise.all([
-                    axios.post(functionUrl, { type: 'genderAge', payload: { keyword: '노트북' } }),
-                    axios.post(functionUrl, { type: 'seasonal', payload: { keyword: '에어컨' } }),
-                    axios.post(functionUrl, { type: 'multiKeyword', payload: { keywords: ['갤럭시', '아이폰', '샤오미'] } }),
-                    axios.post(functionUrl, { type: 'category', payload: { categories: [{ name: "TV", param: ["50000142"] }, { name: "냉장고", param: ["50000208"] }, { name: "에어컨", param: ["50000203"] }] } }),
-                    axios.post(functionUrl, { type: 'risingFalling' })
+                    getGenderAgeTrendAction({ keyword: '노트북', startDate: formattedStartDate, endDate: formattedEndDate }),
+                    getSeasonalPatternAction({ keyword: '에어컨', startDate: formattedStartDate, endDate: formattedEndDate, timeUnit: 'month' })
                 ]);
 
                 setData({
-                    genderAge: genderAgeRes.data,
-                    seasonal: seasonalRes.data,
-                    multiKeyword: multiKeywordRes.data,
-                    category: categoryRes.data,
-                    risingFalling: risingFallingRes.data
+                    genderAge: genderAgeRes,
+                    seasonal: seasonalRes,
+                    multiKeyword: mockData.multiKeyword,
+                    category: mockData.category,
+                    risingFalling: mockData.risingFalling
                 });
             } catch (error) {
                 console.error("Error fetching analysis data:", error);
-                setData(mockData); // Fallback to mock data on error
+                // Fallback to mock data on error
+                 setData({
+                    genderAge: null,
+                    seasonal: null,
+                    multiKeyword: mockData.multiKeyword,
+                    category: mockData.category,
+                    risingFalling: mockData.risingFalling
+                });
             } finally {
                 setLoading(false);
             }

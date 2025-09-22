@@ -427,6 +427,7 @@ export default function KeywordPage() {
                 </div>
               ) : (
                 <div className="h-full flex items-center justify-center">
+                   <p className="text-muted-foreground">연관 태그가 없습니다.</p>
                 </div>
               )}
             </CardContent>

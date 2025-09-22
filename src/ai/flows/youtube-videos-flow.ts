@@ -11,7 +11,6 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'zod';
 import { google } from 'googleapis';
-import type { YoutubeVideo } from '@/lib/types';
 import { differenceInDays, parseISO } from 'date-fns';
 
 
@@ -21,6 +20,7 @@ const YoutubeVideosInputSchema = z.object({
 export type YoutubeVideosInput = z.infer<typeof YoutubeVideosInputSchema>;
 
 const YoutubeVideoSchema = z.object({
+    id: z.string(),
     title: z.string(),
     publishedAt: z.string(),
     viewCount: z.string(),
@@ -64,7 +64,7 @@ const getYoutubeVideosFlow = ai.defineFlow(
             id: videoIds,
         });
 
-        const videoDetails: YoutubeVideo[] = videosResponse.data.items?.map(item => {
+        const videoDetails: YoutubeVideosData = videosResponse.data.items?.map(item => {
             const viewCount = parseInt(item.statistics?.viewCount || '0', 10);
             const publishedAt = item.snippet?.publishedAt || new Date().toISOString();
             const daysSincePublished = differenceInDays(new Date(), parseISO(publishedAt));
@@ -74,6 +74,7 @@ const getYoutubeVideosFlow = ai.defineFlow(
             const growthRate = daysSincePublished > 0 ? viewCount / daysSincePublished : viewCount;
 
             return {
+                id: item.id || '',
                 title: item.snippet?.title || 'No Title',
                 publishedAt: publishedAt,
                 viewCount: item.statistics?.viewCount || '0',

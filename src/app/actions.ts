@@ -8,9 +8,8 @@ import { getYoutubeVideos, type YoutubeVideosInput, type YoutubeVideosData } fro
 import { getRegionalTrends, type RegionalTrendsInput, type RegionalTrendsOutput } from '@/ai/flows/regional-trends-flow';
 import { getKeywordRegionRank, type KeywordRegionRankInput, type KeywordRegionRankOutput } from '@/ai/flows/keyword-region-rank-flow';
 import { getNaverNews, type NaverNewsInput, type RelatedNewsData } from '@/ai/flows/naver-news-flow';
-import { getGenderAgeTrend } from '@/ai/flows/gender-age-trend-flow';
-import { getSeasonalPattern } from '@/ai/flows/seasonal-pattern-flow';
-import type { GenderAgeTrendData, GenderAgeTrendInput, SeasonalPatternData, SeasonalPatternInput } from '@/lib/types';
+import { getGenderAgeTrend, type GenderAgeTrendInput, type GenderAgeTrendData } from '@/ai/flows/gender-age-trend-flow';
+import { getSeasonalPattern, type SeasonalPatternInput, type SeasonalPatternData } from '@/ai/flows/seasonal-pattern-flow';
 
 
 export async function suggestSuperParametersAction(

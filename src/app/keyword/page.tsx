@@ -33,10 +33,11 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { format, parseISO } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { Skeleton } from '@/components/ui/skeleton';
-import type { KeywordTrendPoint, YoutubeVideo } from '@/lib/types';
+import type { KeywordTrendPoint } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { getYoutubeVideosAction } from '../actions';
+import type { YoutubeVideosData } from '@/ai/flows/youtube-videos-flow';
 
 
 const chartConfig = {
@@ -59,7 +60,7 @@ export default function KeywordPage() {
   const [totalSearchVolume, setTotalSearchVolume] = React.useState<number | null>(null);
   const [relatedKeywords, setRelatedKeywords] = React.useState<string[]>([]);
   const [isFetchingRelated, setIsFetchingRelated] = React.useState(false);
-  const [youtubeVideos, setYoutubeVideos] = React.useState<YoutubeVideo[]>([]);
+  const [youtubeVideos, setYoutubeVideos] = React.useState<YoutubeVideosData>([]);
   const [isFetchingVideos, setIsFetchingVideos] = React.useState(false);
   const [maxGrowthRate, setMaxGrowthRate] = React.useState<number | null>(null);
 
@@ -74,7 +75,7 @@ export default function KeywordPage() {
     return data.reduce((sum, point) => sum + point.value, 0);
   };
 
-  const findMaxGrowthRate = (videos: YoutubeVideo[]) => {
+  const findMaxGrowthRate = (videos: YoutubeVideosData) => {
     if (!videos || videos.length === 0) return 0;
     return Math.max(...videos.map(video => video.growthRate || 0));
   };
@@ -171,6 +172,10 @@ export default function KeywordPage() {
   const handleTagClick = (tag: string) => {
     setKeywordSearch(tag);
     handleSearch(tag);
+  };
+  
+  const handleVideoClick = (videoId: string) => {
+    window.open(`https://www.youtube.com/watch?v=${videoId}`, '_blank', 'noopener,noreferrer');
   };
 
   const handleExportCsv = () => {
@@ -368,8 +373,12 @@ export default function KeywordPage() {
                       </TableRow>
                     ))
                   ) : youtubeVideos.length > 0 ? (
-                    youtubeVideos.map((video, index) => (
-                      <TableRow key={index}>
+                    youtubeVideos.map((video) => (
+                      <TableRow 
+                        key={video.id} 
+                        className="cursor-pointer hover:bg-muted/50"
+                        onClick={() => handleVideoClick(video.id)}
+                      >
                         <TableCell className="font-medium">{video.title}</TableCell>
                         <TableCell>{format(parseISO(video.publishedAt), 'yyyy-MM-dd')}</TableCell>
                         <TableCell>{parseInt(video.viewCount).toLocaleString()}</TableCell>

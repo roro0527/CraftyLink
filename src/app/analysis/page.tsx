@@ -3,8 +3,8 @@
 
 import * as React from 'react';
 import {
-  LineChart,
-  Line,
+  BarChart,
+  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -17,37 +17,20 @@ import {
 } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { LoaderCircle, Search, Users } from 'lucide-react';
+import { LoaderCircle, Search, Users, BarChart3 } from 'lucide-react';
 import { getGenderAgeTrendAction } from '../actions';
 import type { GenderAgeTrendData } from '@/ai/flows/gender-age-trend-flow';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 
-const mockData = {
-    multiKeyword: {
-        '갤럭시': [{ date: '2023-12-01', value: 70 }, { date: '2023-12-02', value: 72 }],
-        '아이폰': [{ date: '2023-12-01', value: 80 }, { date: '2023-12-02', value: 85 }],
-        '샤오미': [{ date: '2023-12-01', value: 20 }, { date: '2023-12-02', value: 22 }],
-    },
-    category: {
-        'TV': [{ date: '2023-12-01', value: 50 }, { date: '2023-12-02', value: 55 }],
-        '냉장고': [{ date: '2023-12-01', value: 40 }, { date: '2023-12-02', value: 42 }],
-        '에어컨': [{ date: '2023-12-01', value: 10 }, { date: '2023-12-02', value: 12 }],
-    },
-};
-
-const MULTI_KEYWORD_COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#FF8042', '#0088FE'];
 const GENDER_CHART_COLORS = {
   '남성': '#8884d8',
   '여성': '#82ca9d',
 };
 
-
 interface AnalysisData {
     genderAge: GenderAgeTrendData | null;
-    multiKeyword: any;
-    category: any;
 }
 
 
@@ -80,8 +63,6 @@ const AnalysisPage = () => {
 
                 setData({
                     genderAge: genderAgeRes,
-                    multiKeyword: mockData.multiKeyword,
-                    category: mockData.category,
                 });
             } catch (error) {
                 console.error("Error fetching analysis data:", error);
@@ -92,8 +73,6 @@ const AnalysisPage = () => {
                 });
                 setData({
                     genderAge: null,
-                    multiKeyword: mockData.multiKeyword,
-                    category: mockData.category,
                 });
             } finally {
                 setLoading(false);
@@ -104,43 +83,24 @@ const AnalysisPage = () => {
     }, [keyword, toast]);
 
 
-    const renderLineChart = (chartData: any, title: string) => {
-        if (!chartData || (Array.isArray(chartData) && chartData.length === 0)) return <div className="h-72 flex items-center justify-center bg-muted rounded-md"><p className="text-muted-foreground">데이터 없음</p></div>;
-
-        const isMulti = !Array.isArray(chartData);
-        const keys = isMulti ? Object.keys(chartData) : ['value'];
-
-        let formattedData: any[] = [];
-        if (isMulti) {
-            const dateMap = new Map();
-            keys.forEach(key => {
-                chartData[key].forEach((point: any) => {
-                    if (!dateMap.has(point.date)) dateMap.set(point.date, { date: point.date });
-                    dateMap.get(point.date)[key] = point.value;
-                });
-            });
-            formattedData = Array.from(dateMap.values()).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-        } else {
-            formattedData = chartData;
+    const renderAgeChart = (chartData: GenderAgeTrendData | null) => {
+        if (!chartData?.age || chartData.age.reduce((sum, item) => sum + item.ratio, 0) === 0) {
+            return <div className="h-72 flex items-center justify-center bg-muted rounded-md"><p className="text-muted-foreground">데이터 없음</p></div>;
         }
 
         return (
-            <>
-                <ResponsiveContainer width="100%" height={300}>
-                    <LineChart data={formattedData}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="date" />
-                        <YAxis />
-                        <Tooltip />
-                        <Legend />
-                        {keys.map((key, index) => (
-                            <Line key={key} type="monotone" dataKey={key} name={key} stroke={MULTI_KEYWORD_COLORS[index % MULTI_KEYWORD_COLORS.length]} />
-                        ))}
-                    </LineChart>
-                </ResponsiveContainer>
-            </>
+            <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={chartData.age}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="group" />
+                    <YAxis />
+                    <Tooltip />
+                    <Legend />
+                    <Bar dataKey="ratio" name="검색량" fill="#8884d8" />
+                </BarChart>
+            </ResponsiveContainer>
         );
-    };
+    }
 
     const renderGenderChart = (chartData: GenderAgeTrendData | null) => {
         if (!chartData?.gender || chartData.gender.reduce((sum, item) => sum + item.ratio, 0) === 0) {
@@ -189,7 +149,7 @@ const AnalysisPage = () => {
         if (loading) {
             return (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    {[...Array(4)].map((_, i) => (
+                    {[...Array(2)].map((_, i) => (
                         <Card key={i}>
                             <CardHeader><Skeleton className="h-6 w-40" /></CardHeader>
                             <CardContent><Skeleton className="h-64 w-full" /></CardContent>
@@ -208,17 +168,12 @@ const AnalysisPage = () => {
                     </CardHeader>
                     <CardContent>{renderGenderChart(data?.genderAge)}</CardContent>
                 </Card>
-                <Card className="lg:col-span-2">
+                <Card>
                     <CardHeader>
-                        <CardTitle>다중 키워드 비교</CardTitle>
+                        <CardTitle className="flex items-center"><BarChart3 className="mr-2" /> 연령대별 검색 비율</CardTitle>
+                        <CardDescription>키워드: {keyword}</CardDescription>
                     </CardHeader>
-                    <CardContent>{renderLineChart(data?.multiKeyword, '다중 키워드 비교')}</CardContent>
-                </Card>
-                <Card className="lg:col-span-2">
-                    <CardHeader>
-                        <CardTitle>쇼핑 카테고리 비교</CardTitle>
-                    </CardHeader>
-                    <CardContent>{renderLineChart(data?.category, '쇼핑 카테고리 비교')}</CardContent>
+                    <CardContent>{renderAgeChart(data?.genderAge)}</CardContent>
                 </Card>
             </div>
         );
@@ -227,7 +182,8 @@ const AnalysisPage = () => {
     return (
         <div className="container mx-auto p-4 md:p-8">
             <header className="mb-8">
-                <h1 className="text-3xl font-bold tracking-tight">분석 결과 페이지</h1>
+                <h1 className="text-3xl font-bold tracking-tight">키워드 심층 분석</h1>
+                <p className="text-muted-foreground">성별, 연령대별 검색량 추이를 확인합니다.</p>
             </header>
             
             <div className="flex w-full max-w-sm items-center space-x-2 mb-8">

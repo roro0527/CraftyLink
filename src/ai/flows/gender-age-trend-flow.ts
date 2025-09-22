@@ -3,7 +3,7 @@
 /**
  * @fileOverview A gender and age trend analysis agent using Naver DataLab Search API.
  *
- * - getGenderAgeTrend - A function that handles fetching and processing gender trend data.
+ * - getGenderAgeTrend - A function that handles fetching and processing gender and age trend data.
  * - GenderAgeTrendInput - The input type for the getGenderAgeTrend function.
  * - GenderAgeTrendData - The return type for the getGenderAgeTrend function.
  */
@@ -25,10 +25,16 @@ const GenderAgeTrendDataSchema = z.object({
       ratio: z.number().describe('The search ratio for the gender group.'),
     })
   ),
+  age: z.array(
+    z.object({
+        group: z.string().describe('The age group (e.g., "10대").'),
+        ratio: z.number().describe('The search ratio for the age group.'),
+    })
+  )
 });
 export type GenderAgeTrendData = z.infer<typeof GenderAgeTrendDataSchema>;
 
-async function fetchTrendForGender(keyword: string, gender: 'm' | 'f', startDate: string, endDate: string): Promise<number> {
+async function fetchTrend(keyword: string, startDate: string, endDate: string, gender: 'm' | 'f' | '', ages: string[]): Promise<number> {
   const requestBody = {
     startDate,
     endDate,
@@ -40,7 +46,7 @@ async function fetchTrendForGender(keyword: string, gender: 'm' | 'f', startDate
       },
     ],
     gender,
-    ages: [], // 모든 연령대
+    ages,
   };
 
   try {
@@ -54,13 +60,12 @@ async function fetchTrendForGender(keyword: string, gender: 'm' | 'f', startDate
 
     const results = response.data.results[0]?.data;
     if (results && results.length > 0) {
-      // 월 단위로 요청했으므로, 첫 번째 데이터의 비율을 사용
-      return results[0].ratio;
+      return results.reduce((sum: number, item: any) => sum + item.ratio, 0) / results.length;
     }
     return 0;
   } catch (err: any) {
-    console.error(`Error fetching Naver DataLab data for gender ${gender}:`, err.response?.data || err.message);
-    return 0; // 오류 발생 시 0을 반환
+    console.error(`Error fetching Naver DataLab data for gender ${gender} & ages ${ages.join(',')}:`, err.response?.data || err.message);
+    return 0;
   }
 }
 
@@ -77,31 +82,34 @@ const getGenderAgeTrendFlow = ai.defineFlow(
     const formattedEndDate = format(endDate, 'yyyy-MM-dd');
 
     const [maleRatio, femaleRatio] = await Promise.all([
-      fetchTrendForGender(keyword, 'm', formattedStartDate, formattedEndDate),
-      fetchTrendForGender(keyword, 'f', formattedStartDate, formattedEndDate),
+      fetchTrend(keyword, formattedStartDate, formattedEndDate, 'm', []),
+      fetchTrend(keyword, formattedStartDate, formattedEndDate, 'f', []),
     ]);
 
-    const totalRatio = maleRatio + femaleRatio;
+    const ageGroups = [
+        { name: '10대', codes: ['10', '15'] },
+        { name: '20대', codes: ['20', '25'] },
+        { name: '30대', codes: ['30', '35'] },
+        { name: '40대', codes: ['40', '45'] },
+        { name: '50대', codes: ['50', '55'] },
+        { name: '60대 이상', codes: ['60'] },
+    ];
 
-    // 전체 비율이 0일 경우, 0으로 나눔을 방지
-    if (totalRatio === 0) {
-        return {
-            gender: [
-                { group: '남성', ratio: 0 },
-                { group: '여성', ratio: 0 },
-            ],
-        };
-    }
+    const ageRatios = await Promise.all(
+        ageGroups.map(group => fetchTrend(keyword, formattedStartDate, formattedEndDate, '', group.codes))
+    );
     
-    // 비율을 백분율로 정규화
-    const normalizedMaleRatio = (maleRatio / totalRatio) * 100;
-    const normalizedFemaleRatio = (femaleRatio / totalRatio) * 100;
+    const totalGenderRatio = maleRatio + femaleRatio;
 
     return {
-      gender: [
-        { group: '남성', ratio: normalizedMaleRatio },
-        { group: '여성', ratio: normalizedFemaleRatio },
-      ],
+      gender: totalGenderRatio > 0 ? [
+        { group: '남성', ratio: (maleRatio / totalGenderRatio) * 100 },
+        { group: '여성', ratio: (femaleRatio / totalGenderRatio) * 100 },
+      ] : [{ group: '남성', ratio: 0 }, { group: '여성', ratio: 0 }],
+      age: ageRatios.map((ratio, index) => ({
+        group: ageGroups[index].name,
+        ratio: ratio,
+      }))
     };
   }
 );

@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -18,11 +19,14 @@ import {
 } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { TrendingUp, Users, Calendar, TrendingDown } from 'lucide-react';
+import { TrendingUp, Users, Calendar, TrendingDown, Search, LoaderCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { format, subYears } from 'date-fns';
 import { getGenderAgeTrendAction, getSeasonalPatternAction } from '../actions';
 import type { GenderAgeTrendData, SeasonalPatternData } from '@/lib/types';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
 
 
 const GENDER_COLORS = ['#0088FE', '#FF8042'];
@@ -59,11 +63,27 @@ interface AnalysisData {
 
 
 const AnalysisPage = () => {
+    const { toast } = useToast();
     const [data, setData] = React.useState<AnalysisData | null>(null);
     const [loading, setLoading] = React.useState(true);
+    const [keyword, setKeyword] = React.useState('노트북');
+    const [inputValue, setInputValue] = React.useState('노트북');
+
+    const handleSearch = () => {
+        if (!inputValue.trim()) {
+            toast({
+                variant: 'destructive',
+                title: '검색어를 입력해주세요.',
+            });
+            return;
+        }
+        setKeyword(inputValue);
+    };
 
     React.useEffect(() => {
         const fetchData = async () => {
+            if (!keyword) return;
+
             setLoading(true);
             
             try {
@@ -76,8 +96,8 @@ const AnalysisPage = () => {
                     genderAgeRes,
                     seasonalRes,
                 ] = await Promise.all([
-                    getGenderAgeTrendAction({ keyword: '노트북', startDate: formattedStartDate, endDate: formattedEndDate }),
-                    getSeasonalPatternAction({ keyword: '에어컨', startDate: formattedStartDate, endDate: formattedEndDate, timeUnit: 'month' })
+                    getGenderAgeTrendAction({ keyword, startDate: formattedStartDate, endDate: formattedEndDate }),
+                    getSeasonalPatternAction({ keyword, startDate: formattedStartDate, endDate: formattedEndDate, timeUnit: 'month' })
                 ]);
 
                 setData({
@@ -89,8 +109,12 @@ const AnalysisPage = () => {
                 });
             } catch (error) {
                 console.error("Error fetching analysis data:", error);
-                // Fallback to mock data on error
-                 setData({
+                toast({
+                    variant: 'destructive',
+                    title: '데이터 로딩 실패',
+                    description: '분석 데이터를 가져오는 데 실패했습니다. 다시 시도해주세요.',
+                });
+                setData({
                     genderAge: null,
                     seasonal: null,
                     multiKeyword: mockData.multiKeyword,
@@ -103,7 +127,7 @@ const AnalysisPage = () => {
         };
 
         fetchData();
-    }, []);
+    }, [keyword, toast]);
 
     const renderGenderChart = () => {
         if (!data?.genderAge?.genderGroups || data.genderAge.genderGroups.length === 0) return <div className="h-48 flex items-center justify-center bg-muted rounded-md"><p className="text-muted-foreground">데이터 없음</p></div>;
@@ -232,7 +256,7 @@ const AnalysisPage = () => {
                 <Card>
                     <CardHeader>
                         <CardTitle className="flex items-center"><Users className="mr-2" /> 성별/연령별 분석</CardTitle>
-                        <CardDescription>키워드: 노트북</CardDescription>
+                        <CardDescription>키워드: {keyword}</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-6">
                         <div>
@@ -248,7 +272,7 @@ const AnalysisPage = () => {
                 <Card>
                     <CardHeader>
                         <CardTitle className="flex items-center"><Calendar className="mr-2" /> 시즌 패턴 분석</CardTitle>
-                        <CardDescription>키워드: 에어컨</CardDescription>
+                        <CardDescription>키워드: {keyword}</CardDescription>
                     </CardHeader>
                     <CardContent>{renderLineChart(data?.seasonal, '시즌 패턴 분석')}</CardContent>
                 </Card>
@@ -282,6 +306,22 @@ const AnalysisPage = () => {
             <header className="mb-8">
                 <h1 className="text-3xl font-bold tracking-tight">분석 결과 페이지</h1>
             </header>
+            
+            <div className="flex w-full max-w-sm items-center space-x-2 mb-8">
+                <Input
+                    type="text"
+                    placeholder="키워드 입력..."
+                    value={inputValue}
+                    onChange={(e) => setInputValue(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                    disabled={loading}
+                />
+                <Button onClick={handleSearch} disabled={loading}>
+                    {loading ? <LoaderCircle className="mr-2 h-4 w-4 animate-spin" /> : <Search className="mr-2 h-4 w-4" />}
+                    검색
+                </Button>
+            </div>
+
             {renderContent()}
         </div>
     );

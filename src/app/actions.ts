@@ -8,6 +8,7 @@ import { getYoutubeVideos, type YoutubeVideosInput, type YoutubeVideosData } fro
 import { getRegionalTrends, type RegionalTrendsInput, type RegionalTrendsOutput } from '@/ai/flows/regional-trends-flow';
 import { getKeywordRegionRank, type KeywordRegionRankInput, type KeywordRegionRankOutput } from '@/ai/flows/keyword-region-rank-flow';
 import { getNaverNews, type NaverNewsInput, type RelatedNewsData } from '@/ai/flows/naver-news-flow';
+import { saveKeywordData, type SaveKeywordDataInput } from '@/ai/flows/save-keyword-data-flow';
 
 
 export async function suggestSuperParametersAction(
@@ -90,5 +91,14 @@ export async function getKeywordRegionRankAction(input: KeywordRegionRankInput):
     } catch (error) {
         console.error('Error fetching keyword region rank:', error);
         return [];
+    }
+}
+
+export async function saveKeywordDataAction(input: SaveKeywordDataInput): Promise<{ success: boolean; docId?: string; }> {
+    try {
+        return await saveKeywordData(input);
+    } catch (error) {
+        console.error('Error in saveKeywordDataAction:', error);
+        return { success: false };
     }
 }

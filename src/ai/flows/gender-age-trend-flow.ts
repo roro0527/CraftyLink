@@ -35,7 +35,7 @@ const GenderAgeTrendDataSchema = z.object({
 export type GenderAgeTrendData = z.infer<typeof GenderAgeTrendDataSchema>;
 
 async function fetchTrend(keyword: string, startDate: string, endDate: string, gender: 'm' | 'f' | '', ages: string[]): Promise<number> {
-  const requestBody = {
+  const requestBody: any = {
     startDate,
     endDate,
     timeUnit: 'month',
@@ -45,10 +45,16 @@ async function fetchTrend(keyword: string, startDate: string, endDate: string, g
         keywords: [keyword],
       },
     ],
-    gender,
-    ages,
   };
 
+  if (gender) {
+    requestBody.gender = gender;
+  }
+
+  if (ages && ages.length > 0) {
+    requestBody.ages = ages;
+  }
+  
   try {
     const response = await axios.post('https://openapi.naver.com/v1/datalab/search', requestBody, {
       headers: {
@@ -99,7 +105,7 @@ const getGenderAgeTrendFlow = ai.defineFlow(
     const ageRatios = await Promise.all(
         ageGroups.map(group => fetchTrend(keyword, formattedStartDate, formattedEndDate, '', group.codes))
     );
-
+    
     return {
       gender: [
         { group: '남성', ratio: maleRatio },

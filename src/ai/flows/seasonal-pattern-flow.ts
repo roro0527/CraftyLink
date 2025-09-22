@@ -8,14 +8,10 @@
 
 import { ai } from '@/ai/genkit';
 import axios from 'axios';
-import { getAdminFirestore } from '@/lib/firebase-admin';
 import { SeasonalPatternDataSchema, SeasonalPatternInputSchema } from '@/lib/types';
 import type { SeasonalPatternData, SeasonalPatternInput } from '@/lib/types';
 
-
-const CACHE_TTL_HOURS = 24;
-
-const seasonalPatternFlow = ai.defineFlow(
+export const getSeasonalPattern = ai.defineFlow(
   {
     name: 'seasonalPatternFlow',
     inputSchema: SeasonalPatternInputSchema,
@@ -23,30 +19,7 @@ const seasonalPatternFlow = ai.defineFlow(
   },
   async (input): Promise<SeasonalPatternData> => {
     const { keyword, startDate, endDate, timeUnit } = input;
-    const firestore = getAdminFirestore();
-    const cacheKey = `seasonal-${keyword}-${startDate}-${endDate}-${timeUnit}`.replace(/[^a-zA-Z0-9-]/g, "");
-    const cacheRef = firestore.collection('naverDatalabCache').doc(cacheKey);
     
-    // 1. Check cache
-     try {
-        const cacheDoc = await cacheRef.get();
-        if (cacheDoc.exists) {
-            const cacheData = cacheDoc.data()!;
-            const now = new Date().getTime();
-            const updatedAt = cacheData.updatedAt.toMillis();
-            const diffHours = (now - updatedAt) / (1000 * 60 * 60);
-
-            if (diffHours < CACHE_TTL_HOURS) {
-                console.log(`Returning cached seasonal data for: ${keyword}`);
-                return cacheData.data as SeasonalPatternData;
-            }
-        }
-    } catch (e) {
-        console.error("Cache read error for seasonal, proceeding to fetch from API:", e);
-    }
-    
-
-    // 2. Fetch from API
     console.log(`Fetching fresh seasonal data for: ${keyword}`);
     const requestBody = {
       startDate,
@@ -79,13 +52,14 @@ const seasonalPatternFlow = ai.defineFlow(
         value: item.value,
       }));
 
-       // 3. Update cache
-        await cacheRef.set({
-            data,
-            updatedAt: new Date(),
-        });
+      // Validate the transformed data
+      const validationResult = SeasonalPatternDataSchema.safeParse(data);
+      if (!validationResult.success) {
+        console.error("Data validation failed for seasonal pattern:", validationResult.error);
+        return [];
+      }
 
-      return data;
+      return validationResult.data;
 
     } catch (err: any) {
       console.error('Error fetching Naver DataLab seasonal data:', err.response?.data || err.message);
@@ -93,7 +67,3 @@ const seasonalPatternFlow = ai.defineFlow(
     }
   }
 );
-
-export async function getSeasonalPattern(input: SeasonalPatternInput): Promise<SeasonalPatternData> {
-  return seasonalPatternFlow(input);
-}

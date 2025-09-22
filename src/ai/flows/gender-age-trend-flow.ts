@@ -60,6 +60,7 @@ async function fetchTrend(keyword: string, startDate: string, endDate: string, g
 
     const results = response.data.results[0]?.data;
     if (results && results.length > 0) {
+      // The API returns a ratio for each period. We'll average them for the overall trend.
       return results.reduce((sum: number, item: any) => sum + item.ratio, 0) / results.length;
     }
     return 0;
@@ -98,14 +99,12 @@ const getGenderAgeTrendFlow = ai.defineFlow(
     const ageRatios = await Promise.all(
         ageGroups.map(group => fetchTrend(keyword, formattedStartDate, formattedEndDate, '', group.codes))
     );
-    
-    const totalGenderRatio = maleRatio + femaleRatio;
 
     return {
-      gender: totalGenderRatio > 0 ? [
-        { group: '남성', ratio: (maleRatio / totalGenderRatio) * 100 },
-        { group: '여성', ratio: (femaleRatio / totalGenderRatio) * 100 },
-      ] : [{ group: '남성', ratio: 0 }, { group: '여성', ratio: 0 }],
+      gender: [
+        { group: '남성', ratio: maleRatio },
+        { group: '여성', ratio: femaleRatio },
+      ],
       age: ageRatios.map((ratio, index) => ({
         group: ageGroups[index].name,
         ratio: ratio,

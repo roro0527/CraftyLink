@@ -2,6 +2,7 @@
 'use client';
 
 import React, { useEffect, useRef } from 'react';
+import regionsData from '@/lib/korea-regions.geo.json';
 
 declare global {
   interface Window {
@@ -10,29 +11,77 @@ declare global {
 }
 
 interface RegionMapProps {
-  center: [number, number];
-  zoom: number;
-  bounds?: any;
+  onRegionSelect: (region: { code: string; name: string }) => void;
+  selectedRegionCode?: string | null;
 }
 
-const RegionMap: React.FC<RegionMapProps> = ({ center, zoom, bounds }) => {
+const RegionMap: React.FC<RegionMapProps> = ({ onRegionSelect, selectedRegionCode }) => {
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<any>(null);
+  const polygonsRef = useRef<any[]>([]);
+  const selectedPolygonRef = useRef<any>(null);
   const KAKAO_MAP_API_KEY = process.env.NEXT_PUBLIC_KAKAOMAP_APP_KEY;
 
+  const displayArea = (coordinates: any[], name: string, code: string) => {
+    if (!mapRef.current) return;
+    const path = coordinates[0].map((coord: number[]) => new window.kakao.maps.LatLng(coord[1], coord[0]));
+    
+    const polygon = new window.kakao.maps.Polygon({
+      map: mapRef.current,
+      path: path,
+      strokeWeight: 2,
+      strokeColor: '#004c80',
+      strokeOpacity: 0.8,
+      fillColor: '#fff',
+      fillOpacity: 0.7,
+    });
 
-  function initializeMap() {
+    polygonsRef.current.push(polygon);
+
+    window.kakao.maps.event.addListener(polygon, 'mouseover', () => {
+      if (polygon !== selectedPolygonRef.current) {
+        polygon.setOptions({ fillColor: '#09f' });
+      }
+    });
+
+    window.kakao.maps.event.addListener(polygon, 'mouseout', () => {
+      if (polygon !== selectedPolygonRef.current) {
+        polygon.setOptions({ fillColor: '#fff' });
+      }
+    });
+
+    window.kakao.maps.event.addListener(polygon, 'click', () => {
+      if (selectedPolygonRef.current && selectedPolygonRef.current !== polygon) {
+        selectedPolygonRef.current.setOptions({ fillColor: '#fff' });
+      }
+      polygon.setOptions({ fillColor: '#09f' });
+      selectedPolygonRef.current = polygon;
+      onRegionSelect({ name, code });
+    });
+  };
+
+  const initializeMap = () => {
     if (!mapContainerRef.current) return;
 
     const mapOption = {
-      center: new window.kakao.maps.LatLng(center[0], center[1]),
-      level: zoom,
+      center: new window.kakao.maps.LatLng(36.2, 127.6),
+      level: 13,
     };
 
     mapRef.current = new window.kakao.maps.Map(mapContainerRef.current, mapOption);
-  }
 
-  // Initialize map
+    regionsData.features.forEach(feature => {
+      const { geometry, properties } = feature;
+      if (geometry.type === 'Polygon') {
+        displayArea(geometry.coordinates, properties.nm, properties.code);
+      } else if (geometry.type === 'MultiPolygon') {
+        geometry.coordinates.forEach(coords => {
+          displayArea(coords, properties.nm, properties.code);
+        });
+      }
+    });
+  };
+
   useEffect(() => {
     if (!KAKAO_MAP_API_KEY || KAKAO_MAP_API_KEY === "YOUR_KAKAOMAP_APP_KEY") {
       console.error("Kakao map API key is not configured. Please set NEXT_PUBLIC_KAKAOMAP_APP_KEY in your .env.local file.");
@@ -52,7 +101,7 @@ const RegionMap: React.FC<RegionMapProps> = ({ center, zoom, bounds }) => {
 
     const script = document.createElement('script');
     script.id = scriptId;
-    script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${KAKAO_MAP_API_KEY}&libraries=services&autoload=false`;
+    script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${KAKAO_MAP_API_KEY}&libraries=services,drawing&autoload=false`;
     script.async = true;
     document.head.appendChild(script);
 
@@ -68,14 +117,6 @@ const RegionMap: React.FC<RegionMapProps> = ({ center, zoom, bounds }) => {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-
-  // Update map bounds
-  useEffect(() => {
-    if (mapRef.current && bounds) {
-      mapRef.current.setBounds(bounds);
-    }
-  }, [bounds]);
 
   useEffect(() => {
     const handleResize = () => {

@@ -17,6 +17,7 @@ import axios from "axios";
 import { google } from "googleapis";
 import rateLimit from "express-rate-limit";
 import { fetchNaverNewsLogic } from "./naver-news";
+import * as googleTrends from "google-trends-api";
 
 // Initialize Firebase Admin SDK
 admin.initializeApp();
@@ -153,6 +154,26 @@ app.get("/getNaverNews", async (req, res) => {
         functions.logger.error("Error fetching Naver news:", error);
         return res.status(500).send({ error: "Failed to fetch news." });
     }
+});
+
+app.get("/getRisingSearches", async (req, res) => {
+  const { regionCode } = req.query;
+
+  if (typeof regionCode !== "string") {
+    return res.status(400).send({ error: "regionCode parameter is missing or invalid." });
+  }
+
+  try {
+    const results = await googleTrends.dailyTrends({
+      geo: regionCode,
+    });
+    const trends = JSON.parse(results);
+    const risingSearches = trends.default.trendingSearchesDays[0].trendingSearches.map((t: any) => t.title.query);
+    return res.status(200).json(risingSearches);
+  } catch (error) {
+    functions.logger.error(`Error fetching Google Trends for region ${regionCode}:`, error);
+    return res.status(500).send({ error: "Failed to fetch rising searches." });
+  }
 });
 
 

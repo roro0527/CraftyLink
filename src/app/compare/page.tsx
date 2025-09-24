@@ -13,7 +13,7 @@ import {
   TableCell,
 } from '@/components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, Trash2, X, Save, LoaderCircle } from 'lucide-react';
+import { Plus, Trash2, X } from 'lucide-react';
 import { getKeywordTrendsAction } from '@/app/actions';
 import type { KeywordTrendPoint } from '@/lib/types';
 import {
@@ -29,7 +29,6 @@ import { format, parseISO } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
-import axios from 'axios';
 
 
 type TrendData = Record<string, KeywordTrendPoint[]>;
@@ -55,7 +54,6 @@ export default function ComparePage() {
   const [isLoading, setIsLoading] = React.useState(false);
   const [analysisData, setAnalysisData] = React.useState<AnalysisData>({});
   const [isAnalyzing, setIsAnalyzing] = React.useState(false);
-  const [isSaving, setIsSaving] = React.useState(false);
 
 
   React.useEffect(() => {
@@ -162,37 +160,6 @@ export default function ComparePage() {
     setKeywords([]);
   };
 
-  const handleSave = async () => {
-    if (keywords.length === 0 || isSaving) return;
-    setIsSaving(true);
-    try {
-      const response = await axios.post('/api/saveKeywordData', {
-        keyword: `비교: ${keywords.join(', ')}`,
-        trendData: trendData, // Save the whole multi-keyword trend object
-        youtubeVideos: [], // Not applicable in compare page
-        relatedKeywords: keywords, // Save the compared keywords
-      });
-
-      if (response.data.success) {
-        toast({
-          title: "저장 완료",
-          description: `비교 결과가 저장되었습니다. (ID: ${response.data.docId})`,
-        });
-      } else {
-        throw new Error(response.data.error || 'Save operation failed');
-      }
-    } catch (error) {
-      console.error("Failed to save compare data:", error);
-      toast({
-        variant: "destructive",
-        title: "저장 실패",
-        description: "데이터를 저장하는 중에 오류가 발생했습니다.",
-      });
-    } finally {
-      setIsSaving(false);
-    }
-  };
-  
  const handleExportCsv = () => {
     if (keywords.length === 0 || Object.keys(trendData).length === 0) {
       toast({
@@ -328,10 +295,6 @@ export default function ComparePage() {
             ))}
         </div>
         <div className="flex gap-2">
-            <Button variant="outline" onClick={handleSave} disabled={isSaving || keywords.length === 0}>
-                {isSaving ? <LoaderCircle className="animate-spin" /> : <Save />}
-                저장
-            </Button>
             <Button onClick={handleExportCsv} disabled={keywords.length === 0}>CSV 내보내기</Button>
         </div>
       </div>

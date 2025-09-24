@@ -1,0 +1,90 @@
+
+'use server';
+
+import { ai } from '@/ai/genkit';
+import { getKeywordTrends } from './keyword-trends-flow';
+import { getNaverNews } from './naver-news-flow';
+import { getYoutubeVideos } from './youtube-videos-flow';
+import { getRegionalTrends } from './regional-trends-flow';
+import * as z from 'zod';
+
+const RegionalDashboardInputSchema = z.object({
+  region: z.string().describe('The name of the region (e.g., "서울특별시").'),
+  countryCode: z.string().describe('The country code for rising searches (e.g., "KR").'),
+  countryName: z.string().describe('The display name for the country (e.g., "한국").'),
+});
+
+const RegionalDashboardOutputSchema = z.object({
+  topKeyword: z.string(),
+  summary: z.string(),
+  trendData: z.any(),
+  naverNews: z.any(),
+  youtubeVideos: z.any(),
+});
+
+export type RegionalDashboardInput = z.infer<typeof RegionalDashboardInputSchema>;
+export type RegionalDashboardOutput = z.infer<typeof RegionalDashboardOutputSchema>;
+
+
+async function getRisingSearches(regionCode: string): Promise<string[]> {
+    try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/getRisingSearches?regionCode=${regionCode}`);
+        if (!response.ok) {
+            console.error(`Failed to fetch rising searches for ${regionCode}. Status: ${response.status}`);
+            return [];
+        }
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error(`Error fetching rising searches for region ${regionCode}:`, error);
+        return [];
+    }
+}
+
+
+export const regionalDashboardFlow = ai.defineFlow(
+  {
+    name: 'regionalDashboardFlow',
+    inputSchema: RegionalDashboardInputSchema,
+    outputSchema: RegionalDashboardOutputSchema,
+  },
+  async ({ region, countryCode, countryName }) => {
+    const regionalTrends = await getRisingSearches(countryCode);
+
+    if (regionalTrends.length === 0) {
+      return {
+        topKeyword: '',
+        summary: `${region} 지역의 인기 급상승 키워드를 찾을 수 없습니다.`,
+        trendData: [],
+        naverNews: [],
+        youtubeVideos: [],
+      };
+    }
+
+    const topKeyword = regionalTrends[0];
+
+    const [trendData, naverNews, youtubeVideos] = await Promise.all([
+      getKeywordTrends({ keyword: topKeyword, timeRange: '1m' }),
+      getNaverNews({ keyword: topKeyword }),
+      getYoutubeVideos({ keyword: topKeyword }),
+    ]);
+
+    const summaryPrompt = `다음 데이터를 바탕으로 ${region} 지역의 현재 트렌드를 1~2문장으로 요약해줘. 가장 인기있는 키워드는 '${topKeyword}'이야. 이 키워드의 검색량 추이, 관련 뉴스, 관련 유튜브 영상 데이터를 참고해서 자연스럽게 설명해줘. 예를 들어, '현재 ${region}에서는 ${topKeyword}에 대한 관심이 뜨겁습니다. 관련 영상과 뉴스가 많이 생성되고 있으며, 검색량도 꾸준히 증가하는 추세입니다.' 와 같이 작성해줘.`;
+
+    const { text: summary } = await ai.generate({
+      prompt: summaryPrompt,
+    });
+
+    return {
+      topKeyword,
+      summary,
+      trendData,
+      naverNews,
+      youtubeVideos,
+    };
+  }
+);
+
+export async function getRegionalDashboard(input: RegionalDashboardInput): Promise<RegionalDashboardOutput> {
+    return await regionalDashboardFlow(input);
+}

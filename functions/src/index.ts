@@ -156,4 +156,30 @@ app.get("/getNaverNews", async (req, res) => {
 });
 
 
+app.post("/saveKeywordData", async (req, res) => {
+    try {
+        const { keyword, trendData, youtubeVideos, relatedKeywords } = req.body;
+
+        if (!keyword) {
+            return res.status(400).send({ success: false, error: "Keyword is required." });
+        }
+
+        const docRef = await firestore.collection('keyword_searches').add({
+            keyword,
+            savedAt: admin.firestore.FieldValue.serverTimestamp(),
+            trendData,
+            youtubeVideos,
+            relatedKeywords,
+        });
+
+        functions.logger.info(`Successfully saved keyword data for "${keyword}" with doc ID: ${docRef.id}`);
+        return res.status(200).send({ success: true, docId: docRef.id });
+
+    } catch (error) {
+        functions.logger.error('Error saving keyword data to Firestore:', error);
+        return res.status(500).send({ success: false, error: 'Failed to save data.' });
+    }
+});
+
+
 export const api = functions.runWith({ secrets: ["NAVER_CLIENT_ID", "NAVER_CLIENT_SECRET", "YOUTUBE_API_KEY", "KAKAO_APP_KEY", "NAVER_DATALAB_CLIENT_ID", "NAVER_DATALAB_CLIENT_SECRET", "FIREBASE_SERVICE_ACCOUNT_KEY"]}).region("asia-northeast3").https.onRequest(app);

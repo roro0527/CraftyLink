@@ -27,7 +27,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { LoaderCircle, Search, Save } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
-import { getKeywordTrendsAction, getRelatedKeywordsAction, saveKeywordDataAction } from '@/app/actions';
+import { getKeywordTrendsAction, getRelatedKeywordsAction } from '@/app/actions';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartConfig } from '@/components/ui/chart';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { format, parseISO } from 'date-fns';
@@ -38,6 +38,7 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { getYoutubeVideosAction } from '../actions';
 import type { YoutubeVideosData } from '@/ai/flows/youtube-videos-flow';
+import axios from 'axios';
 
 
 const chartConfig = {
@@ -183,20 +184,20 @@ export default function KeywordPage() {
     if (!keywordSearch.trim() || isSaving) return;
     setIsSaving(true);
     try {
-      const result = await saveKeywordDataAction({
+      const response = await axios.post('/api/saveKeywordData', {
         keyword: keywordSearch,
         trendData,
         youtubeVideos,
         relatedKeywords,
       });
 
-      if (result.success) {
+      if (response.data.success) {
         toast({
           title: "저장 완료",
-          description: `'${keywordSearch}'에 대한 검색 결과가 저장되었습니다. (ID: ${result.docId})`,
+          description: `'${keywordSearch}'에 대한 검색 결과가 저장되었습니다. (ID: ${response.data.docId})`,
         });
       } else {
-        throw new Error('Save operation failed');
+        throw new Error(response.data.error || 'Save operation failed');
       }
     } catch (error) {
       console.error("Failed to save keyword data:", error);

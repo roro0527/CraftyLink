@@ -13,7 +13,7 @@ import {
   TableCell,
 } from '@/components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, Trash2, X } from 'lucide-react';
+import { Plus, Trash2, X, Save } from 'lucide-react';
 import { getKeywordTrendsAction } from '@/app/actions';
 import type { KeywordTrendPoint } from '@/lib/types';
 import {
@@ -29,7 +29,9 @@ import { format, parseISO } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
-
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
 
 type TrendData = Record<string, KeywordTrendPoint[]>;
 type SummaryData = Record<string, { total: number; average: number }>;
@@ -44,6 +46,15 @@ const chartColors = [
   'hsl(var(--chart-5))',
 ];
 
+const saveColors = [
+    { id: 'color-1', value: 'bg-red-500', ring: 'ring-red-500' },
+    { id: 'color-2', value: 'bg-orange-500', ring: 'ring-orange-500' },
+    { id: 'color-3', value: 'bg-yellow-500', ring: 'ring-yellow-500' },
+    { id: 'color-4', value: 'bg-green-500', ring: 'ring-green-500' },
+    { id: 'color-5', value: 'bg-blue-500', ring: 'ring-blue-500' },
+];
+
+
 export default function ComparePage() {
   const { toast } = useToast();
   const [keywords, setKeywords] = React.useState<string[]>([]);
@@ -54,6 +65,9 @@ export default function ComparePage() {
   const [isLoading, setIsLoading] = React.useState(false);
   const [analysisData, setAnalysisData] = React.useState<AnalysisData>({});
   const [isAnalyzing, setIsAnalyzing] = React.useState(false);
+  const [isSaveDialogOpen, setIsSaveDialogOpen] = React.useState(false);
+  const [saveName, setSaveName] = React.useState('');
+  const [selectedColor, setSelectedColor] = React.useState(saveColors[0].value);
 
 
   React.useEffect(() => {
@@ -159,6 +173,29 @@ export default function ComparePage() {
   const handleClearKeywords = () => {
     setKeywords([]);
   };
+
+  const handleSave = () => {
+    // Backend logic will be added later
+    console.log("Saving comparison:", { name: saveName, color: selectedColor, keywords, trendData, summaryData });
+    toast({
+        title: "저장 완료",
+        description: `'${saveName}'(으)로 비교 결과가 저장되었습니다. (프론트엔드-전용)`,
+    });
+    setIsSaveDialogOpen(false);
+  };
+  
+  const handleOpenSaveDialog = () => {
+    if (keywords.length === 0) {
+      toast({
+        variant: 'destructive',
+        title: '저장할 데이터가 없습니다.',
+        description: '먼저 키워드를 추가하여 비교해주세요.',
+      });
+      return;
+    }
+    setSaveName(`비교: ${keywords.join(', ')}`);
+    setIsSaveDialogOpen(true);
+  }
 
  const handleExportCsv = () => {
     if (keywords.length === 0 || Object.keys(trendData).length === 0) {
@@ -295,6 +332,9 @@ export default function ComparePage() {
             ))}
         </div>
         <div className="flex gap-2">
+            <Button onClick={handleOpenSaveDialog} variant="outline">
+                <Save className="mr-2 h-4 w-4" /> 저장
+            </Button>
             <Button onClick={handleExportCsv} disabled={keywords.length === 0}>CSV 내보내기</Button>
         </div>
       </div>
@@ -397,6 +437,42 @@ export default function ComparePage() {
           </CardContent>
         </Card>
       </section>
+
+      <Dialog open={isSaveDialogOpen} onOpenChange={setIsSaveDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+                <DialogTitle>비교 결과 저장</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-2">
+                <div className="space-y-2">
+                    <Label htmlFor="save-name">이름</Label>
+                    <Input id="save-name" value={saveName} onChange={(e) => setSaveName(e.target.value)} placeholder="예: 2분기 스마트폰 시장 비교"/>
+                </div>
+                <div className="space-y-2">
+                   <Label>색상 태그</Label>
+                   <RadioGroup
+                        defaultValue={selectedColor}
+                        onValueChange={setSelectedColor}
+                        className="flex space-x-2"
+                    >
+                        {saveColors.map(color => (
+                            <RadioGroupItem key={color.id} value={color.value} id={color.id} className="sr-only" />
+                        ))}
+                         {saveColors.map(color => (
+                            <Label key={`label-${color.id}`} htmlFor={color.id} className={`h-8 w-8 rounded-full cursor-pointer ${color.value} ${selectedColor === color.value ? `ring-2 ring-offset-2 ${color.ring}`: ''}`}></Label>
+                        ))}
+                    </RadioGroup>
+                </div>
+            </div>
+            <DialogFooter>
+                <DialogClose asChild>
+                    <Button type="button" variant="secondary">취소</Button>
+                </DialogClose>
+                <Button type="button" onClick={handleSave} disabled={!saveName}>저장하기</Button>
+            </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
     </div>
   );
 }

@@ -13,7 +13,7 @@ import {
   TableCell,
 } from '@/components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, Trash2, X, Save } from 'lucide-react';
+import { Plus, Trash2, X, Save, History } from 'lucide-react';
 import { getKeywordTrendsAction } from '@/app/actions';
 import type { KeywordTrendPoint } from '@/lib/types';
 import {
@@ -52,6 +52,31 @@ const saveColors = [
     { id: 'color-3', value: 'bg-yellow-500', ring: 'ring-yellow-500' },
     { id: 'color-4', value: 'bg-green-500', ring: 'ring-green-500' },
     { id: 'color-5', value: 'bg-blue-500', ring: 'ring-blue-500' },
+];
+
+// Mock data for saved comparisons
+const savedComparisons = [
+  {
+    id: 1,
+    name: '2분기 스마트폰 시장',
+    color: 'bg-blue-500',
+    keywords: ['갤럭시', '아이폰'],
+    date: '2023-06-28',
+  },
+  {
+    id: 2,
+    name: '여름 휴가 여행지',
+    color: 'bg-green-500',
+    keywords: ['제주도', '강릉', '부산'],
+    date: '2023-06-25',
+  },
+  {
+    id: 3,
+    name: 'OTT 서비스 경쟁',
+    color: 'bg-red-500',
+    keywords: ['넷플릭스', '디즈니플러스', '티빙'],
+    date: '2023-06-22',
+  },
 ];
 
 
@@ -251,6 +276,14 @@ export default function ComparePage() {
     document.body.removeChild(link);
   };
 
+  const handleLoadComparison = (savedKeywords: string[]) => {
+    setKeywords(savedKeywords);
+    toast({
+      title: '불러오기 완료',
+      description: `"${savedKeywords.join(', ')}" 비교를 불러왔습니다.`,
+    });
+  };
+
 
   const { chartConfig, chartData } = React.useMemo(() => {
     const config: ChartConfig = {};
@@ -288,8 +321,8 @@ export default function ComparePage() {
   }, [keywords, trendData]);
 
   return (
-    <div className="p-6">
-      <header className="flex flex-col sm:flex-row items-center gap-4 mb-6">
+    <div className="p-6 space-y-6">
+      <header className="flex flex-col sm:flex-row items-center gap-4">
         <h1 className="text-2xl font-bold">키워드 비교</h1>
         <div className="flex gap-2 items-center flex-wrap">
           <Input
@@ -320,7 +353,7 @@ export default function ComparePage() {
             </Select>
         </div>
       </header>
-       <div className="flex justify-between items-center mb-4">
+       <div className="flex justify-between items-center">
         <div className="flex flex-wrap gap-2">
             {keywords.map((keyword, index) => (
             <span key={index} className="inline-flex items-center bg-muted text-muted-foreground rounded-full pl-3 pr-1 py-1 text-sm font-semibold">
@@ -340,7 +373,7 @@ export default function ComparePage() {
       </div>
 
 
-      <section id="charts" className="grid grid-cols-1 gap-6 mb-6">
+      <section id="charts" className="grid grid-cols-1 gap-6">
         <Card>
           <CardHeader>
             <CardTitle>검색량 추이 비교</CardTitle>
@@ -434,6 +467,45 @@ export default function ComparePage() {
                 )}
               </TableBody>
             </Table>
+          </CardContent>
+        </Card>
+      </section>
+
+      <section id="saved-comparisons">
+        <Card>
+          <CardHeader>
+            <CardTitle>저장된 비교 목록</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {savedComparisons.length > 0 ? (
+              <div className="space-y-2">
+                {savedComparisons.map((item) => (
+                  <div
+                    key={item.id}
+                    className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 cursor-pointer"
+                    onClick={() => handleLoadComparison(item.keywords)}
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className={`h-4 w-4 rounded-full ${item.color}`}></span>
+                      <span className="font-semibold">{item.name}</span>
+                      <span className="text-sm text-muted-foreground hidden sm:inline">
+                        ({item.keywords.join(', ')})
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                       <span>{item.date}</span>
+                       <Button variant="ghost" size="icon" className="h-8 w-8">
+                         <History className="h-4 w-4" />
+                       </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-10 text-muted-foreground">
+                <p>저장된 비교 항목이 없습니다.</p>
+              </div>
+            )}
           </CardContent>
         </Card>
       </section>

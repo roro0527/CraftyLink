@@ -25,7 +25,7 @@ import {
   TableCell,
 } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
-import { LoaderCircle, Search, Save } from 'lucide-react';
+import { LoaderCircle, Search } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { getKeywordTrendsAction, getRelatedKeywordsAction } from '@/app/actions';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartConfig } from '@/components/ui/chart';
@@ -38,7 +38,6 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { getYoutubeVideosAction } from '../actions';
 import type { YoutubeVideosData } from '@/ai/flows/youtube-videos-flow';
-import axios from 'axios';
 
 
 const chartConfig = {
@@ -56,7 +55,6 @@ export default function KeywordPage() {
   const [keywordSearch, setKeywordSearch] = React.useState(initialKeyword);
   const [isSearching, setIsSearching] = React.useState(false);
   const [isSearchingTrends, setIsSearchingTrends] = React.useState(false);
-  const [isSaving, setIsSaving] = React.useState(false);
   const [timeRange, setTimeRange] = React.useState<'5d' | '1w' | '1m'>('1w');
   const [trendData, setTrendData] = React.useState<KeywordTrendPoint[]>([]);
   const [totalSearchVolume, setTotalSearchVolume] = React.useState<number | null>(null);
@@ -180,79 +178,6 @@ export default function KeywordPage() {
     window.open(`https://www.youtube.com/watch?v=${videoId}`, '_blank', 'noopener,noreferrer');
   };
 
-  const handleSave = async () => {
-    if (!keywordSearch.trim() || isSaving) return;
-    setIsSaving(true);
-    try {
-      const response = await axios.post('/api/saveKeywordData', {
-        keyword: keywordSearch,
-        trendData,
-        youtubeVideos,
-        relatedKeywords,
-      });
-
-      if (response.data.success) {
-        toast({
-          title: "저장 완료",
-          description: `'${keywordSearch}'에 대한 검색 결과가 저장되었습니다. (ID: ${response.data.docId})`,
-        });
-      } else {
-        throw new Error(response.data.error || 'Save operation failed');
-      }
-    } catch (error) {
-      console.error("Failed to save keyword data:", error);
-      toast({
-        variant: "destructive",
-        title: "저장 실패",
-        description: "데이터를 저장하는 중에 오류가 발생했습니다.",
-      });
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const handleExportCsv = () => {
-    if (trendData.length === 0 && youtubeVideos.length === 0) {
-      toast({
-        variant: 'destructive',
-        title: '내보낼 데이터가 없습니다.',
-        description: '먼저 키워드를 검색해주세요.',
-      });
-      return;
-    }
-
-    let csvContent = '\uFEFF'; // BOM for UTF-8
-
-    // Add Trend Data
-    csvContent += '키워드 검색 빈도\n';
-    csvContent += '날짜,검색량\n';
-    trendData.forEach(item => {
-      csvContent += `${item.date},${item.value}\n`;
-    });
-    csvContent += '\n';
-
-    // Add YouTube Video Data
-    csvContent += '관련 영상 목록\n';
-    csvContent += '제목,업로드일,조회수,채널,조회수 증가율\n';
-    youtubeVideos.forEach(video => {
-      const title = video.title.replace(/"/g, '""'); // Escape double quotes
-      csvContent += `"${title}",${format(parseISO(video.publishedAt), 'yyyy-MM-dd')},${video.viewCount},${video.channelTitle},${video.growthRate?.toFixed(2) || 0}\n`;
-    });
-
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    if (link.href) {
-      URL.revokeObjectURL(link.href);
-    }
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', 'craftylink_data.csv');
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
-
   return (
     <div id="keyword-page" className="p-6">
       {/* 상단: 키워드 개요 + KPI */}
@@ -329,13 +254,6 @@ export default function KeywordPage() {
             <SelectItem value="1m">최근 1개월</SelectItem>
           </SelectContent>
         </Select>
-        <div className="flex gap-2 flex-wrap">
-          <Button variant="outline" onClick={handleSave} disabled={isSaving || isSearching || !keywordSearch.trim()}>
-            {isSaving ? <LoaderCircle className="animate-spin" /> : <Save />}
-            저장
-          </Button>
-          <Button onClick={handleExportCsv}>CSV 내보내기</Button>
-        </div>
       </div>
 
       {/* 메인 영역: 선그래프 + 테이블 + 사이드 */}

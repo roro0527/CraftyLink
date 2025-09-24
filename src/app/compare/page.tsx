@@ -13,7 +13,7 @@ import {
   TableCell,
 } from '@/components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, Trash2, X } from 'lucide-react';
+import { Plus, Trash2, X, Save, LoaderCircle } from 'lucide-react';
 import { getKeywordTrendsAction } from '@/app/actions';
 import type { KeywordTrendPoint } from '@/lib/types';
 import {
@@ -28,6 +28,9 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Legend } from 'recharts';
 import { format, parseISO } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useToast } from '@/hooks/use-toast';
+import axios from 'axios';
+
 
 type TrendData = Record<string, KeywordTrendPoint[]>;
 type SummaryData = Record<string, { total: number; average: number }>;
@@ -43,6 +46,7 @@ const chartColors = [
 ];
 
 export default function ComparePage() {
+  const { toast } = useToast();
   const [keywords, setKeywords] = React.useState<string[]>([]);
   const [inputValue, setInputValue] = React.useState('');
   const [timeRange, setTimeRange] = React.useState<'1w' | '1m' | '5d'>('1w');
@@ -51,6 +55,8 @@ export default function ComparePage() {
   const [isLoading, setIsLoading] = React.useState(false);
   const [analysisData, setAnalysisData] = React.useState<AnalysisData>({});
   const [isAnalyzing, setIsAnalyzing] = React.useState(false);
+  const [isSaving, setIsSaving] = React.useState(false);
+
 
   React.useEffect(() => {
     const fetchAllTrends = async () => {
@@ -156,6 +162,72 @@ export default function ComparePage() {
     setKeywords([]);
   };
 
+  const handleSave = async () => {
+    if (keywords.length === 0 || isSaving) return;
+    setIsSaving(true);
+    try {
+      const response = await axios.post('/api/saveKeywordData', {
+        keyword: `비교: ${keywords.join(', ')}`,
+        trendData: trendData, // Save the whole multi-keyword trend object
+        youtubeVideos: [], // Not applicable in compare page
+        relatedKeywords: keywords, // Save the compared keywords
+      });
+
+      if (response.data.success) {
+        toast({
+          title: "저장 완료",
+          description: `비교 결과가 저장되었습니다. (ID: ${response.data.docId})`,
+        });
+      } else {
+        throw new Error(response.data.error || 'Save operation failed');
+      }
+    } catch (error) {
+      console.error("Failed to save compare data:", error);
+      toast({
+        variant: "destructive",
+        title: "저장 실패",
+        description: "데이터를 저장하는 중에 오류가 발생했습니다.",
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+  
+  const handleExportCsv = () => {
+    if (keywords.length === 0 || Object.keys(trendData).length === 0) {
+      toast({
+        variant: 'destructive',
+        title: '내보낼 데이터가 없습니다.',
+        description: '먼저 키워드를 추가하여 비교해주세요.',
+      });
+      return;
+    }
+  
+    let csvContent = '\uFEFF'; // BOM for UTF-8
+  
+    // Header
+    const headers = ['날짜', ...keywords];
+    csvContent += headers.join(',') + '\n';
+  
+    // Rows
+    chartData.forEach(row => {
+      const values = keywords.map(kw => row[kw] ?? 0);
+      csvContent += `${row.date},${values.join(',')}\n`;
+    });
+  
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    if (link.href) {
+      URL.revokeObjectURL(link.href);
+    }
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'craftylink_compare_data.csv');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const { chartConfig, chartData } = React.useMemo(() => {
     const config: ChartConfig = {};
     keywords.forEach((keyword, index) => {
@@ -224,17 +296,26 @@ export default function ComparePage() {
             </Select>
         </div>
       </header>
-
-      <div className="mb-4 flex flex-wrap gap-2">
-        {keywords.map((keyword, index) => (
-          <span key={index} className="inline-flex items-center bg-muted text-muted-foreground rounded-full pl-3 pr-1 py-1 text-sm font-semibold">
-            {keyword}
-            <Button variant="ghost" size="icon" className="h-6 w-6 ml-1 rounded-full" onClick={() => handleRemoveKeyword(keyword)}>
-                <X className="h-4 w-4"/>
+       <div className="flex justify-between items-center mb-4">
+        <div className="flex flex-wrap gap-2">
+            {keywords.map((keyword, index) => (
+            <span key={index} className="inline-flex items-center bg-muted text-muted-foreground rounded-full pl-3 pr-1 py-1 text-sm font-semibold">
+                {keyword}
+                <Button variant="ghost" size="icon" className="h-6 w-6 ml-1 rounded-full" onClick={() => handleRemoveKeyword(keyword)}>
+                    <X className="h-4 w-4"/>
+                </Button>
+            </span>
+            ))}
+        </div>
+        <div className="flex gap-2">
+            <Button variant="outline" onClick={handleSave} disabled={isSaving || keywords.length === 0}>
+                {isSaving ? <LoaderCircle className="animate-spin" /> : <Save />}
+                저장
             </Button>
-          </span>
-        ))}
+            <Button onClick={handleExportCsv} disabled={keywords.length === 0}>CSV 내보내기</Button>
+        </div>
       </div>
+
 
       <section id="charts" className="grid grid-cols-1 gap-6 mb-6">
         <Card>

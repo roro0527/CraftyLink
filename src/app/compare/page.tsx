@@ -55,7 +55,7 @@ const saveColors = [
 ];
 
 // Mock data for saved comparisons
-const savedComparisons = [
+const initialSavedComparisons = [
   {
     id: 1,
     name: '2분기 스마트폰 시장',
@@ -93,6 +93,7 @@ export default function ComparePage() {
   const [isSaveDialogOpen, setIsSaveDialogOpen] = React.useState(false);
   const [saveName, setSaveName] = React.useState('');
   const [selectedColor, setSelectedColor] = React.useState(saveColors[0].value);
+  const [savedItems, setSavedItems] = React.useState(initialSavedComparisons);
 
 
   React.useEffect(() => {
@@ -281,6 +282,14 @@ export default function ComparePage() {
     toast({
       title: '불러오기 완료',
       description: `"${savedKeywords.join(', ')}" 비교를 불러왔습니다.`,
+    });
+  };
+
+  const handleDeleteComparison = (idToDelete: number) => {
+    setSavedItems(prev => prev.filter(item => item.id !== idToDelete));
+    toast({
+        title: "삭제 완료",
+        description: "선택한 항목이 삭제되었습니다.",
     });
   };
 
@@ -477,15 +486,17 @@ export default function ComparePage() {
             <CardTitle>저장된 비교 목록</CardTitle>
           </CardHeader>
           <CardContent>
-            {savedComparisons.length > 0 ? (
+            {savedItems.length > 0 ? (
               <div className="space-y-2">
-                {savedComparisons.map((item) => (
+                {savedItems.map((item) => (
                   <div
                     key={item.id}
-                    className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 cursor-pointer"
-                    onClick={() => handleLoadComparison(item.keywords)}
+                    className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors"
                   >
-                    <div className="flex items-center gap-3">
+                    <div 
+                      className="flex items-center gap-3 cursor-pointer flex-grow"
+                      onClick={() => handleLoadComparison(item.keywords)}
+                    >
                       <span className={`h-4 w-4 rounded-full ${item.color}`}></span>
                       <span className="font-semibold">{item.name}</span>
                       <span className="text-sm text-muted-foreground hidden sm:inline">
@@ -493,9 +504,17 @@ export default function ComparePage() {
                       </span>
                     </div>
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                       <span>{item.date}</span>
-                       <Button variant="ghost" size="icon" className="h-8 w-8">
-                         <History className="h-4 w-4" />
+                       <span className='hidden sm:inline'>{item.date}</span>
+                       <Button 
+                         variant="ghost" 
+                         size="icon" 
+                         className="h-8 w-8"
+                         onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteComparison(item.id);
+                         }}
+                       >
+                         <Trash2 className="h-4 w-4" />
                        </Button>
                     </div>
                   </div>
@@ -548,3 +567,5 @@ export default function ComparePage() {
     </div>
   );
 }
+
+    

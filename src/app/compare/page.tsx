@@ -13,7 +13,7 @@ import {
   TableCell,
 } from '@/components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, Trash2, X, Save, History } from 'lucide-react';
+import { Plus, Trash2, X, Save, History, LoaderCircle } from 'lucide-react';
 import { getKeywordTrendsAction } from '@/app/actions';
 import type { KeywordTrendPoint } from '@/lib/types';
 import {
@@ -201,13 +201,24 @@ export default function ComparePage() {
   };
 
   const handleSave = () => {
-    // Backend logic will be added later
-    console.log("Saving comparison:", { name: saveName, color: selectedColor, keywords, trendData, summaryData });
+    const newItem = {
+      id: Date.now(),
+      name: saveName,
+      color: selectedColor,
+      keywords: keywords,
+      date: new Date().toISOString().split('T')[0],
+    };
+
+    setSavedItems(prevItems => [newItem, ...prevItems]);
+    
     toast({
         title: "저장 완료",
-        description: `'${saveName}'(으)로 비교 결과가 저장되었습니다. (프론트엔드-전용)`,
+        description: `'${saveName}'(으)로 비교 결과가 저장되었습니다.`,
     });
+    
     setIsSaveDialogOpen(false);
+    setSaveName('');
+    setSelectedColor(saveColors[0].value);
   };
   
   const handleOpenSaveDialog = () => {
@@ -567,5 +578,3 @@ export default function ComparePage() {
     </div>
   );
 }
-
-    

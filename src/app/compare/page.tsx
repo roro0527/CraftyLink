@@ -193,7 +193,7 @@ export default function ComparePage() {
     }
   };
   
-  const handleExportCsv = () => {
+ const handleExportCsv = () => {
     if (keywords.length === 0 || Object.keys(trendData).length === 0) {
       toast({
         variant: 'destructive',
@@ -202,19 +202,38 @@ export default function ComparePage() {
       });
       return;
     }
-  
+
     let csvContent = '\uFEFF'; // BOM for UTF-8
-  
-    // Header
-    const headers = ['날짜', ...keywords];
-    csvContent += headers.join(',') + '\n';
-  
-    // Rows
+
+    // Summary Section
+    csvContent += '요약\n';
+    const summaryHeaders = ['키워드', '총 검색량', '평균 검색량', '우세 점수'];
+    csvContent += summaryHeaders.join(',') + '\n';
+
+    keywords.forEach(kw => {
+      const summary = summaryData[kw] || { total: 0, average: 0 };
+      const analysis = analysisData[kw] || { dominanceScore: 0 };
+      const row = [
+        kw,
+        summary.total,
+        summary.average,
+        analysis.dominanceScore
+      ];
+      csvContent += row.join(',') + '\n';
+    });
+
+    csvContent += '\n'; // Add a blank line for separation
+
+    // Trend Data Section
+    csvContent += '기간별 검색량 추이\n';
+    const trendHeaders = ['날짜', ...keywords];
+    csvContent += trendHeaders.join(',') + '\n';
+
     chartData.forEach(row => {
       const values = keywords.map(kw => row[kw] ?? 0);
       csvContent += `${row.date},${values.join(',')}\n`;
     });
-  
+
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     if (link.href) {
@@ -227,6 +246,7 @@ export default function ComparePage() {
     link.click();
     document.body.removeChild(link);
   };
+
 
   const { chartConfig, chartData } = React.useMemo(() => {
     const config: ChartConfig = {};

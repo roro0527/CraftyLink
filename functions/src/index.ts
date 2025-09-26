@@ -227,3 +227,5 @@ app.get("/getRisingSearches", async (req, res) => {
 
 
 export const api = functions.runWith({ secrets: ["NAVER_CLIENT_ID", "NAVER_CLIENT_SECRET", "YOUTUBE_API_KEY", "KAKAO_APP_KEY", "NAVER_DATALAB_CLIENT_ID", "NAVER_DATALAB_CLIENT_SECRET", "FIREBASE_SERVICE_ACCOUNT_KEY", "PEXELS_API_KEY"]}).region("asia-northeast3").https.onRequest(app);
+
+    

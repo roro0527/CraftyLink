@@ -34,7 +34,7 @@ export const getNaverNewsFlow = ai.defineFlow({
     outputSchema: RelatedNewsDataSchema
 }, async (input) => {
     try {
-        console.log(`Fetching Naver news for keyword: ${input.keyword} (caching disabled)`);
+        console.log(`Fetching Naver news for keyword: ${input.keyword}`);
         const { keyword } = input;
         const naverClientId = process.env.NAVER_CLIENT_ID;
         const naverClientSecret = process.env.NAVER_CLIENT_SECRET;
@@ -88,7 +88,8 @@ export const getNaverNewsFlow = ai.defineFlow({
                 data: error.response.data,
             });
         }
-        throw new Error(`Failed to get news for ${input.keyword}.`);
+        // Rethrow a generic error to avoid leaking sensitive details to the client-side action.
+        throw new Error(`Failed to get news for ${input.keyword}. Please check server logs for details.`);
     }
 });
 

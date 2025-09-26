@@ -16,12 +16,10 @@ import cors from "cors";
 import axios from "axios";
 import { google } from "googleapis";
 import rateLimit from "express-rate-limit";
-import { fetchNaverNewsLogic } from "./naver-news";
 import * as googleTrends from "google-trends-api";
 
 // Initialize Firebase Admin SDK
 admin.initializeApp();
-const firestore = admin.firestore();
 
 const app = express();
 
@@ -50,10 +48,6 @@ const youtube = google.youtube({
 });
 const KAKAO_API_KEY = process.env.KAKAO_APP_KEY;
 
-
-// --- Naver API Setup ---
-const NAVER_CLIENT_ID = process.env.NAVER_CLIENT_ID;
-const NAVER_CLIENT_SECRET = process.env.NAVER_CLIENT_SECRET;
 
 // --- Pexels API Setup ---
 const PEXELS_API_KEY = process.env.PEXELS_API_KEY;
@@ -140,25 +134,6 @@ app.get("/getTopVideos", async (req, res) => {
   // ... (code from previous state, can be kept or removed)
 });
 
-app.get("/getNaverNews", async (req, res) => {
-  const { query } = req.query;
-
-    if (typeof query !== 'string') {
-        return res.status(400).send({ error: "Query parameter is missing or invalid." });
-    }
-    if (!NAVER_CLIENT_ID || !NAVER_CLIENT_SECRET) {
-        functions.logger.error("Naver API credentials are not configured in Cloud Functions.");
-        return res.status(500).send({ error: "Server configuration error." });
-    }
-
-    try {
-        const articles = await fetchNaverNewsLogic(query, firestore);
-        return res.status(200).json(articles);
-    } catch (error: any) {
-        functions.logger.error("Error fetching Naver news:", error);
-        return res.status(500).send({ error: "Failed to fetch news." });
-    }
-});
 
 app.get("/getPexelsPhotos", async (req, res) => {
     const { query: searchQuery, page: pageNumber } = req.query;
@@ -244,9 +219,3 @@ app.get("/getRisingSearches", async (req, res) => {
 
 
 export const api = functions.runWith({ secrets: ["NAVER_CLIENT_ID", "NAVER_CLIENT_SECRET", "YOUTUBE_API_KEY", "KAKAO_APP_KEY", "NAVER_DATALAB_CLIENT_ID", "NAVER_DATALAB_CLIENT_SECRET", "FIREBASE_SERVICE_ACCOUNT_KEY", "PEXELS_API_KEY"]}).region("asia-northeast3").https.onRequest(app);
-
-    
-
-    
-
-    

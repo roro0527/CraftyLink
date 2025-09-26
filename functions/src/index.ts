@@ -173,8 +173,9 @@ app.get("/getPexelsPhotos", async (req, res) => {
         return res.status(500).send({ error: "Server configuration error for Pexels API." });
     }
 
+    const url = 'https://api.pexels.com/v1/search';
+    
     try {
-        const url = 'https://api.pexels.com/v1/search';
         const response = await axios.get(url, {
             headers: {
                 Authorization: apiKey,
@@ -185,6 +186,8 @@ app.get("/getPexelsPhotos", async (req, res) => {
                 page: pageNumber || '1',
             },
         });
+        
+        functions.logger.info(`Pexels API call successful for query: "${searchQuery}". Found ${response.data.photos.length} photos.`);
 
         const photos = response.data.photos.map((photo: any) => ({
             id: photo.id,
@@ -201,8 +204,20 @@ app.get("/getPexelsPhotos", async (req, res) => {
         return res.status(200).json({ photos, hasMore });
 
     } catch (error: any) {
-        functions.logger.error("Pexels API call failed:", error.response?.data || error.message);
-        return res.status(500).send({ error: "Failed to fetch photos from Pexels." });
+        if (axios.isAxiosError(error)) {
+            functions.logger.error("Pexels API call failed:", {
+                status: error.response?.status,
+                data: error.response?.data,
+                query: searchQuery
+            });
+            return res.status(error.response?.status || 500).send({
+                error: "Failed to fetch photos from Pexels.",
+                details: error.response?.data
+            });
+        } else {
+             functions.logger.error("An unexpected error occurred while fetching from Pexels:", error);
+             return res.status(500).send({ error: "An unexpected error occurred." });
+        }
     }
 });
 
@@ -229,6 +244,8 @@ app.get("/getRisingSearches", async (req, res) => {
 
 
 export const api = functions.runWith({ secrets: ["NAVER_CLIENT_ID", "NAVER_CLIENT_SECRET", "YOUTUBE_API_KEY", "KAKAO_APP_KEY", "NAVER_DATALAB_CLIENT_ID", "NAVER_DATALAB_CLIENT_SECRET", "FIREBASE_SERVICE_ACCOUNT_KEY", "PEXELS_API_KEY"]}).region("asia-northeast3").https.onRequest(app);
+
+    
 
     
 

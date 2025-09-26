@@ -161,49 +161,51 @@ app.get("/getNaverNews", async (req, res) => {
 });
 
 app.get("/getPexelsPhotos", async (req, res) => {
-  const { query, page } = req.query;
+    const { query: searchQuery, page: pageNumber } = req.query;
+    const apiKey = PEXELS_API_KEY;
 
-  if (typeof query !== 'string') {
-    return res.status(400).send({ error: "Query parameter is required" });
-  }
-  
-  if (!PEXELS_API_KEY) {
-    functions.logger.error("Pexels API key is not configured in Cloud Functions.");
-    return res.status(500).send({ error: "Server configuration error for Pexels API." });
-  }
+    if (typeof searchQuery !== 'string') {
+        return res.status(400).send({ error: "Query parameter is required" });
+    }
+    
+    if (!apiKey) {
+        functions.logger.error("Pexels API key is not configured in Cloud Functions.");
+        return res.status(500).send({ error: "Server configuration error for Pexels API." });
+    }
 
-  try {
-    const url = 'https://api.pexels.com/v1/search';
-    const response = await axios.get(url, {
-      headers: {
-        Authorization: PEXELS_API_KEY,
-      },
-      params: {
-        query,
-        per_page: 12,
-        page: page || '1',
-      },
-    });
+    try {
+        const url = 'https://api.pexels.com/v1/search';
+        const response = await axios.get(url, {
+            headers: {
+                Authorization: apiKey,
+            },
+            params: {
+                query: searchQuery,
+                per_page: 12,
+                page: pageNumber || '1',
+            },
+        });
 
-    const photos = response.data.photos.map((photo: any) => ({
-      id: photo.id,
-      title: photo.alt || 'Pexels Photo',
-      url: photo.url,
-      imageUrl: photo.src.medium,
-      description: `Photo by ${photo.photographer}`,
-      photographer_url: photo.photographer_url,
-      source: 'Pexels',
-    }));
+        const photos = response.data.photos.map((photo: any) => ({
+            id: photo.id,
+            title: photo.alt || 'Pexels Photo',
+            url: photo.url,
+            imageUrl: photo.src.medium,
+            description: `Photo by ${photo.photographer}`,
+            photographer_url: photo.photographer_url,
+            source: 'Pexels',
+        }));
 
-    const hasMore = response.data.next_page !== undefined;
+        const hasMore = response.data.next_page !== undefined;
 
-    return res.status(200).json({ photos, hasMore });
+        return res.status(200).json({ photos, hasMore });
 
-  } catch (error: any) {
-    functions.logger.error("Pexels API call failed:", error.response?.data || error.message);
-    return res.status(500).send({ error: "Failed to fetch photos from Pexels." });
-  }
+    } catch (error: any) {
+        functions.logger.error("Pexels API call failed:", error.response?.data || error.message);
+        return res.status(500).send({ error: "Failed to fetch photos from Pexels." });
+    }
 });
+
 
 app.get("/getRisingSearches", async (req, res) => {
   const { regionCode } = req.query;
@@ -227,5 +229,7 @@ app.get("/getRisingSearches", async (req, res) => {
 
 
 export const api = functions.runWith({ secrets: ["NAVER_CLIENT_ID", "NAVER_CLIENT_SECRET", "YOUTUBE_API_KEY", "KAKAO_APP_KEY", "NAVER_DATALAB_CLIENT_ID", "NAVER_DATALAB_CLIENT_SECRET", "FIREBASE_SERVICE_ACCOUNT_KEY", "PEXELS_API_KEY"]}).region("asia-northeast3").https.onRequest(app);
+
+    
 
     

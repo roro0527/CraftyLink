@@ -11,11 +11,10 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'zod';
 import { google } from 'googleapis';
-import { differenceInDays, parseISO } from 'date-fns';
-
 
 const YoutubeVideosInputSchema = z.object({
   keyword: z.string().describe('The keyword to search for on YouTube.'),
+  pageToken: z.string().optional().describe('The page token for fetching subsequent pages.'),
 });
 export type YoutubeVideosInput = z.infer<typeof YoutubeVideosInputSchema>;
 
@@ -25,10 +24,12 @@ const YoutubeVideoSchema = z.object({
     publishedAt: z.string(),
     viewCount: z.string(),
     channelTitle: z.string(),
-    growthRate: z.number().optional(),
 });
 
-const YoutubeVideosDataSchema = z.array(YoutubeVideoSchema);
+const YoutubeVideosDataSchema = z.object({
+    videos: z.array(YoutubeVideoSchema),
+    nextPageToken: z.string().optional().nullable(),
+});
 export type YoutubeVideosData = z.infer<typeof YoutubeVideosDataSchema>;
 
 
@@ -49,14 +50,15 @@ const getYoutubeVideosFlow = ai.defineFlow(
             part: ['snippet'],
             q: input.keyword,
             type: ['video'],
-            maxResults: 25, // Fetch more results to calculate growth rate accurately
+            maxResults: 12,
             order: 'relevance',
+            pageToken: input.pageToken,
         });
 
         const videoIds = searchResponse.data.items?.map(item => item.id?.videoId).filter((id): id is string => !!id) || [];
         
         if (videoIds.length === 0) {
-            return [];
+            return { videos: [], nextPageToken: null };
         }
 
         const videosResponse = await youtube.videos.list({
@@ -64,34 +66,25 @@ const getYoutubeVideosFlow = ai.defineFlow(
             id: videoIds,
         });
 
-        const videoDetails: YoutubeVideosData = videosResponse.data.items?.map(item => {
-            const viewCount = parseInt(item.statistics?.viewCount || '0', 10);
-            const publishedAt = item.snippet?.publishedAt || new Date().toISOString();
-            const daysSincePublished = differenceInDays(new Date(), parseISO(publishedAt));
-            
-            // Calculate growth rate: views per day.
-            // If published within the last day, use viewCount itself to avoid division by zero and prioritize new videos.
-            const growthRate = daysSincePublished > 0 ? viewCount / daysSincePublished : viewCount;
-
+        const videoDetails = videosResponse.data.items?.map(item => {
             return {
                 id: item.id || '',
                 title: item.snippet?.title || 'No Title',
-                publishedAt: publishedAt,
+                publishedAt: item.snippet?.publishedAt || new Date().toISOString(),
                 viewCount: item.statistics?.viewCount || '0',
                 channelTitle: item.snippet?.channelTitle || 'No Channel',
-                growthRate: growthRate
             };
         }) || [];
         
-        // Sort by growth rate in descending order and take the top 5
-        const sortedVideos = videoDetails.sort((a, b) => (b.growthRate || 0) - (a.growthRate || 0));
-        
-        return sortedVideos.slice(0, 5);
+        return {
+            videos: videoDetails,
+            nextPageToken: searchResponse.data.nextPageToken
+        };
 
     } catch (err) {
         console.error('Error fetching YouTube data:', err);
         // In case of API errors (e.g., quota exceeded), return an empty array.
-        return [];
+        return { videos: [], nextPageToken: null };
     }
   }
 );

@@ -71,7 +71,7 @@ export async function getYoutubeVideosAction(input: YoutubeVideosInput): Promise
     } catch (error) {
         console.error('Error fetching YouTube videos:', error);
         // In case of API errors (e.g., quota exceeded), return an empty array.
-        return [];
+        return { videos: [], nextPageToken: null };
     }
 }
 

@@ -55,10 +55,6 @@ const KAKAO_API_KEY = process.env.KAKAO_APP_KEY;
 const NAVER_CLIENT_ID = process.env.NAVER_CLIENT_ID;
 const NAVER_CLIENT_SECRET = process.env.NAVER_CLIENT_SECRET;
 
-// --- Pexels API Setup ---
-const PEXELS_API_KEY = process.env.PEXELS_API_KEY;
-
-
 /**
  * Fetches the city name from geographic coordinates using Kakao's coord2address API.
  * @param {number} lat - The latitude.
@@ -180,52 +176,5 @@ app.get("/getRisingSearches", async (req, res) => {
   }
 });
 
-app.get("/getPexelsPhotos", async (req, res) => {
-    const { query, page } = req.query;
 
-    if (typeof query !== 'string' || !query.trim()) {
-        return res.status(400).send({ error: "Query parameter is missing or invalid." });
-    }
-    if (!PEXELS_API_KEY) {
-        functions.logger.error("Pexels API key is not configured in Cloud Functions.");
-        return res.status(500).send({ error: "Server configuration error." });
-    }
-
-    const pageNumber = typeof page === 'string' ? parseInt(page, 10) : 1;
-
-    try {
-        const url = 'https://api.pexels.com/v1/search';
-        const response = await axios.get(url, {
-            headers: {
-                Authorization: PEXELS_API_KEY,
-            },
-            params: {
-                query,
-                page: pageNumber,
-                per_page: 12,
-                locale: 'ko-KR'
-            },
-        });
-
-        const { photos, has_more } = response.data;
-        
-        const results = photos.map((photo: any) => ({
-            id: photo.id.toString(),
-            title: photo.alt || 'Pexels Photo',
-            url: photo.url,
-            imageUrl: photo.src.medium, // Use medium size for grid display
-            description: `Photo by ${photo.photographer}`,
-            source: 'Pexels',
-            photographer_url: photo.photographer_url
-        }));
-
-        return res.status(200).json({ photos: results, hasMore: has_more });
-
-    } catch (error: any) {
-        functions.logger.error("Pexels API call failed:", error.response?.data || error.message);
-        return res.status(500).send({ error: "Failed to fetch photos from Pexels." });
-    }
-});
-
-
-export const api = functions.runWith({ secrets: ["NAVER_CLIENT_ID", "NAVER_CLIENT_SECRET", "YOUTUBE_API_KEY", "KAKAO_APP_KEY", "NAVER_DATALAB_CLIENT_ID", "NAVER_DATALAB_CLIENT_SECRET", "FIREBASE_SERVICE_ACCOUNT_KEY", "PEXELS_API_KEY"]}).region("asia-northeast3")..https.onRequest(app);
+export const api = functions.runWith({ secrets: ["NAVER_CLIENT_ID", "NAVER_CLIENT_SECRET", "YOUTUBE_API_KEY", "KAKAO_APP_KEY", "NAVER_DATALAB_CLIENT_ID", "NAVER_DATALAB_CLIENT_SECRET", "FIREBASE_SERVICE_ACCOUNT_KEY"]}).region("asia-northeast3").https.onRequest(app);

@@ -30,7 +30,7 @@ const SearchResultItem: React.FC<{ item: SearchResult }> = ({ item }) => {
         )}
         <CardContent className="p-4">
           <h3 className="font-semibold text-base line-clamp-2">{item.title}</h3>
-          {item.description && (
+          {item.description && item.photographer_url && (
              <a href={item.photographer_url} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="text-sm text-muted-foreground mt-1 line-clamp-3 hover:underline">{item.description}</a>
           )}
           {item.source && (
@@ -67,9 +67,9 @@ const PhotoResults: React.FC<PhotoResultsProps> = ({ query }) => {
             const { photos, hasMore: apiHasMore } = response.data;
             
             if (currentPage === 1) {
-                setResults(photos);
+                setResults(photos || []);
             } else {
-                setResults(prev => [...prev, ...photos]);
+                setResults(prev => [...prev, ...(photos || [])]);
             }
             setHasMore(apiHasMore);
 

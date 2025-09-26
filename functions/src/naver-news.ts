@@ -40,9 +40,8 @@ export async function fetchNaverNewsLogic(
         const cacheDoc = await cacheRef.get();
         if (cacheDoc.exists) {
             const cacheData = cacheDoc.data()!;
-            const nowInSeconds = Math.floor(Date.now() / 1000);
-            const updatedAt = cacheData.updatedAt as Timestamp;
-            const diffMinutes = (nowInSeconds - updatedAt.seconds) / 60;
+            const updatedAt = (cacheData.updatedAt as Timestamp).toMillis();
+            const diffMinutes = (Date.now() - updatedAt) / (1000 * 60);
             
             if (diffMinutes < CACHE_TTL_MINUTES) {
                 functions.logger.info(`Returning cached news for query: ${query}`);
@@ -75,7 +74,7 @@ export async function fetchNaverNewsLogic(
 
             await cacheRef.set({
                 articles,
-                updatedAt: Timestamp.now(),
+                updatedAt: admin.firestore.FieldValue.serverTimestamp(),
             });
             functions.logger.info(`Successfully cached news for query: ${query}`);
 
@@ -99,5 +98,3 @@ export async function fetchNaverNewsLogic(
         }
     }
 }
-
-    

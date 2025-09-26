@@ -104,11 +104,11 @@ const PhotoResults: React.FC<PhotoResultsProps> = ({ query }) => {
     }, [inView, isFetching, hasMore, query, fetchPhotos]);
 
 
-    if (!query && results.length === 0) {
+    if (!query && (!results || results.length === 0)) {
         return null;
     }
     
-    if (results.length === 0 && isFetching) {
+    if ((!results || results.length === 0) && isFetching) {
         return (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {Array.from({ length: 8 }).map((_, i) => (
@@ -133,7 +133,7 @@ const PhotoResults: React.FC<PhotoResultsProps> = ({ query }) => {
         )
     }
 
-     if (results.length === 0 && !isFetching) {
+     if ((!results || results.length === 0) && !isFetching) {
         return (
             <div className="text-center py-10 text-muted-foreground">
                 <p>'{query}'에 대한 사진을 찾을 수 없습니다.</p>
@@ -144,11 +144,11 @@ const PhotoResults: React.FC<PhotoResultsProps> = ({ query }) => {
     return (
        <>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {results.map((item) => <SearchResultItem key={item.id} item={item} />)}
+            {results && results.map((item) => <SearchResultItem key={item.id} item={item} />)}
           </div>
           <div ref={ref} className="h-10 w-full mt-4 flex justify-center items-center">
             {isFetching && page > 1 && <LoaderCircle className="h-6 w-6 animate-spin text-primary" />}
-            {!hasMore && results.length > 0 && <p className="text-muted-foreground">더 이상 결과가 없습니다.</p>}
+            {!hasMore && results && results.length > 0 && <p className="text-muted-foreground">더 이상 결과가 없습니다.</p>}
           </div>
         </>
     );

@@ -22,3 +22,14 @@ export interface YoutubeVideo {
     channelTitle: string;
     growthRate?: number;
 }
+
+export type SearchCategory = 'photo' | 'blog' | 'dictionary' | 'video';
+
+export interface SearchResult {
+  id: string;
+  title: string;
+  url: string;
+  description?: string;
+  imageUrl?: string;
+  source?: string;
+}

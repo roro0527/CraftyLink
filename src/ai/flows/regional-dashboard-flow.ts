@@ -5,7 +5,6 @@ import { ai } from '@/ai/genkit';
 import { getKeywordTrends } from './keyword-trends-flow';
 import { getNaverNews } from './naver-news-flow';
 import { getYoutubeVideos } from './youtube-videos-flow';
-import { getRegionalTrends } from './regional-trends-flow';
 import * as z from 'zod';
 
 const RegionalDashboardInputSchema = z.object({
@@ -88,3 +87,5 @@ export const regionalDashboardFlow = ai.defineFlow(
 export async function getRegionalDashboard(input: RegionalDashboardInput): Promise<RegionalDashboardOutput> {
     return await regionalDashboardFlow(input);
 }
+
+    

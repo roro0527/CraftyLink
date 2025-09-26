@@ -1,6 +1,7 @@
+
 import axios from "axios";
 import * as functions from "firebase-functions";
-import type { Firestore } from 'firebase-admin/firestore';
+import type { Firestore, Timestamp } from 'firebase-admin/firestore';
 
 const CACHE_TTL_MINUTES = 10;
 const NAVER_CLIENT_ID = process.env.NAVER_CLIENT_ID;
@@ -39,10 +40,10 @@ export async function fetchNaverNewsLogic(
         const cacheDoc = await cacheRef.get();
         if (cacheDoc.exists) {
             const cacheData = cacheDoc.data()!;
-            const now = firestore.Timestamp.now();
-            const updatedAt = cacheData.updatedAt;
-            const diffMinutes = (now.toMillis() - updatedAt.toMillis()) / (1000 * 60);
-
+            const nowInSeconds = Math.floor(Date.now() / 1000);
+            const updatedAt = cacheData.updatedAt as Timestamp;
+            const diffMinutes = (nowInSeconds - updatedAt.seconds) / 60;
+            
             if (diffMinutes < CACHE_TTL_MINUTES) {
                 functions.logger.info(`Returning cached news for query: ${query}`);
                 return cacheData.articles as NewsArticle[];
@@ -74,7 +75,7 @@ export async function fetchNaverNewsLogic(
 
             await cacheRef.set({
                 articles,
-                updatedAt: firestore.Timestamp.now(),
+                updatedAt: Timestamp.now(),
             });
             functions.logger.info(`Successfully cached news for query: ${query}`);
 
@@ -98,3 +99,5 @@ export async function fetchNaverNewsLogic(
         }
     }
 }
+
+    

@@ -36,7 +36,11 @@ const VideoResults: React.FC<VideoResultsProps> = ({ query, setIsLoading }) => {
             const response = await getYoutubeVideosAction({ keyword: currentQuery, pageToken: pageToken || undefined });
             
             if (pageToken) {
-                 setResults(prev => [...prev, ...response.videos]);
+                 setResults(prev => {
+                    const existingIds = new Set(prev.map(v => v.id));
+                    const newVideos = response.videos.filter(v => !existingIds.has(v.id));
+                    return [...prev, ...newVideos];
+                });
             } else {
                  setResults(response.videos);
             }

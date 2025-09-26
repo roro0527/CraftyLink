@@ -41,10 +41,9 @@ const SearchResultItem: React.FC<{ item: SearchResult }> = ({ item }) => {
 
 interface PhotoResultsProps {
     query: string;
-    setIsLoading: (isLoading: boolean) => void;
 }
 
-const PhotoResults: React.FC<PhotoResultsProps> = ({ query, setIsLoading }) => {
+const PhotoResults: React.FC<PhotoResultsProps> = ({ query }) => {
     const [results, setResults] = React.useState<SearchResult[]>([]);
     const [page, setPage] = React.useState(1);
     const [hasMore, setHasMore] = React.useState(true);
@@ -54,7 +53,6 @@ const PhotoResults: React.FC<PhotoResultsProps> = ({ query, setIsLoading }) => {
     const fetchPhotos = React.useCallback(async (currentQuery: string, currentPage: number) => {
         if (!currentQuery) return;
         setIsFetching(true);
-        setIsLoading(true);
 
         const pageSize = 12;
         // Simulate API call
@@ -81,9 +79,8 @@ const PhotoResults: React.FC<PhotoResultsProps> = ({ query, setIsLoading }) => {
         // Let's assume there are always more photos for this placeholder
         setHasMore(true); 
         setIsFetching(false);
-        setIsLoading(false);
 
-    }, [setIsLoading]);
+    }, []);
     
     // Effect to fetch initial data or when query changes
     React.useEffect(() => {

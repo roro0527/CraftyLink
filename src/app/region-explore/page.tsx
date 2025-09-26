@@ -75,7 +75,7 @@ export default function RegionExplorePage() {
             ) : (
                 <>
                     <TabsContent value="photo" forceMount={true} hidden={category !== 'photo'}>
-                        <PhotoResults query={submittedQuery} setIsLoading={setIsLoading} />
+                        <PhotoResults query={submittedQuery} />
                     </TabsContent>
                     <TabsContent value="news" forceMount={true} hidden={category !== 'news'}>
                         <NewsResults query={submittedQuery} setIsLoading={setIsLoading} />

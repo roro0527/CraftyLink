@@ -23,7 +23,7 @@ export interface YoutubeVideo {
     growthRate?: number;
 }
 
-export type SearchCategory = 'photo' | 'blog' | 'dictionary' | 'video';
+export type SearchCategory = 'photo' | 'news' | 'dictionary' | 'video';
 
 export interface SearchResult {
   id: string;

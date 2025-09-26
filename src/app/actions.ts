@@ -9,6 +9,7 @@ import { getRegionalTrends, type RegionalTrendsInput, type RegionalTrendsOutput 
 import { getKeywordRegionRank, type KeywordRegionRankInput, type KeywordRegionRankOutput } from '@/ai/flows/keyword-region-rank-flow';
 import { getNaverNews, type NaverNewsInput, type RelatedNewsData } from '@/ai/flows/naver-news-flow';
 import { getRegionalDashboard, type RegionalDashboardInput, type RegionalDashboardOutput } from '@/ai/flows/regional-dashboard-flow';
+import { getDictionaryEntry, type DictionaryInput, type DictionaryEntry } from '@/ai/flows/dictionary-flow';
 
 
 export async function suggestSuperParametersAction(
@@ -102,5 +103,15 @@ export async function getRegionalDashboardAction(input: RegionalDashboardInput):
         console.error('Error fetching regional dashboard data:', error);
         // Re-throw or handle as needed
         throw new Error('Failed to fetch regional dashboard data.');
+    }
+}
+
+export async function getDictionaryEntryAction(input: DictionaryInput): Promise<DictionaryEntry> {
+    try {
+        const entry = await getDictionaryEntry(input);
+        return entry;
+    } catch (error) {
+        console.error('Error fetching dictionary entry:', error);
+        throw new Error('Failed to get dictionary entry.');
     }
 }

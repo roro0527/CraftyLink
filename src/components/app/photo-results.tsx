@@ -2,15 +2,12 @@
 'use client';
 
 import * as React from 'react';
-import { useInView } from 'react-intersection-observer';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import Image from 'next/image';
 import type { SearchResult } from '@/lib/types';
-import { LoaderCircle } from 'lucide-react';
-import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 import { Terminal } from 'lucide-react';
-import { getPexelsPhotosAction } from '@/app/actions';
+import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 
 
 const SearchResultItem: React.FC<{ item: SearchResult }> = ({ item }) => {
@@ -30,8 +27,8 @@ const SearchResultItem: React.FC<{ item: SearchResult }> = ({ item }) => {
         )}
         <CardContent className="p-4">
           <h3 className="font-semibold text-base line-clamp-2">{item.title}</h3>
-          {item.description && item.photographer_url && (
-             <a href={item.photographer_url} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="text-sm text-muted-foreground mt-1 line-clamp-3 hover:underline">{item.description}</a>
+          {item.description && (
+             <p className="text-sm text-muted-foreground mt-1 line-clamp-3">{item.description}</p>
           )}
           {item.source && (
             <p className="text-xs text-muted-foreground mt-2">{item.source}</p>
@@ -49,64 +46,45 @@ interface PhotoResultsProps {
 
 const PhotoResults: React.FC<PhotoResultsProps> = ({ query }) => {
     const [results, setResults] = React.useState<SearchResult[]>([]);
-    const [page, setPage] = React.useState(1);
-    const [hasMore, setHasMore] = React.useState(true);
-    const [isFetching, setIsFetching] = React.useState(false);
+    const [isLoading, setIsLoading] = React.useState(false);
     const [error, setError] = React.useState<string | null>(null);
-    const { ref, inView } = useInView({ threshold: 0.5 });
-    
-    const fetchPhotos = React.useCallback(async (currentQuery: string, currentPage: number) => {
-        if (!currentQuery) return;
-        setIsFetching(true);
+
+    React.useEffect(() => {
+      const generatePlaceholderImages = () => {
+        if (!query) {
+          setResults([]);
+          return;
+        }
+        setIsLoading(true);
         setError(null);
-
+        
         try {
-            const response = await getPexelsPhotosAction({ query: currentQuery, page: currentPage });
-            const { photos, hasMore: apiHasMore } = response;
-            
-            if (currentPage === 1) {
-                setResults(photos || []);
-            } else {
-                setResults(prev => [...prev, ...(photos || [])]);
-            }
-            setHasMore(apiHasMore);
-
-        } catch (err) {
-            console.error(err);
-            setError('사진을 불러오는 데 실패했습니다. 잠시 후 다시 시도해주세요.');
+          const placeholderImages: SearchResult[] = Array.from({ length: 12 }).map((_, i) => ({
+            id: `${query}-${i}`,
+            title: `Placeholder for "${query}" #${i + 1}`,
+            url: `https://picsum.photos/seed/${query}${i}/1200/800`,
+            imageUrl: `https://picsum.photos/seed/${query}${i}/400/225`,
+            description: `A placeholder image related to ${query}`,
+            source: 'Picsum Photos',
+          }));
+          setResults(placeholderImages);
+        } catch(e) {
+          console.error("Failed to generate placeholder images", e);
+          setError("이미지를 불러오는 데 실패했습니다.");
         } finally {
-            setIsFetching(false);
+          setIsLoading(false);
         }
+      };
 
-    }, []);
-    
-    // Effect to fetch initial data or when query changes
-    React.useEffect(() => {
-        if (query) {
-            setPage(1);
-            setHasMore(true);
-            setResults([]);
-            fetchPhotos(query, 1);
-        }
-    }, [query, fetchPhotos]);
-
-    // Effect for infinite scrolling
-    React.useEffect(() => {
-        if (inView && !isFetching && hasMore && query) {
-            setPage(prevPage => {
-                const nextPage = prevPage + 1;
-                fetchPhotos(query, nextPage);
-                return nextPage;
-            });
-        }
-    }, [inView, isFetching, hasMore, query, fetchPhotos]);
+      generatePlaceholderImages();
+    }, [query]);
 
 
-    if (!query && (!results || results.length === 0)) {
+    if (!query && results.length === 0) {
         return null;
     }
     
-    if (results.length === 0 && isFetching) {
+    if (isLoading) {
         return (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {Array.from({ length: 8 }).map((_, i) => (
@@ -131,7 +109,7 @@ const PhotoResults: React.FC<PhotoResultsProps> = ({ query }) => {
         )
     }
 
-     if (results.length === 0 && !isFetching) {
+     if (results.length === 0 && !isLoading) {
         return (
             <div className="text-center py-10 text-muted-foreground">
                 <p>'{query}'에 대한 사진을 찾을 수 없습니다.</p>
@@ -142,11 +120,7 @@ const PhotoResults: React.FC<PhotoResultsProps> = ({ query }) => {
     return (
        <>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {results && results.map((item) => <SearchResultItem key={item.id} item={item} />)}
-          </div>
-          <div ref={ref} className="h-10 w-full mt-4 flex justify-center items-center">
-            {isFetching && page > 1 && <LoaderCircle className="h-6 w-6 animate-spin text-primary" />}
-            {!hasMore && results && results.length > 0 && <p className="text-muted-foreground">더 이상 결과가 없습니다.</p>}
+            {results.map((item) => <SearchResultItem key={item.id} item={item} />)}
           </div>
         </>
     );

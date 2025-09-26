@@ -10,7 +10,6 @@ import { getKeywordRegionRank, type KeywordRegionRankInput, type KeywordRegionRa
 import { getNaverNews, type NaverNewsInput, type RelatedNewsData } from '@/ai/flows/naver-news-flow';
 import { getRegionalDashboard, type RegionalDashboardInput, type RegionalDashboardOutput } from '@/ai/flows/regional-dashboard-flow';
 import { getDictionaryEntry, type DictionaryInput, type DictionaryEntry } from '@/ai/flows/dictionary-flow';
-import { getPexelsPhotos, type PexelsPhotosInput, type PexelsPhotosOutput } from '@/ai/flows/pexels-photos-flow';
 
 
 export async function suggestSuperParametersAction(
@@ -114,15 +113,5 @@ export async function getDictionaryEntryAction(input: DictionaryInput): Promise<
     } catch (error) {
         console.error('Error fetching dictionary entry:', error);
         throw new Error('Failed to get dictionary entry.');
-    }
-}
-
-export async function getPexelsPhotosAction(input: PexelsPhotosInput): Promise<PexelsPhotosOutput> {
-    try {
-        const photos = await getPexelsPhotos(input);
-        return photos;
-    } catch (error) {
-        console.error('Error fetching pexels photos:', error);
-        return { photos: [], hasMore: false };
     }
 }

@@ -8,9 +8,9 @@ import { Skeleton } from '@/components/ui/skeleton';
 import Image from 'next/image';
 import type { SearchResult } from '@/lib/types';
 import { LoaderCircle } from 'lucide-react';
-import axios from 'axios';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 import { Terminal } from 'lucide-react';
+import { getPexelsPhotosAction } from '@/app/actions';
 
 
 const SearchResultItem: React.FC<{ item: SearchResult }> = ({ item }) => {
@@ -61,10 +61,8 @@ const PhotoResults: React.FC<PhotoResultsProps> = ({ query }) => {
         setError(null);
 
         try {
-            const response = await axios.get('/api/getPexelsPhotos', {
-                params: { query: currentQuery, page: currentPage },
-            });
-            const { photos, hasMore: apiHasMore } = response.data;
+            const response = await getPexelsPhotosAction({ query: currentQuery, page: currentPage });
+            const { photos, hasMore: apiHasMore } = response;
             
             if (currentPage === 1) {
                 setResults(photos || []);
@@ -108,7 +106,7 @@ const PhotoResults: React.FC<PhotoResultsProps> = ({ query }) => {
         return null;
     }
     
-    if ((!results || results.length === 0) && isFetching) {
+    if (results.length === 0 && isFetching) {
         return (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {Array.from({ length: 8 }).map((_, i) => (
@@ -133,7 +131,7 @@ const PhotoResults: React.FC<PhotoResultsProps> = ({ query }) => {
         )
     }
 
-     if ((!results || results.length === 0) && !isFetching) {
+     if (results.length === 0 && !isFetching) {
         return (
             <div className="text-center py-10 text-muted-foreground">
                 <p>'{query}'에 대한 사진을 찾을 수 없습니다.</p>

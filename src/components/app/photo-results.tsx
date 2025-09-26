@@ -8,6 +8,10 @@ import { Skeleton } from '@/components/ui/skeleton';
 import Image from 'next/image';
 import type { SearchResult } from '@/lib/types';
 import { LoaderCircle } from 'lucide-react';
+import axios from 'axios';
+import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
+import { Terminal } from 'lucide-react';
+
 
 const SearchResultItem: React.FC<{ item: SearchResult }> = ({ item }) => {
   return (
@@ -27,7 +31,7 @@ const SearchResultItem: React.FC<{ item: SearchResult }> = ({ item }) => {
         <CardContent className="p-4">
           <h3 className="font-semibold text-base line-clamp-2">{item.title}</h3>
           {item.description && (
-            <p className="text-sm text-muted-foreground mt-1 line-clamp-3">{item.description}</p>
+             <a href={item.photographer_url} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="text-sm text-muted-foreground mt-1 line-clamp-3 hover:underline">{item.description}</a>
           )}
           {item.source && (
             <p className="text-xs text-muted-foreground mt-2">{item.source}</p>
@@ -48,37 +52,33 @@ const PhotoResults: React.FC<PhotoResultsProps> = ({ query }) => {
     const [page, setPage] = React.useState(1);
     const [hasMore, setHasMore] = React.useState(true);
     const [isFetching, setIsFetching] = React.useState(false);
+    const [error, setError] = React.useState<string | null>(null);
     const { ref, inView } = useInView({ threshold: 0.5 });
     
     const fetchPhotos = React.useCallback(async (currentQuery: string, currentPage: number) => {
         if (!currentQuery) return;
         setIsFetching(true);
+        setError(null);
 
-        const pageSize = 12;
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 500));
+        try {
+            const response = await axios.get('/api/getPexelsPhotos', {
+                params: { query: currentQuery, page: currentPage },
+            });
+            const { photos, hasMore: apiHasMore } = response.data;
+            
+            if (currentPage === 1) {
+                setResults(photos);
+            } else {
+                setResults(prev => [...prev, ...photos]);
+            }
+            setHasMore(apiHasMore);
 
-        const newResults = Array.from({ length: pageSize }).map((_, i) => {
-            const itemNum = (currentPage - 1) * pageSize + i;
-            return {
-                id: `photo_${currentQuery}_${itemNum}`,
-                title: `사진: ${currentQuery} ${itemNum + 1}`,
-                url: `https://picsum.photos/seed/${currentQuery}${itemNum}/800/600`,
-                imageUrl: `https://picsum.photos/seed/${currentQuery}${itemNum}/400/225`,
-                description: `"${currentQuery}"와(과) 관련된 고품질 이미지입니다.`,
-                source: 'Picsum Photos',
-            };
-        });
-
-        if (currentPage === 1) {
-            setResults(newResults);
-        } else {
-            setResults(prev => [...prev, ...newResults]);
+        } catch (err) {
+            console.error(err);
+            setError('사진을 불러오는 데 실패했습니다. 잠시 후 다시 시도해주세요.');
+        } finally {
+            setIsFetching(false);
         }
-        
-        // Let's assume there are always more photos for this placeholder
-        setHasMore(true); 
-        setIsFetching(false);
 
     }, []);
     
@@ -120,6 +120,23 @@ const PhotoResults: React.FC<PhotoResultsProps> = ({ query }) => {
                         </CardContent>
                     </Card>
                 ))}
+            </div>
+        );
+    }
+     if (error) {
+        return (
+             <Alert variant="destructive">
+                <Terminal className="h-4 w-4" />
+                <AlertTitle>오류</AlertTitle>
+                <AlertDescription>{error}</AlertDescription>
+            </Alert>
+        )
+    }
+
+     if (results.length === 0 && !isFetching) {
+        return (
+            <div className="text-center py-10 text-muted-foreground">
+                <p>'{query}'에 대한 사진을 찾을 수 없습니다.</p>
             </div>
         );
     }

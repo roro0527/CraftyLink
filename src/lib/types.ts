@@ -31,4 +31,5 @@ export interface SearchResult {
   description?: string;
   imageUrl?: string;
   source?: string;
+  photographer_url?: string;
 }

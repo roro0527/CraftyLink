@@ -6,6 +6,7 @@ import { getKeywordTrends } from './keyword-trends-flow';
 import { getNaverNews } from './naver-news-flow';
 import { getYoutubeVideos } from './youtube-videos-flow';
 import * as z from 'zod';
+import axios from 'axios';
 
 const RegionalDashboardInputSchema = z.object({
   region: z.string().describe('The name of the region (e.g., "서울특별시").'),
@@ -87,5 +88,3 @@ export const regionalDashboardFlow = ai.defineFlow(
 export async function getRegionalDashboard(input: RegionalDashboardInput): Promise<RegionalDashboardOutput> {
     return await regionalDashboardFlow(input);
 }
-
-    

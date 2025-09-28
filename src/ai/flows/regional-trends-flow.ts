@@ -25,7 +25,7 @@ const RelatedKeywordsSchema = z.object({
 
 const RegionalTrendsOutputSchema = z.object({
   relatedKeywords: z.array(z.string()).describe('A list of related keywords for the region.'),
-  relatedVideos: z.custom<YoutubeVideosData>().describe('A list of related YouTube videos.')
+  relatedVideos: z.custom<YoutubeVideosData['videos']>().describe('A list of related YouTube videos.')
 });
 export type RegionalTrendsOutput = z.infer<typeof RegionalTrendsOutputSchema>;
 
@@ -70,14 +70,14 @@ const getRegionalTrendsFlow = ai.defineFlow(
           keyword: `${keyword} ${countryName}`
       });
 
-      const [relatedKeywords, relatedVideos] = await Promise.all([
+      const [relatedKeywords, relatedVideosResult] = await Promise.all([
           relatedKeywordsPromise(),
           relatedVideosPromise
       ]);
 
       return {
         relatedKeywords,
-        relatedVideos,
+        relatedVideos: relatedVideosResult.videos,
       };
 
     } catch (error) {

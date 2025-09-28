@@ -185,7 +185,27 @@ async function fetchTopVideos(city: string, lat: number, lng: number, radius: nu
 
 
 app.get("/getTopVideos", async (req, res) => {
-  // ... (code from previous state, can be kept or removed)
+    const { lat, lng, radius, city } = req.query;
+
+    if (!lat || !lng || !radius) {
+        return res.status(400).send({ error: "lat, lng, and radius parameters are required." });
+    }
+
+    try {
+        const latitude = parseFloat(lat as string);
+        const longitude = parseFloat(lng as string);
+        const searchRadius = parseFloat(radius as string);
+        const fallbackCity = city as string || await getCityFromCoords(latitude, longitude);
+
+        const videos = await fetchTopVideos(fallbackCity, latitude, longitude, searchRadius);
+        return res.status(200).json(videos);
+    } catch (error) {
+        if (error instanceof functions.https.HttpsError) {
+            return res.status(500).send({ error: error.message });
+        }
+        functions.logger.error("An unexpected error occurred in /getTopVideos:", error);
+        return res.status(500).send({ error: "An unexpected error occurred." });
+    }
 });
 
 

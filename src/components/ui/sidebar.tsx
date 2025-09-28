@@ -29,6 +29,7 @@ export function Sidebar() {
               <Button asChild variant="ghost" className="text-base w-full justify-start"><Link href="/" onClick={handleLinkClick}>홈</Link></Button>
               <Button asChild variant="ghost" className="text-base w-full justify-start"><Link href="/keyword" onClick={handleLinkClick}>키워드</Link></Button>
               <Button asChild variant="ghost" className="text-base w-full justify-start"><Link href="/compare" onClick={handleLinkClick}>비교</Link></Button>
+               <Button asChild variant="ghost" className="text-base w-full justify-start"><Link href="/region-trends" onClick={handleLinkClick}>지역 트렌드</Link></Button>
               <Button asChild variant="ghost" className="text-base w-full justify-start"><Link href="/region-explore" onClick={handleLinkClick}>탐색</Link></Button>
             </nav>
         </SheetContent>

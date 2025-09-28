@@ -2,7 +2,6 @@
 'use client';
 
 import * as React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import Image from 'next/image';
 import type { SearchResult } from '@/lib/types';
@@ -13,27 +12,30 @@ import { useGetGoogleImages } from '@/hooks/use-get-google-images';
 
 
 const SearchResultItem: React.FC<{ item: SearchResult }> = ({ item }) => {
+  const [isImageLoading, setIsImageLoading] = React.useState(true);
+  
   return (
-    <Card className="overflow-hidden transition-shadow hover:shadow-lg group">
-      <a href={item.url} target="_blank" rel="noopener noreferrer" className="block relative">
-        {item.imageUrl && (
-          <div className="aspect-square overflow-hidden bg-muted">
+    <div className="relative overflow-hidden rounded-lg break-inside-avoid group animate-in fade-in-25 duration-500">
+       {isImageLoading && <Skeleton className="absolute inset-0 w-full h-full" />}
+       <a href={item.url} target="_blank" rel="noopener noreferrer" className="block">
+          {item.imageUrl && (
             <Image
               src={item.imageUrl}
               alt={item.title}
-              fill
-              className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105"
-              unoptimized 
+              width={500}
+              height={500}
+              className={`w-full h-auto object-cover transition-transform duration-300 group-hover:scale-105 ${isImageLoading ? 'opacity-0' : 'opacity-100'}`}
+              unoptimized
+              onLoad={() => setIsImageLoading(false)}
             />
-          </div>
-        )}
-        {item.source && (
-            <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/70 to-transparent">
+          )}
+          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+             <div className="absolute bottom-2 left-2 right-2">
                  <p className="text-xs text-white truncate">{item.source}</p>
-            </div>
-        )}
+             </div>
+          </div>
       </a>
-    </Card>
+    </div>
   );
 };
 
@@ -60,11 +62,9 @@ const PhotoResults: React.FC<PhotoResultsProps> = ({ query }) => {
     
     if (results.length === 0 && isLoading) {
         return (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+            <div className="columns-2 sm:columns-3 md:columns-4 lg:columns-5 gap-4 space-y-4">
                 {Array.from({ length: 10 }).map((_, i) => (
-                    <Card key={`skel-photo-${i}`}>
-                        <Skeleton className="aspect-square w-full" />
-                    </Card>
+                    <Skeleton key={`skel-photo-${i}`} className="h-64 w-full" />
                 ))}
             </div>
         );
@@ -90,7 +90,7 @@ const PhotoResults: React.FC<PhotoResultsProps> = ({ query }) => {
     
     return (
        <>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+          <div className="columns-2 sm:columns-3 md:columns-4 lg:columns-5 gap-4 space-y-4">
             {results.map((item) => <SearchResultItem key={item.id} item={item} />)}
           </div>
            <div ref={ref} className="h-10 w-full mt-4 flex justify-center items-center">

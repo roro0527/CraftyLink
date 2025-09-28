@@ -5,10 +5,7 @@ import type { SuperParam } from '@/lib/types';
 import { getKeywordTrends, type KeywordTrendsInput, type KeywordTrendsData } from '@/ai/flows/keyword-trends-flow';
 import { getRelatedKeywords } from '@/ai/flows/related-keywords-flow';
 import { getYoutubeVideos, type YoutubeVideosInput, type YoutubeVideosData } from '@/ai/flows/youtube-videos-flow';
-import { getRegionalTrends, type RegionalTrendsInput, type RegionalTrendsOutput } from '@/ai/flows/regional-trends-flow';
-import { getKeywordRegionRank, type KeywordRegionRankInput, type KeywordRegionRankOutput } from '@/ai/flows/keyword-region-rank-flow';
 import { getNaverNews, type NaverNewsInput, type RelatedNewsData } from '@/ai/flows/naver-news-flow';
-import { getRegionalDashboard, type RegionalDashboardInput, type RegionalDashboardOutput } from '@/ai/flows/regional-dashboard-flow';
 import { getDictionaryEntry, type DictionaryInput, type DictionaryEntry } from '@/ai/flows/dictionary-flow';
 
 
@@ -72,37 +69,6 @@ export async function getYoutubeVideosAction(input: YoutubeVideosInput): Promise
         console.error('Error fetching YouTube videos:', error);
         // In case of API errors (e.g., quota exceeded), return an empty array.
         return { videos: [], nextPageToken: null };
-    }
-}
-
-export async function getRegionalTrendsAction(input: RegionalTrendsInput): Promise<RegionalTrendsOutput> {
-    try {
-        const trends = await getRegionalTrends(input);
-        return trends;
-    } catch (error) {
-        console.error('Error fetching regional trends:', error);
-        return { relatedKeywords: [], relatedVideos: [] };
-    }
-}
-
-export async function getKeywordRegionRankAction(input: KeywordRegionRankInput): Promise<KeywordRegionRankOutput> {
-    try {
-        const rank = await getKeywordRegionRank(input);
-        return rank;
-    } catch (error) {
-        console.error('Error fetching keyword region rank:', error);
-        return [];
-    }
-}
-
-export async function getRegionalDashboardAction(input: RegionalDashboardInput): Promise<RegionalDashboardOutput> {
-    try {
-        const dashboardData = await getRegionalDashboard(input);
-        return dashboardData;
-    } catch (error) {
-        console.error('Error fetching regional dashboard data:', error);
-        // Re-throw or handle as needed
-        throw new Error('Failed to fetch regional dashboard data.');
     }
 }
 

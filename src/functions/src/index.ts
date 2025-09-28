@@ -16,7 +16,6 @@ import cors from "cors";
 import axios from "axios";
 import { google } from "googleapis";
 import rateLimit from "express-rate-limit";
-import * as googleTrends from "google-trends-api";
 
 // Initialize Firebase Admin SDK
 admin.initializeApp();
@@ -207,27 +206,5 @@ app.get("/getTopVideos", async (req, res) => {
         return res.status(500).send({ error: "An unexpected error occurred." });
     }
 });
-
-
-app.get("/getRisingSearches", async (req, res) => {
-  const { regionCode } = req.query;
-
-  if (typeof regionCode !== "string") {
-    return res.status(400).send({ error: "regionCode parameter is missing or invalid." });
-  }
-
-  try {
-    const results = await googleTrends.dailyTrends({
-      geo: regionCode,
-    });
-    const trends = JSON.parse(results);
-    const risingSearches = trends.default.trendingSearchesDays[0].trendingSearches.map((t: any) => t.title.query);
-    return res.status(200).json(risingSearches);
-  } catch (error) {
-    functions.logger.error(`Error fetching Google Trends for region ${regionCode}:`, error);
-    return res.status(500).send({ error: "Failed to fetch rising searches." });
-  }
-});
-
 
 export const api = functions.runWith({ secrets: ["NAVER_CLIENT_ID", "NAVER_CLIENT_SECRET", "YOUTUBE_API_KEY", "KAKAO_APP_KEY", "NAVER_DATALAB_CLIENT_ID", "NAVER_DATALAB_CLIENT_SECRET", "FIREBASE_SERVICE_ACCOUNT_KEY", "GOOGLE_CUSTOM_SEARCH_API_KEY", "GOOGLE_CUSTOM_SEARCH_ENGINE_ID"]}).region("asia-northeast3").https.onRequest(app);

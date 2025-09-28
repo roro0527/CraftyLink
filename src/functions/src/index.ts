@@ -4,7 +4,7 @@
  *
  * This file defines two main HTTP endpoints:
  * 1. /getTopVideos: Fetches top YouTube videos for a given location, using Kakao API for geocoding.
- * 2. /getNaverNews: Fetches top news articles from Naver Search API for a given keyword.
+ * 2. /getGoogleImages: Fetches images from Google Custom Search API.
  *
  * All endpoints include caching, rate limiting, and robust error handling.
  */
@@ -27,6 +27,7 @@ try {
 
 const app = express();
 
+// Enable CORS for all routes
 app.use(cors({ origin: true }));
 
 
@@ -76,7 +77,7 @@ app.get("/getGoogleImages", async (req, res) => {
 
     const items = response.data.items || [];
     const searchResult = items.map((item: any) => ({
-      id: item.cacheId || item.link,
+      id: item.cacheId || `${item.link}-${Math.random()}`,
       title: item.title,
       url: item.image.contextLink,
       imageUrl: item.link, // Direct image link

@@ -12,9 +12,10 @@ import { Terminal, Pin, MessageSquareQuote, Pilcrow } from 'lucide-react';
 
 interface DictionaryResultProps {
     query: string;
+    setIsParentLoading: (isLoading: boolean) => void;
 }
 
-const DictionaryResult: React.FC<DictionaryResultProps> = ({ query }) => {
+const DictionaryResult: React.FC<DictionaryResultProps> = ({ query, setIsParentLoading }) => {
     const [result, setResult] = React.useState<DictionaryEntry | null>(null);
     const [isFetching, setIsFetching] = React.useState(false);
     const [error, setError] = React.useState<string | null>(null);
@@ -26,6 +27,7 @@ const DictionaryResult: React.FC<DictionaryResultProps> = ({ query }) => {
                 return;
             };
             setIsFetching(true);
+            setIsParentLoading(true);
             setError(null);
             try {
                 const entry = await getDictionaryEntryAction({ keyword: query });
@@ -35,11 +37,12 @@ const DictionaryResult: React.FC<DictionaryResultProps> = ({ query }) => {
                 setError("사전 정보를 생성하는 데 실패했습니다. 잠시 후 다시 시도해주세요.");
             } finally {
                 setIsFetching(false);
+                setIsParentLoading(false);
             }
         };
 
         fetchEntry();
-    }, [query]);
+    }, [query, setIsParentLoading]);
 
     if (!query) {
         return null;

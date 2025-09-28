@@ -32,8 +32,8 @@ export async function getKeywordTrendsAction(input: KeywordTrendsInput): Promise
     const trends = await getKeywordTrends(input);
     return trends;
   } catch (error) {
-    console.error('Error fetching keyword trends:', error);
-    // Let the calling function handle the error.
+    console.error('Error in getKeywordTrendsAction:', error);
+    // Re-throw the error to be handled by the calling component
     throw error;
   }
 }
@@ -42,10 +42,12 @@ export async function getKeywordTrendsAction(input: KeywordTrendsInput): Promise
 export async function getRelatedKeywordsAction(input: { keyword: string }): Promise<string[]> {
     try {
         const keywords = await getRelatedKeywords(input);
+        // Ensure it always returns an array
         return keywords || [];
     } catch (error) {
-        console.error('Error fetching related keywords:', error);
-        return []; // Return empty array on failure to prevent crash
+        console.error('Error in getRelatedKeywordsAction:', error);
+        // Return an empty array on failure to prevent app crashes
+        return [];
     }
 }
 
@@ -55,8 +57,8 @@ export async function getNaverNewsAction(input: NaverNewsInput): Promise<Related
         const news = await getNaverNews(input);
         return news;
     } catch (error) {
-        console.error('An unexpected error occurred in getNaverNewsAction:', error);
-        // Re-throwing the error to be handled by the caller (e.g., in a try-catch block in the component)
+        console.error('Error in getNaverNewsAction:', error);
+        // Re-throw to be handled by the component
         throw error;
     }
 }
@@ -67,8 +69,8 @@ export async function getYoutubeVideosAction(input: YoutubeVideosInput): Promise
         const videos = await getYoutubeVideos(input);
         return videos;
     } catch (error) {
-        console.error('Error fetching YouTube videos:', error);
-        // In case of API errors (e.g., quota exceeded), return an empty array.
+        console.error('Error in getYoutubeVideosAction:', error);
+        // Return a default empty state on error
         return { videos: [], nextPageToken: null };
     }
 }
@@ -78,7 +80,8 @@ export async function getDictionaryEntryAction(input: DictionaryInput): Promise<
         const entry = await getDictionaryEntry(input);
         return entry;
     } catch (error) {
-        console.error('Error fetching dictionary entry:', error);
+        console.error('Error in getDictionaryEntryAction:', error);
+        // Re-throw to let the component handle the error state
         throw new Error('Failed to get dictionary entry.');
     }
 }
@@ -88,7 +91,8 @@ export async function getGoogleImagesAction(input: GoogleImagesInput): Promise<G
         const images = await getGoogleImages(input);
         return images;
     } catch (error) {
-        console.error('Error fetching google images:', error);
+        console.error('Error in getGoogleImagesAction:', error);
+        // Re-throw to let the component handle the error state
         throw new Error('Failed to get google images.');
     }
 }

@@ -27,7 +27,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { LoaderCircle, Search } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
-import { getKeywordTrendsAction, getRelatedKeywordsAction } from '@/app/actions';
+import { getKeywordTrendsAction, getRelatedKeywordsAction, getYoutubeVideosAction } from '@/app/actions';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartConfig } from '@/components/ui/chart';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { format, parseISO } from 'date-fns';
@@ -36,7 +36,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 import type { KeywordTrendPoint } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { getYoutubeVideosAction } from '../actions';
 import type { YoutubeVideosData } from '@/ai/flows/youtube-videos-flow';
 
 
@@ -115,45 +114,41 @@ export default function KeywordPage() {
     }
   }, [timeRange, toast]);
 
+  // Effect for initial search when the page loads with a query parameter
   React.useEffect(() => {
     if (initialKeyword) {
         handleSearch(initialKeyword);
     }
-  }, [initialKeyword, handleSearch]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialKeyword]);
 
+  // Effect for fetching trends when time range changes
   React.useEffect(() => {
-    if (keywordSearch.trim() && !isSearching) {
-      let isActive = true;
-      const fetchTrends = async () => {
+    const fetchTrends = async () => {
+        if (!keywordSearch.trim() || isSearching) return;
+        
         setIsSearchingTrends(true);
         try {
-          const trendResult = await getKeywordTrendsAction({ keyword: keywordSearch, timeRange });
-          if (isActive) {
+            const trendResult = await getKeywordTrendsAction({ keyword: keywordSearch, timeRange });
             setTrendData(trendResult);
             setTotalSearchVolume(calculateTotalVolume(trendResult));
-          }
         } catch (error) {
-           console.error("An error occurred fetching trends:", error);
-           if (isActive) {
-             toast({
+            console.error("An error occurred fetching trends:", error);
+            toast({
                 variant: "destructive",
                 title: "트렌드 데이터 로드 실패",
                 description: "시간 범위에 따른 트렌드 데이터를 가져오는 데 실패했습니다.",
-             });
-           }
+            });
+            setTrendData([]);
+            setTotalSearchVolume(0);
         } finally {
-          if (isActive) {
             setIsSearchingTrends(false);
-          }
         }
-      };
-      fetchTrends();
-      
-      return () => {
-        isActive = false;
-      };
-    }
-  }, [timeRange, keywordSearch, isSearching, toast]);
+    };
+    fetchTrends();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [timeRange]);
+
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Enter') {
@@ -366,5 +361,3 @@ export default function KeywordPage() {
     </div>
   );
 }
-
-    

@@ -16,15 +16,13 @@ import type { SearchCategory } from '@/lib/types';
 export default function RegionExplorePage() {
   const [searchQuery, setSearchQuery] = React.useState('');
   const [submittedQuery, setSubmittedQuery] = React.useState('');
-  const [initialSearchDone, setInitialSearchDone] = React.useState(false);
   const [activeTab, setActiveTab] = React.useState<SearchCategory>('photo');
-  const [isAnyTabLoading, setIsAnyTabLoading] = React.useState(false);
+  const [isSearching, setIsSearching] = React.useState(false);
   
 
   const handleSearch = () => {
     if (searchQuery.trim() === '') return;
     setSubmittedQuery(searchQuery);
-    setInitialSearchDone(true);
   };
   
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -44,10 +42,10 @@ export default function RegionExplorePage() {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={handleKeyDown}
                 className="h-12 text-lg"
-                disabled={isAnyTabLoading}
+                disabled={isSearching}
             />
-            <Button onClick={handleSearch} disabled={isAnyTabLoading || !searchQuery.trim()} className="h-12 px-6">
-                {isAnyTabLoading ? <LoaderCircle className="mr-2 h-4 w-4 animate-spin" /> : <Search className="mr-2 h-4 w-4" />}
+            <Button onClick={handleSearch} disabled={isSearching || !searchQuery.trim()} className="h-12 px-6">
+                {isSearching ? <LoaderCircle className="mr-2 h-4 w-4 animate-spin" /> : <Search className="mr-2 h-4 w-4" />}
                 검색
             </Button>
         </div>
@@ -62,25 +60,23 @@ export default function RegionExplorePage() {
         </TabsList>
 
         <div className="mt-6">
-            {!initialSearchDone ? (
+            {!submittedQuery ? (
                 <div className="text-center py-20 text-muted-foreground">
                     <p>궁금한 내용을 검색해보세요.</p>
                 </div>
             ) : (
                 <>
                     <TabsContent value="photo">
-                        <PhotoResults 
-                            query={submittedQuery}
-                        />
+                        <PhotoResults query={submittedQuery} setIsParentLoading={setIsSearching} />
                     </TabsContent>
                     <TabsContent value="news">
-                        <NewsResults query={submittedQuery} />
+                        <NewsResults query={submittedQuery} setIsParentLoading={setIsSearching} />
                     </TabsContent>
                     <TabsContent value="dictionary">
-                        <DictionaryResult query={submittedQuery} />
+                        <DictionaryResult query={submittedQuery} setIsParentLoading={setIsSearching} />
                     </TabsContent>
                     <TabsContent value="video">
-                        <VideoResults query={submittedQuery} />
+                        <VideoResults query={submittedQuery} setIsParentLoading={setIsSearching} />
                     </TabsContent>
                 </>
             )}

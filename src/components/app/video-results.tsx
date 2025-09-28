@@ -13,9 +13,10 @@ import { useInView } from 'react-intersection-observer';
 
 interface VideoResultsProps {
     query: string;
+    setIsParentLoading: (isLoading: boolean) => void;
 }
 
-const VideoResults: React.FC<VideoResultsProps> = ({ query }) => {
+const VideoResults: React.FC<VideoResultsProps> = ({ query, setIsParentLoading }) => {
     const [results, setResults] = React.useState<YoutubeVideo[]>([]);
     const [nextPageToken, setNextPageToken] = React.useState<string | null | undefined>(undefined);
     const [hasMore, setHasMore] = React.useState(true);
@@ -28,20 +29,17 @@ const VideoResults: React.FC<VideoResultsProps> = ({ query }) => {
         if (!currentQuery) return;
         
         setIsFetching(true);
+        if(!pageToken) setIsParentLoading(true);
         setError(null);
 
         try {
             const response = await getYoutubeVideosAction({ keyword: currentQuery, pageToken: pageToken || undefined });
             
-            if (pageToken) {
-                 setResults(prev => {
-                    const existingIds = new Set(prev.map(v => v.id));
-                    const newVideos = response.videos.filter(v => !existingIds.has(v.id));
-                    return [...prev, ...newVideos];
-                });
-            } else {
-                 setResults(response.videos);
-            }
+            setResults(prev => {
+                const existingIds = new Set(prev.map(v => v.id));
+                const newVideos = response.videos.filter(v => !existingIds.has(v.id));
+                return pageToken ? [...prev, ...newVideos] : response.videos;
+            });
 
             setNextPageToken(response.nextPageToken);
             setHasMore(!!response.nextPageToken);
@@ -51,8 +49,9 @@ const VideoResults: React.FC<VideoResultsProps> = ({ query }) => {
             setError("동영상 정보를 가져오는 데 실패했습니다. 잠시 후 다시 시도해주세요.");
         } finally {
             setIsFetching(false);
+            if(!pageToken) setIsParentLoading(false);
         }
-    }, []);
+    }, [setIsParentLoading]);
 
     // Effect to fetch initial data or when query changes
     React.useEffect(() => {
@@ -123,6 +122,7 @@ const VideoResults: React.FC<VideoResultsProps> = ({ query }) => {
                                 width={400}
                                 height={225}
                                 className="object-cover w-full h-full transition-transform duration-300 hover:scale-105"
+                                unoptimized
                             />
                             </div>
                             <CardContent className="p-4">
@@ -135,7 +135,7 @@ const VideoResults: React.FC<VideoResultsProps> = ({ query }) => {
                 ))}
             </div>
             <div ref={ref} className="h-10 w-full mt-4 flex justify-center items-center">
-                {isFetching && <LoaderCircle className="h-6 w-6 animate-spin text-primary" />}
+                {isFetching && hasMore && <LoaderCircle className="h-6 w-6 animate-spin text-primary" />}
                 {!hasMore && results.length > 0 && <p className="text-muted-foreground">더 이상 결과가 없습니다.</p>}
           </div>
       </>

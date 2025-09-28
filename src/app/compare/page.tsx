@@ -113,11 +113,22 @@ export default function ComparePage() {
 
       await Promise.all(
         keywords.map(async (keyword) => {
-          const trends = await getKeywordTrendsAction({ keyword, timeRange });
-          newTrendData[keyword] = trends;
-          const total = trends.reduce((sum, point) => sum + point.value, 0);
-          const average = trends.length > 0 ? total / trends.length : 0;
-          newSummaryData[keyword] = { total, average: Math.round(average) };
+          try {
+            const trends = await getKeywordTrendsAction({ keyword, timeRange });
+            newTrendData[keyword] = trends;
+            const total = trends.reduce((sum, point) => sum + point.value, 0);
+            const average = trends.length > 0 ? total / trends.length : 0;
+            newSummaryData[keyword] = { total, average: Math.round(average) };
+          } catch (error) {
+            console.error(`Failed to fetch trends for ${keyword}:`, error);
+            toast({
+              variant: 'destructive',
+              title: `'${keyword}' 트렌드 로드 실패`,
+              description: '데이터를 가져오는 중 오류가 발생했습니다.',
+            });
+            newTrendData[keyword] = [];
+            newSummaryData[keyword] = { total: 0, average: 0 };
+          }
         })
       );
 
@@ -183,7 +194,7 @@ export default function ComparePage() {
     };
 
     fetchAllTrends();
-  }, [keywords, timeRange]);
+  }, [keywords, timeRange, toast]);
 
   const handleAddKeyword = () => {
     if (inputValue && !keywords.includes(inputValue) && keywords.length < 5) {

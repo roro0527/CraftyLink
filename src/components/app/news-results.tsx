@@ -12,9 +12,10 @@ import { Terminal } from 'lucide-react';
 
 interface NewsResultsProps {
     query: string;
+    setIsParentLoading: (isLoading: boolean) => void;
 }
 
-const NewsResults: React.FC<NewsResultsProps> = ({ query }) => {
+const NewsResults: React.FC<NewsResultsProps> = ({ query, setIsParentLoading }) => {
     const [results, setResults] = React.useState<RelatedNewsData>([]);
     const [isFetching, setIsFetching] = React.useState(false);
     const [error, setError] = React.useState<string | null>(null);
@@ -26,6 +27,7 @@ const NewsResults: React.FC<NewsResultsProps> = ({ query }) => {
                 return;
             };
             setIsFetching(true);
+            setIsParentLoading(true);
             setError(null);
             try {
                 const news = await getNaverNewsAction({ keyword: query });
@@ -35,11 +37,12 @@ const NewsResults: React.FC<NewsResultsProps> = ({ query }) => {
                 setError("뉴스 정보를 가져오는 데 실패했습니다. 잠시 후 다시 시도해주세요.");
             } finally {
                 setIsFetching(false);
+                setIsParentLoading(false);
             }
         };
 
         fetchNews();
-    }, [query]);
+    }, [query, setIsParentLoading]);
 
     if (!query) {
         return null;
@@ -79,8 +82,8 @@ const NewsResults: React.FC<NewsResultsProps> = ({ query }) => {
 
     return (
         <div className="space-y-4">
-            {results.map((item) => (
-                 <Card key={item.url} className="transition-shadow hover:shadow-lg">
+            {results.map((item, index) => (
+                 <Card key={`${item.url}-${index}`} className="transition-shadow hover:shadow-lg">
                     <a href={item.url} target="_blank" rel="noopener noreferrer" className="block p-4">
                         <h3 className="font-semibold text-base line-clamp-2 hover:underline">{item.title}</h3>
                         <p className="text-sm text-muted-foreground mt-1 line-clamp-3">{item.summary}</p>

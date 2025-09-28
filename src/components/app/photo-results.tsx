@@ -52,13 +52,17 @@ const SearchResultItem: React.FC<{ item: SearchResult }> = ({ item }) => {
 
 interface PhotoResultsProps {
     query: string;
+    setIsParentLoading: (isLoading: boolean) => void;
 }
 
-const PhotoResults: React.FC<PhotoResultsProps> = ({ query }) => {
+const PhotoResults: React.FC<PhotoResultsProps> = ({ query, setIsParentLoading }) => {
     const { ref, inView } = useInView({ threshold: 0.5 });
     const { results, isLoading, error, hasMore, loadMore } = useGetGoogleImages(query);
     
-    // Effect for infinite scrolling
+    React.useEffect(() => {
+      setIsParentLoading(isLoading);
+    }, [isLoading, setIsParentLoading]);
+
     React.useEffect(() => {
         if (inView && !isLoading && hasMore) {
             loadMore();

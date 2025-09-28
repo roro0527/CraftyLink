@@ -8,8 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { BarChart, Compass, Frown, Youtube } from 'lucide-react';
-import { getRegionalTrendsAction, getRegionalDashboardAction } from '../actions';
-import type { RegionalTrendsOutput } from '@/ai/flows/regional-trends-flow';
+import { getRegionalDashboardAction } from '../actions';
 import Image from 'next/image';
 import {
   ChartConfig,
@@ -32,7 +31,6 @@ const chartConfig = {
 export default function RegionTrendsPage() {
   const [selectedRegion, setSelectedRegion] = React.useState<{ code: string; name:string; } | null>(null);
   const [dashboardData, setDashboardData] = React.useState<RegionalDashboardOutput | null>(null);
-  const [trendsData, setTrendsData] = React.useState<RegionalTrendsOutput | null>(null);
   const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   
@@ -45,17 +43,15 @@ export default function RegionTrendsPage() {
     setSelectedRegion(region);
     setIsLoading(true);
     setError(null);
-    setTrendsData(null);
     setDashboardData(null);
 
     try {
-        const [dashboard, trends] = await Promise.all([
-             getRegionalDashboardAction({ region: region.name, countryCode: country.code, countryName: country.name }),
-             getRegionalTrendsAction({ keyword: region.name, region: country.code, countryName: country.name })
-        ]);
-        setDashboardData(dashboard);
-        setTrendsData(trends);
-
+        const dashboardResult = await getRegionalDashboardAction({ 
+            region: region.name, 
+            countryCode: country.code, 
+            countryName: country.name 
+        });
+        setDashboardData(dashboardResult);
     } catch (e) {
       console.error('Failed to fetch regional data:', e);
       setError('지역 트렌드 데이터를 불러오는 데 실패했습니다. 잠시 후 다시 시도해주세요.');
@@ -123,7 +119,7 @@ export default function RegionTrendsPage() {
       );
     }
 
-    if (!dashboardData || !trendsData) {
+    if (!dashboardData) {
          return (
              <div className="text-center py-20 text-muted-foreground">데이터가 없습니다.</div>
          )
@@ -166,16 +162,18 @@ export default function RegionTrendsPage() {
 
             <Card>
                 <CardHeader>
-                    <CardTitle>연관 키워드</CardTitle>
+                    <CardTitle>관련 뉴스</CardTitle>
                 </CardHeader>
                 <CardContent>
-                     {trendsData.relatedKeywords.length > 0 ? (
-                        <div className="flex flex-wrap gap-2">
-                        {trendsData.relatedKeywords.map(keyword => (
-                            <Badge key={keyword} variant="secondary" className="text-sm cursor-pointer hover:bg-primary/20" onClick={() => handleKeywordClick(keyword)}>{keyword}</Badge>
+                     {dashboardData.naverNews && dashboardData.naverNews.length > 0 ? (
+                        <ul className="space-y-2">
+                        {dashboardData.naverNews.slice(0, 3).map((news: any) => (
+                           <li key={news.url}>
+                             <a href={news.url} target="_blank" rel="noopener noreferrer" className="text-sm hover:underline text-muted-foreground line-clamp-2">{news.title}</a>
+                           </li>
                         ))}
-                        </div>
-                    ) : <p className="text-muted-foreground text-sm">연관 키워드가 없습니다.</p>}
+                        </ul>
+                    ) : <p className="text-muted-foreground text-sm">관련 뉴스가 없습니다.</p>}
                 </CardContent>
             </Card>
         </div>
@@ -185,9 +183,9 @@ export default function RegionTrendsPage() {
                 <CardTitle className="flex items-center gap-2"><Youtube className="h-6 w-6 text-red-600" />관련 영상</CardTitle>
             </CardHeader>
             <CardContent>
-                 {trendsData.relatedVideos && trendsData.relatedVideos.length > 0 ? (
+                 {dashboardData.youtubeVideos && dashboardData.youtubeVideos.length > 0 ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                        {trendsData.relatedVideos.slice(0, 6).map(video => (
+                        {dashboardData.youtubeVideos.slice(0, 6).map((video: any) => (
                             <a key={video.id} href={`https://www.youtube.com/watch?v=${video.id}`} target="_blank" rel="noopener noreferrer" className="group">
                                 <div className="aspect-video overflow-hidden rounded-lg border">
                                     <Image

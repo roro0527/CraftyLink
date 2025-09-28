@@ -6,7 +6,6 @@ import { getKeywordTrends } from './keyword-trends-flow';
 import { getNaverNews } from './naver-news-flow';
 import { getYoutubeVideos } from './youtube-videos-flow';
 import * as z from 'zod';
-import axios from 'axios';
 
 const RegionalDashboardInputSchema = z.object({
   region: z.string().describe('The name of the region (e.g., "서울특별시").'),
@@ -42,9 +41,9 @@ async function getRisingSearches(regionCode: string): Promise<string[]> {
 }
 
 
-export const regionalDashboardFlow = ai.defineFlow(
+export const getRegionalDashboard = ai.defineFlow(
   {
-    name: 'regionalDashboardFlow',
+    name: 'getRegionalDashboard',
     inputSchema: RegionalDashboardInputSchema,
     outputSchema: RegionalDashboardOutputSchema,
   },
@@ -63,7 +62,7 @@ export const regionalDashboardFlow = ai.defineFlow(
 
     const topKeyword = regionalTrends[0];
 
-    const [trendData, naverNews, youtubeVideos] = await Promise.all([
+    const [trendData, naverNewsResult, youtubeVideosResult] = await Promise.all([
       getKeywordTrends({ keyword: topKeyword, timeRange: '1m' }),
       getNaverNews({ keyword: topKeyword }),
       getYoutubeVideos({ keyword: topKeyword }),
@@ -79,12 +78,8 @@ export const regionalDashboardFlow = ai.defineFlow(
       topKeyword,
       summary,
       trendData,
-      naverNews,
-      youtubeVideos,
+      naverNews: naverNewsResult,
+      youtubeVideos: youtubeVideosResult.videos,
     };
   }
 );
-
-export async function getRegionalDashboard(input: RegionalDashboardInput): Promise<RegionalDashboardOutput> {
-    return await regionalDashboardFlow(input);
-}

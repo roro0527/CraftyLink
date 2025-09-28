@@ -17,8 +17,22 @@ import axios from "axios";
 import { google } from "googleapis";
 import rateLimit from "express-rate-limit";
 
-// Initialize Firebase Admin SDK
-admin.initializeApp();
+// Initialize Firebase Admin SDK with service account
+try {
+  const serviceAccount = functions.config().service_account;
+  if (serviceAccount) {
+    admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount),
+    });
+  } else {
+    // Fallback for environments where config might not be set
+    admin.initializeApp();
+  }
+} catch (e) {
+  console.error('Firebase admin initialization error', e);
+  admin.initializeApp();
+}
+
 
 const app = express();
 
@@ -208,3 +222,5 @@ app.get("/getTopVideos", async (req, res) => {
 });
 
 export const api = functions.runWith({ secrets: ["NAVER_CLIENT_ID", "NAVER_CLIENT_SECRET", "YOUTUBE_API_KEY", "KAKAO_APP_KEY", "NAVER_DATALAB_CLIENT_ID", "NAVER_DATALAB_CLIENT_SECRET", "FIREBASE_SERVICE_ACCOUNT_KEY", "GOOGLE_CUSTOM_SEARCH_API_KEY", "GOOGLE_CUSTOM_SEARCH_ENGINE_ID"]}).region("asia-northeast3").https.onRequest(app);
+
+    

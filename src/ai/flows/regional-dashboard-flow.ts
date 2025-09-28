@@ -24,21 +24,12 @@ const RegionalDashboardOutputSchema = z.object({
 export type RegionalDashboardInput = z.infer<typeof RegionalDashboardInputSchema>;
 export type RegionalDashboardOutput = z.infer<typeof RegionalDashboardOutputSchema>;
 
-
-async function getRisingSearches(regionCode: string): Promise<string[]> {
-    try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/getRisingSearches?regionCode=${regionCode}`);
-        if (!response.ok) {
-            console.error(`Failed to fetch rising searches for ${regionCode}. Status: ${response.status}`);
-            return [];
-        }
-        const data = await response.json();
-        return data;
-    } catch (error) {
-        console.error(`Error fetching rising searches for region ${regionCode}:`, error);
-        return [];
-    }
-}
+const topKeywordPrompt = ai.definePrompt({
+    name: 'topKeywordPrompt',
+    input: { schema: z.object({ region: z.string() }) },
+    output: { schema: z.object({ keyword: z.string() }) },
+    prompt: `{{region}}에서 최근 가장 인기 있는 검색어 1개를 예상해서 알려줘. 다른 설명 없이 키워드만 정확히 알려줘.`,
+});
 
 
 export const getRegionalDashboard = ai.defineFlow(
@@ -48,19 +39,19 @@ export const getRegionalDashboard = ai.defineFlow(
     outputSchema: RegionalDashboardOutputSchema,
   },
   async ({ region, countryCode, countryName }) => {
-    const regionalTrends = await getRisingSearches(countryCode);
+    
+    const { output: topKeywordOutput } = await topKeywordPrompt({ region });
+    const topKeyword = topKeywordOutput?.keyword;
 
-    if (regionalTrends.length === 0) {
+    if (!topKeyword) {
       return {
-        topKeyword: '',
-        summary: `${region} 지역의 인기 급상승 키워드를 찾을 수 없습니다.`,
+        topKeyword: 'N/A',
+        summary: `${region} 지역의 인기 키워드를 찾을 수 없습니다.`,
         trendData: [],
         naverNews: [],
         youtubeVideos: [],
       };
     }
-
-    const topKeyword = regionalTrends[0];
 
     const [trendData, naverNewsResult, youtubeVideosResult] = await Promise.all([
       getKeywordTrends({ keyword: topKeyword, timeRange: '1m' }),

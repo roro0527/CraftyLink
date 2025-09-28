@@ -9,7 +9,7 @@ import type { SearchResult } from '@/lib/types';
 import { Terminal, LoaderCircle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 import { useInView } from 'react-intersection-observer';
-import axios from 'axios';
+import { useGetGoogleImages } from '@/hooks/use-get-google-images';
 
 
 const SearchResultItem: React.FC<{ item: SearchResult }> = ({ item }) => {
@@ -48,67 +48,15 @@ interface PhotoResultsProps {
 }
 
 const PhotoResults: React.FC<PhotoResultsProps> = ({ query }) => {
-    const [results, setResults] = React.useState<SearchResult[]>([]);
-    const [isLoading, setIsLoading] = React.useState(false);
-    const [error, setError] = React.useState<string | null>(null);
-    const [startIndex, setStartIndex] = React.useState(1);
-    const [hasMore, setHasMore] = React.useState(true);
     const { ref, inView } = useInView({ threshold: 0.5 });
+    const { results, isLoading, error, hasMore, loadMore } = useGetGoogleImages(query);
     
-    const fetchPhotos = React.useCallback(async (currentQuery: string, start: number) => {
-        if (!currentQuery) return;
-        
-        setIsLoading(true);
-        setError(null);
-
-        try {
-            const response = await axios.get('/api/getGoogleImages', {
-                params: { query: currentQuery, start: start },
-            });
-            const { photos, nextPage } = response.data;
-            
-            if (start === 1) {
-                setResults(photos);
-            } else {
-                 setResults(prev => {
-                    const existingIds = new Set(prev.map(p => p.id));
-                    const newPhotos = photos.filter((p: SearchResult) => !existingIds.has(p.id));
-                    return [...prev, ...newPhotos];
-                });
-            }
-
-            if (nextPage) {
-                setStartIndex(nextPage);
-                setHasMore(true);
-            } else {
-                setHasMore(false);
-            }
-
-        } catch (err) {
-            console.error("Failed to fetch images", err);
-            setError("이미지를 불러오는 데 실패했습니다.");
-        } finally {
-            setIsLoading(false);
-        }
-    }, []);
-
-    // Effect to fetch initial data or when query changes
+    // Effect for infinite scrolling
     React.useEffect(() => {
-        if (query) {
-            setResults([]);
-            setStartIndex(1);
-            setHasMore(true);
-            fetchPhotos(query, 1);
+        if (inView && !isLoading && hasMore) {
+            loadMore();
         }
-    }, [query, fetchPhotos]);
-
-     // Effect for infinite scrolling
-    React.useEffect(() => {
-        if (inView && !isLoading && hasMore && query) {
-            fetchPhotos(query, startIndex);
-        }
-    }, [inView, isLoading, hasMore, query, startIndex, fetchPhotos]);
-
+    }, [inView, isLoading, hasMore, loadMore]);
 
     if (!query && results.length === 0) {
         return null;
@@ -129,6 +77,7 @@ const PhotoResults: React.FC<PhotoResultsProps> = ({ query }) => {
             </div>
         );
     }
+
      if (error) {
         return (
              <Alert variant="destructive">
@@ -153,7 +102,7 @@ const PhotoResults: React.FC<PhotoResultsProps> = ({ query }) => {
             {results.map((item) => <SearchResultItem key={item.id} item={item} />)}
           </div>
            <div ref={ref} className="h-10 w-full mt-4 flex justify-center items-center">
-                {isLoading && <LoaderCircle className="h-6 w-6 animate-spin text-primary" />}
+                {isLoading && hasMore && <LoaderCircle className="h-6 w-6 animate-spin text-primary" />}
                 {!hasMore && results.length > 0 && <p className="text-muted-foreground">더 이상 결과가 없습니다.</p>}
           </div>
         </>

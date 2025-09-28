@@ -44,14 +44,6 @@ const nextConfig: NextConfig = {
       'https://*.cloudworkstations.dev',
     ],
   },
-   async rewrites() {
-    return [
-      {
-        source: '/api/:path*',
-        destination: `${process.env.NEXT_PUBLIC_API_BASE_URL}/:path*`,
-      },
-    ];
-  },
    webpack: (config) => {
     config.externals.push({
       'utf-8-validate': 'commonjs utf-8-validate',

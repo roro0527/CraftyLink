@@ -27,8 +27,21 @@ try {
 
 const app = express();
 
-// Enable CORS for all origins. Configure this more strictly for production.
-app.use(cors({ origin: true }));
+// Manually set CORS headers for all responses to fix Network Error
+app.use((req, res, next) => {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
+    res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, DELETE");
+    
+    // Intercepts OPTIONS method
+    if ('OPTIONS' === req.method) {
+      // Always respond with 200 for OPTIONS requests
+      res.sendStatus(200);
+    } else {
+      next();
+    }
+});
+
 
 // Basic rate limiting to prevent abuse
 const limiter = rateLimit({
@@ -213,3 +226,5 @@ app.get("/getTopVideos", async (req, res) => {
 });
 
 export const api = functions.runWith({ secrets: ["YOUTUBE_API_KEY", "KAKAO_APP_KEY", "NAVER_DATALAB_CLIENT_ID", "NAVER_DATALAB_CLIENT_SECRET", "NAVER_CLIENT_ID", "NAVER_CLIENT_SECRET", "GOOGLE_CUSTOM_SEARCH_API_KEY", "GOOGLE_CUSTOM_SEARCH_ENGINE_ID"]}).region("asia-northeast3").https.onRequest(app);
+
+    

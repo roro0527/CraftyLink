@@ -18,12 +18,8 @@ export default function RegionExplorePage() {
   const [submittedQuery, setSubmittedQuery] = React.useState('');
   const [initialSearchDone, setInitialSearchDone] = React.useState(false);
   const [activeTab, setActiveTab] = React.useState<SearchCategory>('photo');
-  const [loadingStates, setLoadingStates] = React.useState<Record<SearchCategory, boolean>>({
-    photo: false,
-    news: false,
-    dictionary: false,
-    video: false,
-  });
+  const [isAnyTabLoading, setIsAnyTabLoading] = React.useState(false);
+  
 
   const handleSearch = () => {
     if (searchQuery.trim() === '') return;
@@ -36,12 +32,6 @@ export default function RegionExplorePage() {
       handleSearch();
     }
   };
-  
-  const handleLoadingStateChange = React.useCallback((category: SearchCategory, isLoading: boolean) => {
-    setLoadingStates(prev => ({...prev, [category]: isLoading }));
-  }, []);
-
-  const isAnyTabLoading = Object.values(loadingStates).some(state => state);
 
   return (
     <div className="container mx-auto p-4 md:p-8">
@@ -80,18 +70,17 @@ export default function RegionExplorePage() {
                 <>
                     <TabsContent value="photo">
                         <PhotoResults 
-                            query={submittedQuery} 
-                            onLoadingComplete={() => {}} 
+                            query={submittedQuery}
                         />
                     </TabsContent>
                     <TabsContent value="news">
-                        <NewsResults query={submittedQuery} setIsLoading={(loading) => handleLoadingStateChange('news', loading)} />
+                        <NewsResults query={submittedQuery} />
                     </TabsContent>
                     <TabsContent value="dictionary">
-                        <DictionaryResult query={submittedQuery} setIsLoading={(loading) => handleLoadingStateChange('dictionary', loading)} />
+                        <DictionaryResult query={submittedQuery} />
                     </TabsContent>
                     <TabsContent value="video">
-                        <VideoResults query={submittedQuery} setIsLoading={(loading) => handleLoadingStateChange('video', loading)} />
+                        <VideoResults query={submittedQuery} />
                     </TabsContent>
                 </>
             )}

@@ -12,10 +12,9 @@ import { Terminal } from 'lucide-react';
 
 interface NewsResultsProps {
     query: string;
-    setIsLoading: (isLoading: boolean) => void;
 }
 
-const NewsResults: React.FC<NewsResultsProps> = ({ query, setIsLoading }) => {
+const NewsResults: React.FC<NewsResultsProps> = ({ query }) => {
     const [results, setResults] = React.useState<RelatedNewsData>([]);
     const [isFetching, setIsFetching] = React.useState(false);
     const [error, setError] = React.useState<string | null>(null);
@@ -27,7 +26,6 @@ const NewsResults: React.FC<NewsResultsProps> = ({ query, setIsLoading }) => {
                 return;
             };
             setIsFetching(true);
-            setIsLoading(true);
             setError(null);
             try {
                 const news = await getNaverNewsAction({ keyword: query });
@@ -37,12 +35,11 @@ const NewsResults: React.FC<NewsResultsProps> = ({ query, setIsLoading }) => {
                 setError("뉴스 정보를 가져오는 데 실패했습니다. 잠시 후 다시 시도해주세요.");
             } finally {
                 setIsFetching(false);
-                setIsLoading(false);
             }
         };
 
         fetchNews();
-    }, [query, setIsLoading]);
+    }, [query]);
 
     if (!query) {
         return null;
@@ -96,4 +93,3 @@ const NewsResults: React.FC<NewsResultsProps> = ({ query, setIsLoading }) => {
 };
 
 export default NewsResults;
-

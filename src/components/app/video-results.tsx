@@ -13,10 +13,9 @@ import { useInView } from 'react-intersection-observer';
 
 interface VideoResultsProps {
     query: string;
-    setIsLoading: (isLoading: boolean) => void;
 }
 
-const VideoResults: React.FC<VideoResultsProps> = ({ query, setIsLoading }) => {
+const VideoResults: React.FC<VideoResultsProps> = ({ query }) => {
     const [results, setResults] = React.useState<YoutubeVideo[]>([]);
     const [nextPageToken, setNextPageToken] = React.useState<string | null | undefined>(undefined);
     const [hasMore, setHasMore] = React.useState(true);
@@ -29,7 +28,6 @@ const VideoResults: React.FC<VideoResultsProps> = ({ query, setIsLoading }) => {
         if (!currentQuery) return;
         
         setIsFetching(true);
-        if(!pageToken) setIsLoading(true);
         setError(null);
 
         try {
@@ -53,9 +51,8 @@ const VideoResults: React.FC<VideoResultsProps> = ({ query, setIsLoading }) => {
             setError("동영상 정보를 가져오는 데 실패했습니다. 잠시 후 다시 시도해주세요.");
         } finally {
             setIsFetching(false);
-            setIsLoading(false);
         }
-    }, [setIsLoading]);
+    }, []);
 
     // Effect to fetch initial data or when query changes
     React.useEffect(() => {

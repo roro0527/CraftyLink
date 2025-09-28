@@ -45,10 +45,9 @@ const SearchResultItem: React.FC<{ item: SearchResult }> = ({ item }) => {
 
 interface PhotoResultsProps {
     query: string;
-    onLoadingComplete: () => void;
 }
 
-const PhotoResults: React.FC<PhotoResultsProps> = ({ query, onLoadingComplete }) => {
+const PhotoResults: React.FC<PhotoResultsProps> = ({ query }) => {
     const { ref, inView } = useInView({ threshold: 0.5 });
     const { results, isLoading, error, hasMore, loadMore } = useGetGoogleImages(query);
     
@@ -58,13 +57,6 @@ const PhotoResults: React.FC<PhotoResultsProps> = ({ query, onLoadingComplete })
             loadMore();
         }
     }, [inView, isLoading, hasMore, loadMore]);
-    
-    // Notify parent component when loading state changes
-    React.useEffect(() => {
-      if (!isLoading) {
-        onLoadingComplete();
-      }
-    }, [isLoading, onLoadingComplete]);
 
 
     if (!query && results.length === 0) {

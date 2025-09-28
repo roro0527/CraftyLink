@@ -27,9 +27,9 @@ export type SearchCategory = 'photo' | 'news' | 'dictionary' | 'video';
 export interface SearchResult {
   id: string;
   title: string;
-  url: string;
+  url: string; // The URL of the page where the image is.
   description?: string;
-  imageUrl?: string;
-  source?: string;
+  imageUrl?: string; // The URL of the image itself.
+  source?: string; // The domain of the source website.
   photographer_url?: string;
 }

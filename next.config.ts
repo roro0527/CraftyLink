@@ -28,13 +28,29 @@ const nextConfig: NextConfig = {
         hostname: 'i.ytimg.com',
         port: '',
         pathname: '/**',
-      }
+      },
+      {
+        protocol: 'https',
+        hostname: 'images.pexels.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.*', // Allow all hostnames for Google Search images
+      },
     ],
   },
   devServer: {
     allowedDevOrigins: [
       'https://*.cloudworkstations.dev',
     ],
+  },
+   async rewrites() {
+    return [
+      {
+        source: '/api/:path*',
+        destination: `${process.env.NEXT_PUBLIC_API_BASE_URL}/:path*`,
+      },
+    ];
   },
    webpack: (config) => {
     config.externals.push({

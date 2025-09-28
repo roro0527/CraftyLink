@@ -13,9 +13,18 @@ import { useGetGoogleImages } from '@/hooks/use-get-google-images';
 
 const SearchResultItem: React.FC<{ item: SearchResult }> = ({ item }) => {
   const [isImageLoading, setIsImageLoading] = React.useState(true);
+  const [isVisible, setIsVisible] = React.useState(true);
+
+  const handleImageError = () => {
+    setIsVisible(false);
+  };
   
+  if (!isVisible) {
+    return null;
+  }
+
   return (
-    <div className="relative overflow-hidden rounded-lg break-inside-avoid group animate-in fade-in-25 duration-500">
+    <div className={`relative overflow-hidden rounded-lg break-inside-avoid group animate-in fade-in-25 duration-500 ${!isVisible ? 'hidden' : ''}`}>
        {isImageLoading && <Skeleton className="absolute inset-0 w-full h-full" />}
        <a href={item.url} target="_blank" rel="noopener noreferrer" className="block">
           {item.imageUrl && (
@@ -27,6 +36,7 @@ const SearchResultItem: React.FC<{ item: SearchResult }> = ({ item }) => {
               className={`w-full h-auto object-cover transition-transform duration-300 group-hover:scale-105 ${isImageLoading ? 'opacity-0' : 'opacity-100'}`}
               unoptimized
               onLoad={() => setIsImageLoading(false)}
+              onError={handleImageError}
             />
           )}
           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300">

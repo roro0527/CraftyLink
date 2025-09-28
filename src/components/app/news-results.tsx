@@ -1,25 +1,33 @@
 
 'use client';
 
+/**
+ * @file '탐색' 페이지의 '뉴스' 탭 콘텐츠를 렌더링하는 컴포넌트입니다.
+ * 검색어를 받아 네이버 뉴스 API를 호출하고 결과 목록을 표시합니다.
+ */
+
 import * as React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { getNaverNewsAction } from '@/app/actions';
 import type { RelatedNewsData } from '@/ai/flows/naver-news-flow';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Terminal } from 'lucide-react';
 
-
 interface NewsResultsProps {
-    query: string;
-    setIsParentLoading: (isLoading: boolean) => void;
+    query: string; // 부모 컴포넌트로부터 받은 검색어
+    setIsParentLoading: (isLoading: boolean) => void; // 로딩 상태를 부모에게 전달하는 함수
 }
 
 const NewsResults: React.FC<NewsResultsProps> = ({ query, setIsParentLoading }) => {
-    const [results, setResults] = React.useState<RelatedNewsData>([]);
-    const [isFetching, setIsFetching] = React.useState(false);
-    const [error, setError] = React.useState<string | null>(null);
+    // --- State 정의 ---
+    const [results, setResults] = React.useState<RelatedNewsData>([]); // API 결과
+    const [isFetching, setIsFetching] = React.useState(false); // 내부 로딩 상태
+    const [error, setError] = React.useState<string | null>(null); // 에러 상태
 
+    /**
+     * query prop이 변경될 때마다 뉴스 검색 액션을 호출합니다.
+     */
     React.useEffect(() => {
         const fetchNews = async () => {
             if (!query) {
@@ -27,7 +35,7 @@ const NewsResults: React.FC<NewsResultsProps> = ({ query, setIsParentLoading }) 
                 return;
             };
             setIsFetching(true);
-            setIsParentLoading(true);
+            setIsParentLoading(true); // 부모 컴포넌트에 로딩 시작 알림
             setError(null);
             try {
                 const news = await getNaverNewsAction({ keyword: query });
@@ -37,17 +45,19 @@ const NewsResults: React.FC<NewsResultsProps> = ({ query, setIsParentLoading }) 
                 setError("뉴스 정보를 가져오는 데 실패했습니다. 잠시 후 다시 시도해주세요.");
             } finally {
                 setIsFetching(false);
-                setIsParentLoading(false);
+                setIsParentLoading(false); // 부모 컴포넌트에 로딩 종료 알림
             }
         };
 
         fetchNews();
     }, [query, setIsParentLoading]);
 
+    // 검색어가 없으면 아무것도 렌더링하지 않습니다.
     if (!query) {
         return null;
     }
     
+    // 로딩 중일 때 스켈레톤 UI를 표시합니다.
     if (isFetching) {
         return (
             <div className="space-y-4">
@@ -62,6 +72,7 @@ const NewsResults: React.FC<NewsResultsProps> = ({ query, setIsParentLoading }) 
         );
     }
     
+    // 에러 발생 시 에러 메시지를 표시합니다.
     if (error) {
         return (
              <Alert variant="destructive">
@@ -72,6 +83,7 @@ const NewsResults: React.FC<NewsResultsProps> = ({ query, setIsParentLoading }) 
         )
     }
 
+    // 결과가 없을 경우 메시지를 표시합니다.
     if (results.length === 0) {
         return (
             <div className="text-center py-10 text-muted-foreground">
@@ -80,6 +92,7 @@ const NewsResults: React.FC<NewsResultsProps> = ({ query, setIsParentLoading }) 
         );
     }
 
+    // --- JSX 렌더링 (성공) ---
     return (
         <div className="space-y-4">
             {results.map((item, index) => (

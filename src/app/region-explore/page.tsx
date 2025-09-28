@@ -1,6 +1,12 @@
 
 'use client';
 
+/**
+ * @file '탐색' 페이지 컴포넌트입니다.
+ * 사용자는 검색어를 입력하여 사진, 뉴스, 사전, 동영상 등 다양한 카테고리의 정보를 탐색할 수 있습니다.
+ * 각 카테고리는 탭으로 구분됩니다.
+ */
+
 import * as React from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -14,25 +20,34 @@ import type { SearchCategory } from '@/lib/types';
 
 
 export default function RegionExplorePage() {
-  const [searchQuery, setSearchQuery] = React.useState('');
-  const [submittedQuery, setSubmittedQuery] = React.useState('');
-  const [activeTab, setActiveTab] = React.useState<SearchCategory>('photo');
-  const [isSearching, setIsSearching] = React.useState(false);
-  
+  // --- State 정의 ---
+  const [searchQuery, setSearchQuery] = React.useState(''); // 입력창의 현재 검색어
+  const [submittedQuery, setSubmittedQuery] = React.useState(''); // 실제 검색을 실행한 검색어
+  const [activeTab, setActiveTab] = React.useState<SearchCategory>('photo'); // 현재 활성화된 탭
+  const [isSearching, setIsSearching] = React.useState(false); // 자식 컴포넌트 중 하나라도 로딩 중인지 여부
 
+  /**
+   * 검색 버튼 클릭 또는 Enter 입력 시 실행될 핸들러.
+   * 입력된 검색어를 submittedQuery state에 저장하여 실제 검색을 트리거합니다.
+   */
   const handleSearch = () => {
     if (searchQuery.trim() === '') return;
     setSubmittedQuery(searchQuery);
   };
   
+  /**
+   * 입력창에서 Enter 키를 눌렀을 때 검색을 실행하는 핸들러입니다.
+   */
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       handleSearch();
     }
   };
 
+  // --- JSX 렌더링 ---
   return (
     <div className="container mx-auto p-4 md:p-8">
+      {/* 헤더: 검색창 */}
       <header className="mb-8 flex flex-col items-center">
         <div className="w-full max-w-xl flex gap-2">
             <Input
@@ -51,6 +66,7 @@ export default function RegionExplorePage() {
         </div>
       </header>
 
+      {/* 탭 메뉴 */}
       <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as SearchCategory)} className="w-full">
         <TabsList className="grid w-full grid-cols-4 mb-6">
             <TabsTrigger value="photo">사진</TabsTrigger>
@@ -59,15 +75,18 @@ export default function RegionExplorePage() {
             <TabsTrigger value="video">동영상</TabsTrigger>
         </TabsList>
 
+        {/* 탭 콘텐츠 */}
         <div className="mt-6">
             {!submittedQuery ? (
+                // 검색어가 제출되기 전의 초기 화면
                 <div className="text-center py-20 text-muted-foreground">
                     <p>궁금한 내용을 검색해보세요.</p>
                 </div>
             ) : (
+                // 검색어가 제출된 후 각 탭에 맞는 콘텐츠를 보여줌
                 <>
                     <TabsContent value="photo">
-                        <PhotoResults query={submittedQuery} setIsParentLoading={setIsSearching} />
+                        <PhotoResults query={submittedQuery} setIsLoadingParentLoading={setIsSearching} />
                     </TabsContent>
                     <TabsContent value="news">
                         <NewsResults query={submittedQuery} setIsParentLoading={setIsSearching} />

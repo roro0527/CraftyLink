@@ -1,6 +1,11 @@
 
 'use client';
 
+/**
+ * @file '탐색' 페이지의 '사전' 탭 콘텐츠를 렌더링하는 컴포넌트입니다.
+ * 검색어를 받아 사전 API를 호출하고 결과를 표시합니다.
+ */
+
 import * as React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -9,17 +14,20 @@ import type { DictionaryEntry } from '@/ai/flows/dictionary-flow';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Terminal, Pin, MessageSquareQuote, Pilcrow } from 'lucide-react';
 
-
 interface DictionaryResultProps {
-    query: string;
-    setIsParentLoading: (isLoading: boolean) => void;
+    query: string; // 부모 컴포넌트로부터 받은 검색어
+    setIsParentLoading: (isLoading: boolean) => void; // 로딩 상태를 부모에게 전달하는 함수
 }
 
 const DictionaryResult: React.FC<DictionaryResultProps> = ({ query, setIsParentLoading }) => {
-    const [result, setResult] = React.useState<DictionaryEntry | null>(null);
-    const [isFetching, setIsFetching] = React.useState(false);
-    const [error, setError] = React.useState<string | null>(null);
+    // --- State 정의 ---
+    const [result, setResult] = React.useState<DictionaryEntry | null>(null); // API 결과
+    const [isFetching, setIsFetching] = React.useState(false); // 내부 로딩 상태
+    const [error, setError] = React.useState<string | null>(null); // 에러 상태
 
+    /**
+     * query prop이 변경될 때마다 사전 검색 액션을 호출합니다.
+     */
     React.useEffect(() => {
         const fetchEntry = async () => {
             if (!query) {
@@ -27,7 +35,7 @@ const DictionaryResult: React.FC<DictionaryResultProps> = ({ query, setIsParentL
                 return;
             };
             setIsFetching(true);
-            setIsParentLoading(true);
+            setIsParentLoading(true); // 부모 컴포넌트에 로딩 시작 알림
             setError(null);
             try {
                 const entry = await getDictionaryEntryAction({ keyword: query });
@@ -37,17 +45,19 @@ const DictionaryResult: React.FC<DictionaryResultProps> = ({ query, setIsParentL
                 setError("사전 정보를 생성하는 데 실패했습니다. 잠시 후 다시 시도해주세요.");
             } finally {
                 setIsFetching(false);
-                setIsParentLoading(false);
+                setIsParentLoading(false); // 부모 컴포넌트에 로딩 종료 알림
             }
         };
 
         fetchEntry();
     }, [query, setIsParentLoading]);
 
+    // 검색어가 없으면 아무것도 렌더링하지 않습니다.
     if (!query) {
         return null;
     }
     
+    // 로딩 중일 때 스켈레톤 UI를 표시합니다.
     if (isFetching) {
         return (
             <Card>
@@ -74,6 +84,7 @@ const DictionaryResult: React.FC<DictionaryResultProps> = ({ query, setIsParentL
         );
     }
     
+    // 에러 발생 시 에러 메시지를 표시합니다.
     if (error) {
         return (
              <Alert variant="destructive">
@@ -84,6 +95,7 @@ const DictionaryResult: React.FC<DictionaryResultProps> = ({ query, setIsParentL
         )
     }
 
+    // 결과가 없거나 API가 에러를 반환했을 경우 메시지를 표시합니다.
     if (!result || result.definition.startsWith('오류')) {
         return (
             <div className="text-center py-10 text-muted-foreground">
@@ -92,6 +104,7 @@ const DictionaryResult: React.FC<DictionaryResultProps> = ({ query, setIsParentL
         );
     }
 
+    // --- JSX 렌더링 (성공) ---
     return (
         <Card>
             <CardHeader>
@@ -100,7 +113,7 @@ const DictionaryResult: React.FC<DictionaryResultProps> = ({ query, setIsParentL
             <CardContent className="space-y-6">
                  <div className="space-y-2">
                     <h3 className="font-semibold flex items-center gap-2 text-lg"><Pin className="h-5 w-5 text-primary"/>정의</h3>
-                    <p className="text-muted-foreground leading-relaxed">{result.definition}</p>
+                    <p className="text-muted-foreground leading-relaxed">{result.definition}</p>LAGOM
                 </div>
 
                 {result.etymology && (

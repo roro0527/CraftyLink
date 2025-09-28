@@ -1,6 +1,12 @@
 
 'use client';
 
+/**
+ * @file 키워드 비교 페이지 컴포넌트입니다.
+ * 사용자는 여러 키워드를 추가하여 검색량 추이, 요약 통계 등을 차트와 테이블로 비교할 수 있습니다.
+ * 비교 결과는 저장하고 불러올 수 있습니다.
+ */
+
 import * as React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -33,11 +39,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogC
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 
-type TrendData = Record<string, KeywordTrendPoint[]>;
-type SummaryData = Record<string, { total: number; average: number }>;
-type AnalysisData = Record<string, { dominanceScore: number }>;
-type ChartableData = { date: string; [keyword: string]: number | string };
+// 각 데이터 유형에 대한 타입 정의
+type TrendData = Record<string, KeywordTrendPoint[]>; // 키워드별 트렌드 데이터
+type SummaryData = Record<string, { total: number; average: number }>; // 키워드별 요약 데이터
+type AnalysisData = Record<string, { dominanceScore: number }>; // 키워드별 분석 데이터
+type ChartableData = { date: string; [keyword: string]: number | string }; // 차트 렌더링용 데이터
 
+// 차트에서 사용할 색상 배열
 const chartColors = [
   'hsl(var(--chart-1))',
   'hsl(var(--chart-2))',
@@ -46,6 +54,7 @@ const chartColors = [
   'hsl(var(--chart-5))',
 ];
 
+// 저장 다이얼로그에서 사용할 색상 태그 배열
 const saveColors = [
     { id: 'color-1', value: 'bg-red-500', ring: 'ring-red-500' },
     { id: 'color-2', value: 'bg-orange-500', ring: 'ring-orange-500' },
@@ -54,7 +63,7 @@ const saveColors = [
     { id: 'color-5', value: 'bg-blue-500', ring: 'ring-blue-500' },
 ];
 
-// Mock data for saved comparisons
+// 저장된 비교 목록의 초기 목업 데이터
 const initialSavedComparisons = [
   {
     id: 1,
@@ -82,20 +91,25 @@ const initialSavedComparisons = [
 
 export default function ComparePage() {
   const { toast } = useToast();
-  const [keywords, setKeywords] = React.useState<string[]>([]);
-  const [inputValue, setInputValue] = React.useState('');
-  const [timeRange, setTimeRange] = React.useState<'1w' | '1m' | '5d'>('1w');
-  const [trendData, setTrendData] = React.useState<TrendData>({});
-  const [summaryData, setSummaryData] = React.useState<SummaryData>({});
-  const [isLoading, setIsLoading] = React.useState(false);
-  const [analysisData, setAnalysisData] = React.useState<AnalysisData>({});
-  const [isAnalyzing, setIsAnalyzing] = React.useState(false);
-  const [isSaveDialogOpen, setIsSaveDialogOpen] = React.useState(false);
-  const [saveName, setSaveName] = React.useState('');
-  const [selectedColor, setSelectedColor] = React.useState(saveColors[0].value);
-  const [savedItems, setSavedItems] = React.useState(initialSavedComparisons);
 
+  // --- State 정의 ---
+  const [keywords, setKeywords] = React.useState<string[]>([]); // 비교할 키워드 목록
+  const [inputValue, setInputValue] = React.useState(''); // 키워드 입력값
+  const [timeRange, setTimeRange] = React.useState<'1w' | '1m' | '5d'>('1w'); // 조회 기간
+  const [trendData, setTrendData] = React.useState<TrendData>({}); // API로부터 받은 트렌드 데이터
+  const [summaryData, setSummaryData] = React.useState<SummaryData>({}); // 트렌드 데이터 기반 요약 통계
+  const [isLoading, setIsLoading] = React.useState(false); // 데이터 로딩 상태
+  const [analysisData, setAnalysisData] = React.useState<AnalysisData>({}); // 데이터 분석 결과 (우세 점수 등)
+  const [isAnalyzing, setIsAnalyzing] = React.useState(false); // 분석 중 상태
+  const [isSaveDialogOpen, setIsSaveDialogOpen] = React.useState(false); // 저장 다이얼로그 표시 여부
+  const [saveName, setSaveName] = React.useState(''); // 저장할 이름
+  const [selectedColor, setSelectedColor] = React.useState(saveColors[0].value); // 저장 시 선택한 색상
+  const [savedItems, setSavedItems] = React.useState(initialSavedComparisons); // 저장된 비교 목록
 
+  /**
+   * keywords 또는 timeRange가 변경될 때마다 모든 키워드에 대한 트렌드 데이터를 API로 가져옵니다.
+   * 가져온 데이터를 기반으로 요약(summary) 및 분석(analysis) 데이터를 계산하고 state를 업데이트합니다.
+   */
   React.useEffect(() => {
     const fetchAllTrends = async () => {
       if (keywords.length === 0) {
@@ -111,6 +125,7 @@ export default function ComparePage() {
       const newTrendData: TrendData = {};
       const newSummaryData: SummaryData = {};
 
+      // 모든 키워드에 대한 API 요청을 병렬로 처리합니다.
       await Promise.all(
         keywords.map(async (keyword) => {
           try {
@@ -132,12 +147,10 @@ export default function ComparePage() {
         })
       );
 
-      // Perform analysis after fetching trends
+      // 트렌드 데이터를 기반으로 우세 점수 등 분석 데이터를 계산합니다.
       const newAnalysisData: AnalysisData = {};
       if (Object.keys(newTrendData).length > 0) {
-        const allAverages = Object.values(newSummaryData).map(
-          (s) => s.average
-        );
+        const allAverages = Object.values(newSummaryData).map((s) => s.average);
         const maxAverage = Math.max(...allAverages);
 
         for (const keyword of keywords) {
@@ -147,36 +160,21 @@ export default function ComparePage() {
             continue;
           }
 
-          // 1. Average Volume Score (50 points)
+          // 1. 평균 검색량 점수 (50점 만점)
           const average = newSummaryData[keyword].average;
           const avgScore = maxAverage > 0 ? (average / maxAverage) * 50 : 0;
 
-          // 2. Trend Score (50 points)
+          // 2. 성장 추세 점수 (50점 만점)
           let trendScore = 0;
           if (Ktrends.length > 1) {
             const midPoint = Math.ceil(Ktrends.length / 2);
             const firstHalf = Ktrends.slice(0, midPoint);
             const secondHalf = Ktrends.slice(midPoint);
-
-            const firstHalfAvg =
-              firstHalf.reduce((sum, p) => sum + p.value, 0) /
-              firstHalf.length;
-            const secondHalfAvg =
-              secondHalf.length > 0
-                ? secondHalf.reduce((sum, p) => sum + p.value, 0) /
-                  secondHalf.length
-                : 0;
-
-            const growthRate =
-              firstHalfAvg > 0
-                ? (secondHalfAvg - firstHalfAvg) / firstHalfAvg
-                : secondHalfAvg > 0
-                ? 1
-                : 0; // Cap growth at 100% if first half is 0
-
-            // Normalize growth rate to a 0-50 score. Let's say 100% growth (growthRate=1) is 50 points.
-            const normalizedGrowth = Math.max(-1, Math.min(1, growthRate)); // Clamp between -100% and +100%
-            trendScore = ((normalizedGrowth + 1) / 2) * 50; // Map [-1, 1] to [0, 50]
+            const firstHalfAvg = firstHalf.reduce((sum, p) => sum + p.value, 0) / firstHalf.length;
+            const secondHalfAvg = secondHalf.length > 0 ? secondHalf.reduce((sum, p) => sum + p.value, 0) / secondHalf.length : 0;
+            const growthRate = firstHalfAvg > 0 ? (secondHalfAvg - firstHalfAvg) / firstHalfAvg : (secondHalfAvg > 0 ? 1 : 0);
+            const normalizedGrowth = Math.max(-1, Math.min(1, growthRate)); // -100% ~ +100% 사이로 제한
+            trendScore = ((normalizedGrowth + 1) / 2) * 50; // [-1, 1] 범위를 [0, 50]으로 매핑
           }
 
           newAnalysisData[keyword] = {
@@ -185,7 +183,7 @@ export default function ComparePage() {
         }
       }
       
-      // Set all states at once after all data processing is complete
+      // 모든 데이터 처리가 끝난 후 state를 한 번에 업데이트하여 불필요한 리렌더링을 방지합니다.
       setTrendData(newTrendData);
       setSummaryData(newSummaryData);
       setAnalysisData(newAnalysisData);
@@ -196,6 +194,9 @@ export default function ComparePage() {
     fetchAllTrends();
   }, [keywords, timeRange, toast]);
 
+  /**
+   * 입력된 키워드를 비교 목록에 추가하는 핸들러입니다.
+   */
   const handleAddKeyword = () => {
     if (inputValue && !keywords.includes(inputValue) && keywords.length < 5) {
       setKeywords([...keywords, inputValue]);
@@ -203,14 +204,23 @@ export default function ComparePage() {
     }
   };
 
+  /**
+   * 특정 키워드를 비교 목록에서 제거하는 핸들러입니다.
+   */
   const handleRemoveKeyword = (keywordToRemove: string) => {
     setKeywords(keywords.filter(keyword => keyword !== keywordToRemove));
   };
   
+  /**
+   * 모든 키워드를 비교 목록에서 제거(초기화)하는 핸들러입니다.
+   */
   const handleClearKeywords = () => {
     setKeywords([]);
   };
 
+  /**
+   * 현재 비교 결과를 저장하는 핸들러입니다.
+   */
   const handleSave = () => {
     const newItem = {
       id: Date.now(),
@@ -232,6 +242,9 @@ export default function ComparePage() {
     setSelectedColor(saveColors[0].value);
   };
   
+  /**
+   * 저장 다이얼로그를 여는 핸들러입니다.
+   */
   const handleOpenSaveDialog = () => {
     if (keywords.length === 0) {
       toast({
@@ -245,7 +258,10 @@ export default function ComparePage() {
     setIsSaveDialogOpen(true);
   }
 
- const handleExportCsv = () => {
+  /**
+   * 현재 비교 데이터를 CSV 파일로 내보내는 핸들러입니다.
+   */
+  const handleExportCsv = () => {
     if (keywords.length === 0 || Object.keys(trendData).length === 0) {
       toast({
         variant: 'destructive',
@@ -255,50 +271,42 @@ export default function ComparePage() {
       return;
     }
 
-    let csvContent = '\uFEFF'; // BOM for UTF-8
+    let csvContent = '\uFEFF'; // UTF-8 BOM
 
-    // Summary Section
+    // 요약 섹션
     csvContent += '요약\n';
-    const summaryHeaders = ['키워드', '총 검색량', '평균 검색량', '우세 점수'];
-    csvContent += summaryHeaders.join(',') + '\n';
-
+    csvContent += ['키워드', '총 검색량', '평균 검색량', '우세 점수'].join(',') + '\n';
     keywords.forEach(kw => {
       const summary = summaryData[kw] || { total: 0, average: 0 };
       const analysis = analysisData[kw] || { dominanceScore: 0 };
-      const row = [
-        kw,
-        summary.total,
-        summary.average,
-        analysis.dominanceScore
-      ];
-      csvContent += row.join(',') + '\n';
+      csvContent += [kw, summary.total, summary.average, analysis.dominanceScore].join(',') + '\n';
     });
 
-    csvContent += '\n'; // Add a blank line for separation
+    csvContent += '\n';
 
-    // Trend Data Section
+    // 트렌드 데이터 섹션
     csvContent += '기간별 검색량 추이\n';
-    const trendHeaders = ['날짜', ...keywords];
-    csvContent += trendHeaders.join(',') + '\n';
-
+    csvContent += ['날짜', ...keywords].join(',') + '\n';
     chartData.forEach(row => {
       const values = keywords.map(kw => row[kw] ?? 0);
       csvContent += `${row.date},${values.join(',')}\n`;
     });
 
+    // CSV 다운로드 로직
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
-    if (link.href) {
-      URL.revokeObjectURL(link.href);
-    }
     const url = URL.createObjectURL(blob);
     link.setAttribute('href', url);
     link.setAttribute('download', 'craftylink_compare_data.csv');
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
+  /**
+   * 저장된 비교 항목을 불러오는 핸들러입니다.
+   */
   const handleLoadComparison = (savedKeywords: string[]) => {
     setKeywords(savedKeywords);
     toast({
@@ -307,6 +315,9 @@ export default function ComparePage() {
     });
   };
 
+  /**
+   * 저장된 비교 항목을 삭제하는 핸들러입니다.
+   */
   const handleDeleteComparison = (idToDelete: number) => {
     setSavedItems(prev => prev.filter(item => item.id !== idToDelete));
     toast({
@@ -315,7 +326,10 @@ export default function ComparePage() {
     });
   };
 
-
+  /**
+   * `useMemo`를 사용하여 keywords 또는 trendData가 변경될 때만 차트 설정을 다시 계산합니다.
+   * 이는 불필요한 리렌더링을 방지하고 성능을 최적화합니다.
+   */
   const { chartConfig, chartData } = React.useMemo(() => {
     const config: ChartConfig = {};
     keywords.forEach((keyword, index) => {
@@ -325,19 +339,14 @@ export default function ComparePage() {
       };
     });
   
-    // Use a map to merge data points by date
+    // 날짜별로 데이터를 병합하기 위해 Map을 사용합니다.
     const dataMap = new Map<string, ChartableData>();
-  
-    // Initialize map with all keywords to ensure all columns are present
     keywords.forEach(keyword => {
       const trends = trendData[keyword] || [];
       trends.forEach(point => {
         if (!dataMap.has(point.date)) {
           const initialPoint: ChartableData = { date: point.date };
-          // Ensure all keyword keys are created with a default value
-          keywords.forEach(kw => {
-            initialPoint[kw] = 0;
-          });
+          keywords.forEach(kw => { initialPoint[kw] = 0; });
           dataMap.set(point.date, initialPoint);
         }
         const existingPoint = dataMap.get(point.date)!;
@@ -345,14 +354,16 @@ export default function ComparePage() {
       });
     });
     
-    // Convert map to array and sort by date
+    // Map을 배열로 변환하고 날짜순으로 정렬합니다.
     const data = Array.from(dataMap.values()).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   
     return { chartConfig: config, chartData: data };
   }, [keywords, trendData]);
 
+  // --- JSX 렌더링 ---
   return (
     <div className="p-6 space-y-6">
+      {/* 헤더: 페이지 제목 및 키워드 입력/관리 */}
       <header className="flex flex-col sm:flex-row items-center gap-4">
         <h1 className="text-2xl font-bold">키워드 비교</h1>
         <div className="flex gap-2 items-center flex-wrap">
@@ -384,6 +395,8 @@ export default function ComparePage() {
             </Select>
         </div>
       </header>
+
+      {/* 키워드 태그 및 액션 버튼 */}
        <div className="flex justify-between items-center">
         <div className="flex flex-wrap gap-2">
             {keywords.map((keyword, index) => (
@@ -403,7 +416,7 @@ export default function ComparePage() {
         </div>
       </div>
 
-
+      {/* 차트 섹션 */}
       <section id="charts" className="grid grid-cols-1 gap-6">
         <Card>
           <CardHeader>
@@ -456,6 +469,7 @@ export default function ComparePage() {
         </Card>
       </section>
 
+      {/* 요약 테이블 섹션 */}
       <section id="summary-table" className="overflow-x-auto">
          <Card>
           <CardHeader>
@@ -502,6 +516,7 @@ export default function ComparePage() {
         </Card>
       </section>
 
+      {/* 저장된 비교 목록 섹션 */}
       <section id="saved-comparisons">
         <Card>
           <CardHeader>
@@ -532,7 +547,7 @@ export default function ComparePage() {
                          size="icon" 
                          className="h-8 w-8"
                          onClick={(e) => {
-                            e.stopPropagation();
+                            e.stopPropagation(); // 부모 div의 onClick 이벤트 전파 방지
                             handleDeleteComparison(item.id);
                          }}
                        >
@@ -551,6 +566,7 @@ export default function ComparePage() {
         </Card>
       </section>
 
+      {/* 저장 다이얼로그 */}
       <Dialog open={isSaveDialogOpen} onOpenChange={setIsSaveDialogOpen}>
         <DialogContent className="sm:max-w-md">
             <DialogHeader>

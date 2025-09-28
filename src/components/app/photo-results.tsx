@@ -14,29 +14,24 @@ import { useGetGoogleImages } from '@/hooks/use-get-google-images';
 
 const SearchResultItem: React.FC<{ item: SearchResult }> = ({ item }) => {
   return (
-    <Card className="overflow-hidden transition-shadow hover:shadow-lg">
-      <a href={item.url} target="_blank" rel="noopener noreferrer">
+    <Card className="overflow-hidden transition-shadow hover:shadow-lg group">
+      <a href={item.url} target="_blank" rel="noopener noreferrer" className="block relative">
         {item.imageUrl && (
-          <div className="aspect-video overflow-hidden bg-muted">
+          <div className="aspect-square overflow-hidden bg-muted">
             <Image
               src={item.imageUrl}
               alt={item.title}
-              width={400}
-              height={225}
-              className="object-cover w-full h-full transition-transform duration-300 hover:scale-105"
-              unoptimized // Use this if you have many different image domains
+              fill
+              className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105"
+              unoptimized 
             />
           </div>
         )}
-        <CardContent className="p-4">
-          <h3 className="font-semibold text-base line-clamp-2">{item.title}</h3>
-          {item.description && (
-             <p className="text-sm text-muted-foreground mt-1 line-clamp-3">{item.description}</p>
-          )}
-          {item.source && (
-            <p className="text-xs text-muted-foreground mt-2">{item.source}</p>
-          )}
-        </CardContent>
+        {item.source && (
+            <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/70 to-transparent">
+                 <p className="text-xs text-white truncate">{item.source}</p>
+            </div>
+        )}
       </a>
     </Card>
   );
@@ -65,14 +60,10 @@ const PhotoResults: React.FC<PhotoResultsProps> = ({ query }) => {
     
     if (results.length === 0 && isLoading) {
         return (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {Array.from({ length: 8 }).map((_, i) => (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                {Array.from({ length: 10 }).map((_, i) => (
                     <Card key={`skel-photo-${i}`}>
-                        <Skeleton className="aspect-video w-full" />
-                        <CardContent className="p-4">
-                        <Skeleton className="h-5 w-3/4 mb-2" />
-                        <Skeleton className="h-4 w-full" />
-                        </CardContent>
+                        <Skeleton className="aspect-square w-full" />
                     </Card>
                 ))}
             </div>
@@ -99,7 +90,7 @@ const PhotoResults: React.FC<PhotoResultsProps> = ({ query }) => {
     
     return (
        <>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
             {results.map((item) => <SearchResultItem key={item.id} item={item} />)}
           </div>
            <div ref={ref} className="h-10 w-full mt-4 flex justify-center items-center">

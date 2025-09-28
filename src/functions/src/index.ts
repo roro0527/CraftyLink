@@ -27,15 +27,7 @@ try {
 
 const app = express();
 
-// More robust CORS settings
-app.use(cors({
-    origin: "*", // Allow any origin
-    methods: "GET,POST,PUT,DELETE,OPTIONS",
-    allowedHeaders: "Content-Type, Authorization",
-}));
-
-// Handle pre-flight requests for all routes
-app.options('*', cors());
+app.use(cors({ origin: true }));
 
 
 // Basic rate limiting to prevent abuse
@@ -84,7 +76,7 @@ app.get("/getGoogleImages", async (req, res) => {
 
     const items = response.data.items || [];
     const searchResult = items.map((item: any) => ({
-      id: item.cacheId || `${item.link}-${Math.random()}`,
+      id: item.cacheId || item.link,
       title: item.title,
       url: item.image.contextLink,
       imageUrl: item.link, // Direct image link

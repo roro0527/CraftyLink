@@ -18,12 +18,25 @@ import { google } from "googleapis";
 import rateLimit from "express-rate-limit";
 
 // Initialize Firebase Admin SDK
-admin.initializeApp();
+try {
+    admin.initializeApp();
+} catch (e) {
+  console.error('Firebase admin initialization error', e);
+}
+
 
 const app = express();
 
-// Enable CORS for all origins. Configure this more strictly for production.
-app.use(cors({ origin: true }));
+// More robust CORS settings
+app.use(cors({
+    origin: "*", // Allow any origin
+    methods: "GET,POST,PUT,DELETE,OPTIONS",
+    allowedHeaders: "Content-Type, Authorization",
+}));
+
+// Handle pre-flight requests for all routes
+app.options('*', cors());
+
 
 // Basic rate limiting to prevent abuse
 const limiter = rateLimit({
@@ -51,7 +64,7 @@ app.get("/getGoogleImages", async (req, res) => {
   const cseId = process.env.GOOGLE_CUSTOM_SEARCH_ENGINE_ID;
 
   if (!apiKey || !cseId) {
-    functions.logger.error("Google Custom Search API Key or Engine ID is not configured.");
+    functions.logger.error("Google Custom Search API Key or Engine ID is not configured in function secrets.");
     return res.status(500).send({ error: "Server configuration error." });
   }
 
@@ -207,4 +220,4 @@ app.get("/getTopVideos", async (req, res) => {
     }
 });
 
-export const api = functions.runWith({ secrets: ["NAVER_CLIENT_ID", "NAVER_CLIENT_SECRET", "YOUTUBE_API_KEY", "KAKAO_APP_KEY", "NAVER_DATALAB_CLIENT_ID", "NAVER_DATALAB_CLIENT_SECRET", "FIREBASE_SERVICE_ACCOUNT_KEY", "GOOGLE_CUSTOM_SEARCH_API_KEY", "GOOGLE_CUSTOM_SEARCH_ENGINE_ID"]}).region("asia-northeast3").https.onRequest(app);
+export const api = functions.runWith({ secrets: ["YOUTUBE_API_KEY", "KAKAO_APP_KEY", "NAVER_DATALAB_CLIENT_ID", "NAVER_DATALAB_CLIENT_SECRET", "NAVER_CLIENT_ID", "NAVER_CLIENT_SECRET", "GOOGLE_CUSTOM_SEARCH_API_KEY", "GOOGLE_CUSTOM_SEARCH_ENGINE_ID"]}).region("asia-northeast3").https.onRequest(app);

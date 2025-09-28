@@ -7,6 +7,7 @@ import { getRelatedKeywords } from '@/ai/flows/related-keywords-flow';
 import { getYoutubeVideos, type YoutubeVideosInput, type YoutubeVideosData } from '@/ai/flows/youtube-videos-flow';
 import { getNaverNews, type NaverNewsInput, type RelatedNewsData } from '@/ai/flows/naver-news-flow';
 import { getDictionaryEntry, type DictionaryInput, type DictionaryEntry } from '@/ai/flows/dictionary-flow';
+import { getGoogleImages, type GoogleImagesInput, type GoogleImagesData } from '@/ai/flows/google-images-flow';
 
 
 export async function suggestSuperParametersAction(
@@ -79,5 +80,15 @@ export async function getDictionaryEntryAction(input: DictionaryInput): Promise<
     } catch (error) {
         console.error('Error fetching dictionary entry:', error);
         throw new Error('Failed to get dictionary entry.');
+    }
+}
+
+export async function getGoogleImagesAction(input: GoogleImagesInput): Promise<GoogleImagesData> {
+    try {
+        const images = await getGoogleImages(input);
+        return images;
+    } catch (error) {
+        console.error('Error fetching google images:', error);
+        throw new Error('Failed to get google images.');
     }
 }

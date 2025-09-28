@@ -2,11 +2,8 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import axios, { AxiosError } from 'axios';
 import type { SearchResult } from '@/lib/types';
-
-const PROJECT_ID = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
-const FUNCTION_REGION = 'asia-northeast3';
+import { getGoogleImagesAction } from '@/app/actions';
 
 export const useGetGoogleImages = (query: string) => {
   const [results, setResults] = useState<SearchResult[]>([]);
@@ -16,25 +13,15 @@ export const useGetGoogleImages = (query: string) => {
   const [hasMore, setHasMore] = useState(true);
 
   const fetchImages = useCallback(async (currentQuery: string, start: number) => {
-    if (!currentQuery || !PROJECT_ID) {
-        if (!PROJECT_ID) console.error("Firebase Project ID is not configured.");
-        return;
-    }
+    if (!currentQuery) return;
     
     setIsLoading(true);
     setError(null);
 
-    const functionUrl = `https://${FUNCTION_REGION}-${PROJECT_ID}.cloudfunctions.net/api/getGoogleImages`;
-
     try {
-      const response = await axios.get(functionUrl, {
-        params: {
-            query: currentQuery,
-            start: start,
-        }
-      });
+      const response = await getGoogleImagesAction({ query: currentQuery, start: start });
       
-      const { photos, nextPage } = response.data;
+      const { photos, nextPage } = response;
       
       if (start === 1) {
           setResults(photos || []);
@@ -54,16 +41,8 @@ export const useGetGoogleImages = (query: string) => {
       }
 
     } catch (err: any) {
-      console.error("Failed to fetch images via function URL", err);
-      let errorMessage = "이미지를 불러오는 데 실패했습니다. 잠시 후 다시 시도해주세요.";
-      if (err instanceof AxiosError) {
-          errorMessage = `[${err.code}] ${err.message}`;
-          if (err.response) {
-            console.error("Error response:", err.response.data);
-            errorMessage += `: ${err.response.data?.error || 'Server error'}`
-          }
-      }
-      setError(errorMessage);
+      console.error("Failed to fetch images via server action", err);
+      setError("이미지를 불러오는 데 실패했습니다. 잠시 후 다시 시도해주세요.");
     } finally {
       setIsLoading(false);
     }
@@ -78,14 +57,16 @@ export const useGetGoogleImages = (query: string) => {
       fetchImages(query, 1);
     } else {
       setResults([]);
+      setStartIndex(1);
+      setHasMore(true);
     }
   }, [query, fetchImages]);
 
-  const loadMore = () => {
+  const loadMore = useCallback(() => {
     if (!isLoading && hasMore) {
       fetchImages(query, startIndex);
     }
-  };
+  }, [isLoading, hasMore, fetchImages, query, startIndex]);
 
   return { results, isLoading, error, hasMore, loadMore };
 };

@@ -16,7 +16,6 @@ import type { SearchCategory } from '@/lib/types';
 export default function RegionExplorePage() {
   const [searchQuery, setSearchQuery] = React.useState('');
   const [submittedQuery, setSubmittedQuery] = React.useState('');
-  const [isLoading, setIsLoading] = React.useState(false);
   const [initialSearchDone, setInitialSearchDone] = React.useState(false);
   const [activeTab, setActiveTab] = React.useState<SearchCategory>('photo');
   const [loadingStates, setLoadingStates] = React.useState<Record<SearchCategory, boolean>>({
@@ -67,9 +66,9 @@ export default function RegionExplorePage() {
       <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as SearchCategory)} className="w-full">
         <TabsList className="grid w-full grid-cols-4 mb-6">
             <TabsTrigger value="photo">사진</TabsTrigger>
-            <TabsTrigger value="news" disabled>뉴스</TabsTrigger>
-            <TabsTrigger value="dictionary" disabled>사전</TabsTrigger>
-            <TabsTrigger value="video" disabled>동영상</TabsTrigger>
+            <TabsTrigger value="news">뉴스</TabsTrigger>
+            <TabsTrigger value="dictionary">사전</TabsTrigger>
+            <TabsTrigger value="video">동영상</TabsTrigger>
         </TabsList>
 
         <div className="mt-6">

@@ -16,6 +16,7 @@ import cors from "cors";
 import axios from "axios";
 import { google } from "googleapis";
 import rateLimit from "express-rate-limit";
+import { onRequest } from "firebase-functions/v2/https";
 
 // Initialize Firebase Admin SDK
 try {
@@ -213,5 +214,10 @@ app.get("/getTopVideos", async (req, res) => {
     }
 });
 
-export const api = functions.runWith({ secrets: ["YOUTUBE_API_KEY", "KAKAO_APP_KEY", "NAVER_DATALAB_CLIENT_ID", "NAVER_DATALAB_CLIENT_SECRET", "NAVER_CLIENT_ID", "NAVER_CLIENT_SECRET", "GOOGLE_CUSTOM_SEARCH_API_KEY", "GOOGLE_CUSTOM_SEARCH_ENGINE_ID"]}).region("asia-northeast3").https.onRequest(app);
-
+export const api = onRequest(
+    {
+        region: "asia-northeast3",
+        secrets: ["YOUTUBE_API_KEY", "KAKAO_APP_KEY", "NAVER_DATALAB_CLIENT_ID", "NAVER_DATALAB_CLIENT_SECRET", "NAVER_CLIENT_ID", "NAVER_CLIENT_SECRET", "GOOGLE_CUSTOM_SEARCH_API_KEY", "GOOGLE_CUSTOM_SEARCH_ENGINE_ID"],
+    },
+    app
+);

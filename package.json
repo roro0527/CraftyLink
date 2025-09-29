@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "npm-run-all --parallel dev:next dev:emulators",
+    "dev": "npm-run-all --parallel \"dev:next --\" dev:emulators",
     "dev:next": "next dev --turbopack",
     "dev:emulators": "cd functions && npm run serve",
     "build": "next build",

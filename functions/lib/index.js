@@ -53,6 +53,7 @@ const cors_1 = __importDefault(require("cors"));
 const axios_1 = __importDefault(require("axios"));
 const googleapis_1 = require("googleapis");
 const express_rate_limit_1 = __importDefault(require("express-rate-limit"));
+const https_1 = require("firebase-functions/v2/https");
 // Initialize Firebase Admin SDK
 try {
     admin.initializeApp();
@@ -221,5 +222,8 @@ app.get("/getTopVideos", async (req, res) => {
         return res.status(500).send({ error: "An unexpected error occurred." });
     }
 });
-exports.api = functions.runWith({ secrets: ["YOUTUBE_API_KEY", "KAKAO_APP_KEY", "NAVER_DATALAB_CLIENT_ID", "NAVER_DATALAB_CLIENT_SECRET", "NAVER_CLIENT_ID", "NAVER_CLIENT_SECRET", "GOOGLE_CUSTOM_SEARCH_API_KEY", "GOOGLE_CUSTOM_SEARCH_ENGINE_ID"] }).region("asia-northeast3").https.onRequest(app);
+exports.api = (0, https_1.onRequest)({
+    region: "asia-northeast3",
+    secrets: ["YOUTUBE_API_KEY", "KAKAO_APP_KEY", "NAVER_DATALAB_CLIENT_ID", "NAVER_DATALAB_CLIENT_SECRET", "NAVER_CLIENT_ID", "NAVER_CLIENT_SECRET", "GOOGLE_CUSTOM_SEARCH_API_KEY", "GOOGLE_CUSTOM_SEARCH_ENGINE_ID"],
+}, app);
 //# sourceMappingURL=index.js.map

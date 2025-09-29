@@ -39,21 +39,19 @@ export const useAuth = () => {
    */
   const signInWithGoogle = async () => {
     const provider = new GoogleAuthProvider();
+    setLoading(true);
     try {
-      setLoading(true);
+      // signInWithPopup이 성공하면, onAuthStateChanged가 user와 loading 상태를 처리합니다.
       await signInWithPopup(auth, provider);
     } catch (error: any) {
-      // 사용자가 팝업을 닫은 경우는 자연스러운 행동이므로 오류로 처리하지 않습니다.
+      // 사용자가 팝업을 닫았거나 다른 오류가 발생했을 때만 로딩 상태를 직접 false로 설정합니다.
       if (error.code === 'auth/popup-closed-by-user') {
         console.log("Sign-in popup closed by user.");
       } else {
         // 다른 실제 오류가 발생한 경우에만 콘솔에 에러를 출력합니다.
         console.error("Error signing in with Google", error);
       }
-    } finally {
-      // 로그인 시도 후에는 항상 로딩 상태를 false로 설정합니다.
-      // 실제 로그인 성공 여부는 onAuthStateChanged 리스너가 감지하여 처리합니다.
-       setLoading(false);
+      setLoading(false);
     }
   };
 

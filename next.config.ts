@@ -38,11 +38,6 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  devServer: {
-    allowedDevOrigins: [
-      'https://*.cloudworkstations.dev',
-    ],
-  },
    webpack: (config) => {
     config.externals.push({
       'utf-8-validate': 'commonjs utf-8-validate',

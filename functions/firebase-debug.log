@@ -1,35 +1,35 @@
-[debug] [2025-09-29T07:53:04.311Z] ----------------------------------------------------------------------
-[debug] [2025-09-29T07:53:04.314Z] Command:       /nix/store/ws50yvm6vzlzf7jzz6n7xh4szddrack1-nodejs-20.19.1/bin/node /nix/store/a3jfkfzmr1h8lmk31a8fbchkg5sp12q9-firebase-tools-14.16.0/lib/node_modules/firebase-tools/lib/bin/firebase.js emulators:start --only functions
-[debug] [2025-09-29T07:53:04.315Z] CLI Version:   14.16.0
-[debug] [2025-09-29T07:53:04.315Z] Platform:      linux
-[debug] [2025-09-29T07:53:04.315Z] Node Version:  v20.19.1
-[debug] [2025-09-29T07:53:04.315Z] Time:          Mon Sep 29 2025 07:53:04 GMT+0000 (Coordinated Universal Time)
-[debug] [2025-09-29T07:53:04.315Z] ----------------------------------------------------------------------
+[debug] [2025-09-29T07:54:39.913Z] ----------------------------------------------------------------------
+[debug] [2025-09-29T07:54:39.916Z] Command:       /nix/store/ws50yvm6vzlzf7jzz6n7xh4szddrack1-nodejs-20.19.1/bin/node /nix/store/a3jfkfzmr1h8lmk31a8fbchkg5sp12q9-firebase-tools-14.16.0/lib/node_modules/firebase-tools/lib/bin/firebase.js emulators:start --only functions
+[debug] [2025-09-29T07:54:39.917Z] CLI Version:   14.16.0
+[debug] [2025-09-29T07:54:39.917Z] Platform:      linux
+[debug] [2025-09-29T07:54:39.917Z] Node Version:  v20.19.1
+[debug] [2025-09-29T07:54:39.917Z] Time:          Mon Sep 29 2025 07:54:39 GMT+0000 (Coordinated Universal Time)
+[debug] [2025-09-29T07:54:39.918Z] ----------------------------------------------------------------------
 [debug] 
-[debug] [2025-09-29T07:53:04.800Z] No OAuth tokens found
-[debug] [2025-09-29T07:53:04.800Z] No OAuth tokens found
+[debug] [2025-09-29T07:54:40.447Z] No OAuth tokens found
+[debug] [2025-09-29T07:54:40.448Z] No OAuth tokens found
 [error] Failed to fetch Firebase Project from current Studio Workspace: Unable to refresh auth: not yet authenticated.
-[debug] [2025-09-29T07:53:04.806Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform","https://www.googleapis.com/auth/userinfo.email"]
-[debug] [2025-09-29T07:53:07.996Z] Running auto auth
+[debug] [2025-09-29T07:54:40.454Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform","https://www.googleapis.com/auth/userinfo.email"]
+[debug] [2025-09-29T07:54:43.751Z] Running auto auth
 [info] i  emulators: Starting emulators: functions {"metadata":{"emulator":{"name":"hub"},"message":"Starting emulators: functions"}}
 [info] i  emulators: Detected demo project ID "demo-no-project", emulated services will use a demo configuration and attempts to access non-emulated services for this project will fail. {"metadata":{"emulator":{"name":"hub"},"message":"Detected demo project ID \"demo-no-project\", emulated services will use a demo configuration and attempts to access non-emulated services for this project will fail."}}
 [warn] ⚠  logging: Error when trying to check port 4500 on ::1: Error: listen EADDRNOTAVAIL: address not available ::1:4500 {"metadata":{"emulator":{"name":"logging"},"message":"Error when trying to check port 4500 on ::1: Error: listen EADDRNOTAVAIL: address not available ::1:4500"}}
 [warn] ⚠  logging: Port 4500 is available on 127.0.0.1 but not ::1. This may cause issues with some clients. {"metadata":{"emulator":{"name":"logging"},"message":"Port 4500 is available on 127.0.0.1 but not ::1. This may cause issues with some clients."}}
 [warn] ⚠  logging: If you encounter connectivity issues, consider switching to a different port or explicitly specifying "host": "<ip address>" instead of hostname in firebase.json {"metadata":{"emulator":{"name":"logging"},"message":"If you encounter connectivity issues, consider switching to a different port or explicitly specifying \u001b[33m\"host\": \"<ip address>\"\u001b[39m instead of hostname in firebase.json"}}
-[debug] [2025-09-29T07:53:08.017Z] assigned listening specs for emulators {"user":{"hub":[{"address":"127.0.0.1","family":"IPv4","port":4400}],"ui":[{"address":"127.0.0.1","family":"IPv4","port":4000}],"logging":[{"address":"127.0.0.1","family":"IPv4","port":4500}]},"metadata":{"message":"assigned listening specs for emulators"}}
-[debug] [2025-09-29T07:53:08.025Z] Emulator locator file path: /tmp/hub-demo-no-project.json
-[debug] [2025-09-29T07:53:08.027Z] [hub] writing locator at /tmp/hub-demo-no-project.json
+[debug] [2025-09-29T07:54:43.767Z] assigned listening specs for emulators {"user":{"hub":[{"address":"127.0.0.1","family":"IPv4","port":4400}],"ui":[{"address":"127.0.0.1","family":"IPv4","port":4000}],"logging":[{"address":"127.0.0.1","family":"IPv4","port":4500}]},"metadata":{"message":"assigned listening specs for emulators"}}
+[debug] [2025-09-29T07:54:43.773Z] Emulator locator file path: /tmp/hub-demo-no-project.json
+[debug] [2025-09-29T07:54:43.773Z] [hub] writing locator at /tmp/hub-demo-no-project.json
 [warn] ⚠  eventarc: Error when trying to check port 9299 on ::1: Error: listen EADDRNOTAVAIL: address not available ::1:9299 {"metadata":{"emulator":{"name":"eventarc"},"message":"Error when trying to check port 9299 on ::1: Error: listen EADDRNOTAVAIL: address not available ::1:9299"}}
 [warn] ⚠  eventarc: Port 9299 is available on 127.0.0.1 but not ::1. This may cause issues with some clients. {"metadata":{"emulator":{"name":"eventarc"},"message":"Port 9299 is available on 127.0.0.1 but not ::1. This may cause issues with some clients."}}
 [warn] ⚠  eventarc: If you encounter connectivity issues, consider switching to a different port or explicitly specifying "host": "<ip address>" instead of hostname in firebase.json {"metadata":{"emulator":{"name":"eventarc"},"message":"If you encounter connectivity issues, consider switching to a different port or explicitly specifying \u001b[33m\"host\": \"<ip address>\"\u001b[39m instead of hostname in firebase.json"}}
 [warn] ⚠  tasks: Error when trying to check port 9499 on ::1: Error: listen EADDRNOTAVAIL: address not available ::1:9499 {"metadata":{"emulator":{"name":"tasks"},"message":"Error when trying to check port 9499 on ::1: Error: listen EADDRNOTAVAIL: address not available ::1:9499"}}
 [warn] ⚠  tasks: Port 9499 is available on 127.0.0.1 but not ::1. This may cause issues with some clients. {"metadata":{"emulator":{"name":"tasks"},"message":"Port 9499 is available on 127.0.0.1 but not ::1. This may cause issues with some clients."}}
 [warn] ⚠  tasks: If you encounter connectivity issues, consider switching to a different port or explicitly specifying "host": "<ip address>" instead of hostname in firebase.json {"metadata":{"emulator":{"name":"tasks"},"message":"If you encounter connectivity issues, consider switching to a different port or explicitly specifying \u001b[33m\"host\": \"<ip address>\"\u001b[39m instead of hostname in firebase.json"}}
-[debug] [2025-09-29T07:53:08.045Z] late-assigned ports for functions and eventarc emulators {"user":{"hub":[{"address":"127.0.0.1","family":"IPv4","port":4400}],"ui":[{"address":"127.0.0.1","family":"IPv4","port":4000}],"logging":[{"address":"127.0.0.1","family":"IPv4","port":4500}],"functions":[{"address":"127.0.0.1","family":"IPv4","port":5001}],"eventarc":[{"address":"127.0.0.1","family":"IPv4","port":9299}],"tasks":[{"address":"127.0.0.1","family":"IPv4","port":9499}]},"metadata":{"message":"late-assigned ports for functions and eventarc emulators"}}
+[debug] [2025-09-29T07:54:43.782Z] late-assigned ports for functions and eventarc emulators {"user":{"hub":[{"address":"127.0.0.1","family":"IPv4","port":4400}],"ui":[{"address":"127.0.0.1","family":"IPv4","port":4000}],"logging":[{"address":"127.0.0.1","family":"IPv4","port":4500}],"functions":[{"address":"127.0.0.1","family":"IPv4","port":5001}],"eventarc":[{"address":"127.0.0.1","family":"IPv4","port":9299}],"tasks":[{"address":"127.0.0.1","family":"IPv4","port":9499}]},"metadata":{"message":"late-assigned ports for functions and eventarc emulators"}}
 [warn] ⚠  functions: Application Default Credentials detected. Non-emulated services will access production using these credentials. Be careful! {"metadata":{"emulator":{"name":"functions"},"message":"Application Default Credentials detected. Non-emulated services will access production using these credentials. Be careful!"}}
 [info] i  functions: Watching "/home/user/studio/functions" for Cloud Functions... {"metadata":{"emulator":{"name":"functions"},"message":"Watching \"/home/user/studio/functions\" for Cloud Functions..."}}
-[debug] [2025-09-29T07:53:11.083Z] Validating nodejs source
-[debug] [2025-09-29T07:53:12.345Z] > [functions] package.json contents: {
+[debug] [2025-09-29T07:54:46.930Z] Validating nodejs source
+[debug] [2025-09-29T07:54:48.021Z] > [functions] package.json contents: {
   "name": "functions",
   "description": "Cloud Functions for Firebase",
   "scripts": {
@@ -65,17 +65,17 @@
   },
   "private": true
 }
-[debug] [2025-09-29T07:53:12.349Z] Building nodejs source
-[debug] [2025-09-29T07:53:12.350Z] Failed to find version of module node: reached end of search path /home/user/studio/functions/node_modules
+[debug] [2025-09-29T07:54:48.022Z] Building nodejs source
+[debug] [2025-09-29T07:54:48.023Z] Failed to find version of module node: reached end of search path /home/user/studio/functions/node_modules
 [warn] ⚠  functions: Your requested "node" version "18" doesn't match your global version "20". Using node@20 from host. 
-[debug] [2025-09-29T07:53:12.365Z] Could not find functions.yaml. Must use http discovery
-[debug] [2025-09-29T07:53:12.371Z] Found firebase-functions binary at '/home/user/studio/node_modules/.bin/firebase-functions'
-[info] Serving at port 8049
+[debug] [2025-09-29T07:54:48.029Z] Could not find functions.yaml. Must use http discovery
+[debug] [2025-09-29T07:54:48.041Z] Found firebase-functions binary at '/home/user/studio/node_modules/.bin/firebase-functions'
+[info] Serving at port 8533
 
-[debug] [2025-09-29T07:53:14.057Z] Got response from /__/functions.yaml {"endpoints":{"api":{"availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"concurrency":null,"serviceAccountEmail":null,"vpc":null,"platform":"gcfv2","region":["asia-northeast3"],"secretEnvironmentVariables":[{"key":"YOUTUBE_API_KEY"},{"key":"KAKAO_APP_KEY"},{"key":"NAVER_DATALAB_CLIENT_ID"},{"key":"NAVER_DATALAB_CLIENT_SECRET"},{"key":"NAVER_CLIENT_ID"},{"key":"NAVER_CLIENT_SECRET"},{"key":"GOOGLE_CUSTOM_SEARCH_API_KEY"},{"key":"GOOGLE_CUSTOM_SEARCH_ENGINE_ID"}],"labels":{},"httpsTrigger":{},"entryPoint":"api"}},"specVersion":"v1alpha1","requiredAPIs":[],"extensions":{}}
+[debug] [2025-09-29T07:54:49.792Z] Got response from /__/functions.yaml {"endpoints":{"api":{"availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"concurrency":null,"serviceAccountEmail":null,"vpc":null,"platform":"gcfv2","region":["asia-northeast3"],"secretEnvironmentVariables":[{"key":"YOUTUBE_API_KEY"},{"key":"KAKAO_APP_KEY"},{"key":"NAVER_DATALAB_CLIENT_ID"},{"key":"NAVER_DATALAB_CLIENT_SECRET"},{"key":"NAVER_CLIENT_ID"},{"key":"NAVER_CLIENT_SECRET"},{"key":"GOOGLE_CUSTOM_SEARCH_API_KEY"},{"key":"GOOGLE_CUSTOM_SEARCH_ENGINE_ID"}],"labels":{},"httpsTrigger":{},"entryPoint":"api"}},"specVersion":"v1alpha1","requiredAPIs":[],"extensions":{}}
 [info] ✔  functions: Loaded functions definitions from source: api. {"metadata":{"emulator":{"name":"functions"},"message":"Loaded functions definitions from source: api."}}
 [info] ✔  functions[asia-northeast3-api]: http function initialized (http://127.0.0.1:5001/demo-no-project/asia-northeast3/api). {"metadata":{"emulator":{"name":"functions"},"message":"\u001b[1mhttp\u001b[22m function initialized (http://127.0.0.1:5001/demo-no-project/asia-northeast3/api)."}}
-[debug] [2025-09-29T07:53:14.182Z] Could not find VSCode notification endpoint: FetchError: request to http://localhost:40001/vscode/notify failed, reason: connect ECONNREFUSED 127.0.0.1:40001. If you are not running the Firebase Data Connect VSCode extension, this is expected and not an issue.
+[debug] [2025-09-29T07:54:49.917Z] Could not find VSCode notification endpoint: FetchError: request to http://localhost:40001/vscode/notify failed, reason: connect ECONNREFUSED 127.0.0.1:40001. If you are not running the Firebase Data Connect VSCode extension, this is expected and not an issue.
 [info] 
 ┌─────────────────────────────────────────────────────────────┐
 │ ✔  All emulators ready! It is now safe to connect your app. │

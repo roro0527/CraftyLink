@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "npm-run-all --parallel dev:*",
+    "dev": "npm run dev:next",
     "dev:next": "next dev --turbopack",
     "dev:emulators": "cd functions && npm run serve",
     "build": "next build",

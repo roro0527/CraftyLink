@@ -16,10 +16,10 @@ import { Terminal, Pin, MessageSquareQuote, Pilcrow } from 'lucide-react';
 
 interface DictionaryResultProps {
     query: string; // 부모 컴포넌트로부터 받은 검색어
-    setIsParentLoading: (isLoading: boolean) => void; // 로딩 상태를 부모에게 전달하는 함수
+    setIsLoading: (isLoading: boolean) => void; // 로딩 상태를 부모에게 전달하는 함수
 }
 
-const DictionaryResult: React.FC<DictionaryResultProps> = ({ query, setIsParentLoading }) => {
+const DictionaryResult: React.FC<DictionaryResultProps> = ({ query, setIsLoading }) => {
     // --- State 정의 ---
     const [result, setResult] = React.useState<DictionaryEntry | null>(null); // API 결과
     const [isFetching, setIsFetching] = React.useState(false); // 내부 로딩 상태
@@ -35,7 +35,7 @@ const DictionaryResult: React.FC<DictionaryResultProps> = ({ query, setIsParentL
                 return;
             };
             setIsFetching(true);
-            setIsParentLoading(true); // 부모 컴포넌트에 로딩 시작 알림
+            setIsLoading(true); // 부모 컴포넌트에 로딩 시작 알림
             setError(null);
             try {
                 const entry = await getDictionaryEntryAction({ keyword: query });
@@ -45,12 +45,12 @@ const DictionaryResult: React.FC<DictionaryResultProps> = ({ query, setIsParentL
                 setError("사전 정보를 생성하는 데 실패했습니다. 잠시 후 다시 시도해주세요.");
             } finally {
                 setIsFetching(false);
-                setIsParentLoading(false); // 부모 컴포넌트에 로딩 종료 알림
+                setIsLoading(false); // 부모 컴포넌트에 로딩 종료 알림
             }
         };
 
         fetchEntry();
-    }, [query, setIsParentLoading]);
+    }, [query, setIsLoading]);
 
     // 검색어가 없으면 아무것도 렌더링하지 않습니다.
     if (!query) {

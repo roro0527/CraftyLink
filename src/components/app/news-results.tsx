@@ -16,10 +16,10 @@ import { Terminal } from 'lucide-react';
 
 interface NewsResultsProps {
     query: string; // 부모 컴포넌트로부터 받은 검색어
-    setIsParentLoading: (isLoading: boolean) => void; // 로딩 상태를 부모에게 전달하는 함수
+    setIsLoading: (isLoading: boolean) => void; // 로딩 상태를 부모에게 전달하는 함수
 }
 
-const NewsResults: React.FC<NewsResultsProps> = ({ query, setIsParentLoading }) => {
+const NewsResults: React.FC<NewsResultsProps> = ({ query, setIsLoading }) => {
     // --- State 정의 ---
     const [results, setResults] = React.useState<RelatedNewsData>([]); // API 결과
     const [isFetching, setIsFetching] = React.useState(false); // 내부 로딩 상태
@@ -35,7 +35,7 @@ const NewsResults: React.FC<NewsResultsProps> = ({ query, setIsParentLoading }) 
                 return;
             };
             setIsFetching(true);
-            setIsParentLoading(true); // 부모 컴포넌트에 로딩 시작 알림
+            setIsLoading(true); // 부모 컴포넌트에 로딩 시작 알림
             setError(null);
             try {
                 const news = await getNaverNewsAction({ keyword: query });
@@ -45,12 +45,12 @@ const NewsResults: React.FC<NewsResultsProps> = ({ query, setIsParentLoading }) 
                 setError("뉴스 정보를 가져오는 데 실패했습니다. 잠시 후 다시 시도해주세요.");
             } finally {
                 setIsFetching(false);
-                setIsParentLoading(false); // 부모 컴포넌트에 로딩 종료 알림
+                setIsLoading(false); // 부모 컴포넌트에 로딩 종료 알림
             }
         };
 
         fetchNews();
-    }, [query, setIsParentLoading]);
+    }, [query, setIsLoading]);
 
     // 검색어가 없으면 아무것도 렌더링하지 않습니다.
     if (!query) {

@@ -34,21 +34,22 @@ const SearchResultItem: React.FC<{ item: SearchResult }> = ({ item }) => {
   }
 
   return (
-    <div className={`relative break-inside-avoid-page group overflow-hidden rounded-lg animate-in fade-in-50 duration-500 ${!isVisible ? 'hidden' : ''}`}>
-       {isImageLoading && <Skeleton className="absolute inset-0 w-full h-full" />}
-       <a href={item.url} target="_blank" rel="noopener noreferrer" className="block">
-          {item.imageUrl && (
-            <Image
-              src={item.imageUrl}
-              alt={item.title}
-              width={500}
-              height={500}
-              className={`w-full h-auto object-cover transition-transform duration-300 group-hover:scale-105 ${isImageLoading ? 'opacity-0' : 'opacity-100'}`}
-              unoptimized
-              onLoad={() => setIsImageLoading(false)}
-              onError={handleImageError}
-            />
-          )}
+    <div className={`break-inside-avoid-page group animate-in fade-in-50 duration-500 ${!isVisible ? 'hidden' : ''}`}>
+       <a href={item.url} target="_blank" rel="noopener noreferrer" className="block overflow-hidden rounded-lg relative">
+          <div className="aspect-video bg-muted relative">
+              {isImageLoading && <Skeleton className="absolute inset-0 w-full h-full" />}
+              {item.imageUrl && (
+                <Image
+                  src={item.imageUrl}
+                  alt={item.title}
+                  fill
+                  className={`object-cover transition-transform duration-300 group-hover:scale-105 ${isImageLoading ? 'opacity-0' : 'opacity-100'}`}
+                  unoptimized
+                  onLoad={() => setIsImageLoading(false)}
+                  onError={handleImageError}
+                />
+              )}
+          </div>
           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
              <div className="absolute bottom-2 left-2 right-2">
                  <p className="text-xs text-white truncate">{item.source}</p>
@@ -89,7 +90,7 @@ const PhotoResults: React.FC<PhotoResultsProps> = ({ query }) => {
         return (
             <div className="columns-2 sm:columns-3 md:columns-4 lg:columns-5 gap-4 space-y-4">
                 {Array.from({ length: 10 }).map((_, i) => (
-                    <Skeleton key={`skel-photo-${i}`} className="h-64 w-full break-inside-avoid-page" />
+                    <Skeleton key={`skel-photo-${i}`} className="h-40 w-full break-inside-avoid-page" />
                 ))}
             </div>
         );

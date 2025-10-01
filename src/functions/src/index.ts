@@ -2,21 +2,17 @@
 /**
  * @fileOverview Firebase Cloud Functions for CraftyLink.
  *
- * This file defines two main HTTP endpoints:
- * 1. /getTopVideos: Fetches top YouTube videos for a given location, using Kakao API for geocoding.
- * 2. /getGoogleImages: Fetches images from Google Custom Search API.
- *
- * All endpoints include caching, rate limiting, and robust error handling.
+ * This file defines independent HTTP endpoints using Firebase Functions v2.
+ * - api/getGoogleImages: Fetches images from Google Custom Search API.
+ * - api/getTopVideos: Fetches top YouTube videos for a given location.
  */
 
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
-import express from "express";
-import cors from "cors";
 import axios from "axios";
 import { google } from "googleapis";
-import rateLimit from "express-rate-limit";
 import { onRequest } from "firebase-functions/v2/https";
+import cors from "cors";
 
 // Initialize Firebase Admin SDK
 try {
@@ -25,44 +21,87 @@ try {
   console.error('Firebase admin initialization error', e);
 }
 
+const corsMiddleware = cors({ origin: true });
 
-const app = express();
+// --- Google Images Function ---
+export const getGoogleImages = onRequest(
+    {
+        region: "asia-northeast3",
+        secrets: ["GOOGLE_CUSTOM_SEARCH_API_KEY", "GOOGLE_CUSTOM_SEARCH_ENGINE_ID"],
+    },
+    (req, res) => {
+        corsMiddleware(req, res, async () => {
+            const { query, start } = req.query;
 
-// Use cors middleware for all routes
-app.use(cors({ origin: true }));
+            if (typeof query !== "string") {
+                res.status(400).send({ error: "query parameter is missing or invalid." });
+                return;
+            }
 
+            const apiKey = process.env.GOOGLE_CUSTOM_SEARCH_API_KEY;
+            const cseId = process.env.GOOGLE_CUSTOM_SEARCH_ENGINE_ID;
 
-// Basic rate limiting to prevent abuse
-const limiter = rateLimit({
-  windowMs: 60 * 1000, // 1 minute
-  max: 30, // Limit each IP to 30 requests per windowMs
-  standardHeaders: true,
-  legacyHeaders: false,
-  handler: (req, res) => {
-    functions.logger.warn("Rate limit exceeded for IP:", req.ip);
-    res.status(429).send({ error: "Too many requests, please try again later." });
-  },
-});
+            if (!apiKey || !cseId) {
+                functions.logger.error("Google Custom Search API Key or Engine ID is not configured.");
+                res.status(500).send({ error: "Server configuration error." });
+                return;
+            }
 
-app.use(limiter); // Apply rate limiter to all routes
+            const url = "https://www.googleapis.com/customsearch/v1";
+
+            try {
+                const response = await axios.get(url, {
+                    params: {
+                        key: apiKey,
+                        cx: cseId,
+                        q: query,
+                        searchType: "image",
+                        num: 10,
+                        start: start || 1,
+                    },
+                });
+
+                const items = response.data.items || [];
+                const searchResult = items.map((item: any) => ({
+                    id: item.cacheId || `${item.link}-${Math.random()}`,
+                    title: item.title,
+                    url: item.image.contextLink,
+                    imageUrl: item.link,
+                    description: item.snippet,
+                    source: item.displayLink,
+                }));
+                
+                const nextPageIndex = response.data.queries?.nextPage?.[0]?.startIndex;
+
+                res.status(200).json({ 
+                    photos: searchResult,
+                    nextPage: nextPageIndex,
+                });
+
+            } catch (error) {
+                if (axios.isAxiosError(error)) {
+                    functions.logger.error("Google Custom Search API call failed:", error.response?.data || error.message);
+                    res.status(error.response?.status || 500).send({ error: "Failed to fetch images from Google.", details: error.response?.data });
+                } else {
+                    functions.logger.error("An unexpected error occurred while fetching Google Images:", error);
+                    res.status(500).send({ error: "An unexpected error occurred." });
+                }
+            }
+        });
+    }
+);
 
 
 // --- YouTube and Kakao API Setup ---
 const youtube = google.youtube({
   version: "v3",
-  auth: process.env.YOUTUBE_API_KEY,
 });
-const KAKAO_API_KEY = process.env.KAKAO_APP_KEY;
-
-
-
-/**
- * Fetches the city name from geographic coordinates using Kakao's coord2address API.
- * @param {number} lat - The latitude.
- * @param {number} lng - The longitude.
- * @returns {Promise<string>} The name of the city (e.g., "서울특별시").
- */
 async function getCityFromCoords(lat: number, lng: number): Promise<string> {
+  const KAKAO_API_KEY = process.env.KAKAO_APP_KEY;
+  if (!KAKAO_API_KEY) {
+    functions.logger.error("Kakao API Key is not configured.");
+    throw new functions.https.HttpsError("internal", "Server configuration error for location services.");
+  }
   const url = `https://dapi.kakao.com/v2/local/geo/coord2address.json?x=${lng}&y=${lat}`;
   try {
     const response = await axios.get(url, {
@@ -79,14 +118,6 @@ async function getCityFromCoords(lat: number, lng: number): Promise<string> {
   }
 }
 
-/**
- * Fetches top YouTube videos based on location and a fallback query.
- * @param {string} city - The city name to use as a fallback query.
- * @param {number} lat - The latitude for location-based search.
- * @param {number} lng - The longitude for location-based search.
- * @param {number} radius - The search radius in kilometers.
- * @returns {Promise<any[]>} A list of video items with snippet and statistics.
- */
 async function fetchTopVideos(city: string, lat: number, lng: number, radius: number): Promise<any[]> {
     const locationString = `${lat},${lng}`;
     const locationRadiusString = `${radius}km`;
@@ -94,8 +125,13 @@ async function fetchTopVideos(city: string, lat: number, lng: number, radius: nu
     
     let videoIds = new Set<string>();
 
+    const youtubeClient = google.youtube({
+        version: 'v3',
+        auth: process.env.YOUTUBE_API_KEY,
+    });
+
     try {
-        const locationSearchResponse = await youtube.search.list({
+        const locationSearchResponse = await youtubeClient.search.list({
             part: ['id'],
             type: ['video'],
             location: locationString,
@@ -106,7 +142,7 @@ async function fetchTopVideos(city: string, lat: number, lng: number, radius: nu
         locationSearchResponse.data.items?.forEach(item => item.id?.videoId && videoIds.add(item.id.videoId));
         
         if (videoIds.size < MAX_RESULTS_PER_CALL) {
-            const citySearchResponse = await youtube.search.list({
+            const citySearchResponse = await youtubeClient.search.list({
                 part: ['id'],
                 type: ['video'],
                 q: `${city} 인기 영상`,
@@ -118,7 +154,7 @@ async function fetchTopVideos(city: string, lat: number, lng: number, radius: nu
 
         if (videoIds.size === 0) return [];
 
-        const videoDetailsResponse = await youtube.videos.list({
+        const videoDetailsResponse = await youtubeClient.videos.list({
             part: ['snippet', 'statistics'],
             id: Array.from(videoIds),
             maxResults: 50,
@@ -133,37 +169,37 @@ async function fetchTopVideos(city: string, lat: number, lng: number, radius: nu
 }
 
 
-app.get("/getTopVideos", async (req, res) => {
-    const { lat, lng, radius, city } = req.query;
-
-    if (!lat || !lng || !radius) {
-        return res.status(400).send({ error: "lat, lng, and radius parameters are required." });
-    }
-
-    try {
-        const latitude = parseFloat(lat as string);
-        const longitude = parseFloat(lng as string);
-        const searchRadius = parseFloat(radius as string);
-        const fallbackCity = city as string || await getCityFromCoords(latitude, longitude);
-
-        const videos = await fetchTopVideos(fallbackCity, latitude, longitude, searchRadius);
-        return res.status(200).json(videos);
-    } catch (error) {
-        if (error instanceof functions.https.HttpsError) {
-            return res.status(500).send({ error: error.message });
-        }
-        functions.logger.error("An unexpected error occurred in /getTopVideos:", error);
-        return res.status(500).send({ error: "An unexpected error occurred." });
-    }
-});
-
-// Note: The /getGoogleImages endpoint is removed as it's now handled by a Genkit flow.
-// This simplifies the Cloud Function logic and keeps API calls managed in one place (Genkit flows).
-
-export const api = onRequest(
+// --- Top Videos Function ---
+export const getTopVideos = onRequest(
     {
         region: "asia-northeast3",
-        secrets: ["YOUTUBE_API_KEY", "KAKAO_APP_KEY", "NAVER_DATALAB_CLIENT_ID", "NAVER_DATALAB_CLIENT_SECRET", "NAVER_CLIENT_ID", "NAVER_CLIENT_SECRET", "GOOGLE_CUSTOM_SEARCH_API_KEY", "GOOGLE_CUSTOM_SEARCH_ENGINE_ID"],
+        secrets: ["YOUTUBE_API_KEY", "KAKAO_APP_KEY"],
     },
-    app
+    (req, res) => {
+        corsMiddleware(req, res, async () => {
+            const { lat, lng, radius, city } = req.query;
+
+            if (!lat || !lng || !radius) {
+                res.status(400).send({ error: "lat, lng, and radius parameters are required." });
+                return;
+            }
+
+            try {
+                const latitude = parseFloat(lat as string);
+                const longitude = parseFloat(lng as string);
+                const searchRadius = parseFloat(radius as string);
+                const fallbackCity = city as string || await getCityFromCoords(latitude, longitude);
+
+                const videos = await fetchTopVideos(fallbackCity, latitude, longitude, searchRadius);
+                res.status(200).json(videos);
+            } catch (error) {
+                if (error instanceof functions.https.HttpsError) {
+                    res.status(500).send({ error: error.message });
+                } else {
+                    functions.logger.error("An unexpected error occurred in /getTopVideos:", error);
+                    res.status(500).send({ error: "An unexpected error occurred." });
+                }
+            }
+        });
+    }
 );

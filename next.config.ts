@@ -9,10 +9,22 @@ const nextConfig: NextConfig = {
     ignoreDuringBuilds: true,
   },
   async rewrites() {
+    const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+    const region = 'asia-northeast3';
+    if (!projectId) {
+        console.error("NEXT_PUBLIC_FIREBASE_PROJECT_ID is not set. API rewrites will not work.");
+        return [];
+    }
+    const functionBaseUrl = `http://127.0.0.1:5001/${projectId}/${region}`;
+
     return [
       {
-        source: '/api/:path*',
-        destination: `http://127.0.0.1:5001/${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}/asia-northeast3/api/:path*`,
+        source: '/api/getGoogleImages',
+        destination: `${functionBaseUrl}/getGoogleImages`,
+      },
+       {
+        source: '/api/getTopVideos',
+        destination: `${functionBaseUrl}/getTopVideos`,
       },
     ];
   },

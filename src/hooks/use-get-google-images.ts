@@ -9,7 +9,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { SearchResult } from '@/lib/types';
 import axios from 'axios';
-import { getFirebase } from '@/firebase/client';
 
 export const useGetGoogleImages = (query: string) => {
   // --- State 정의 ---
@@ -19,10 +18,6 @@ export const useGetGoogleImages = (query: string) => {
   const [startIndex, setStartIndex] = useState(1); // 다음 검색 시작 인덱스
   const [hasMore, setHasMore] = useState(true); // 추가 데이터 존재 여부
   
-  const { functions } = getFirebase();
-  // TODO: Use a real deployed Cloud Function URL
-  const functionsUrl = `http://127.0.0.1:5001/${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}/asia-northeast3/api`;
-
   /**
    * 이미지 검색 Cloud Function을 호출하여 데이터를 가져오는 함수.
    * useCallback으로 메모이제이션하여 불필요한 함수 재생성을 방지합니다.
@@ -36,7 +31,7 @@ export const useGetGoogleImages = (query: string) => {
     setError(null);
 
     try {
-        const response = await axios.get(`${functionsUrl}/getGoogleImages`, {
+        const response = await axios.get(`/api/getGoogleImages`, {
             params: {
               query: currentQuery,
               start: start,
@@ -70,7 +65,7 @@ export const useGetGoogleImages = (query: string) => {
     } finally {
       setIsLoading(false);
     }
-  }, [functionsUrl]);
+  }, []);
 
   /**
    * 검색어(query)가 변경되면 상태를 초기화하고 첫 페이지 데이터를 가져옵니다.

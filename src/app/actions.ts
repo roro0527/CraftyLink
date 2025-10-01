@@ -12,7 +12,6 @@ import { getRelatedKeywords } from '@/ai/flows/related-keywords-flow';
 import { getYoutubeVideos, type YoutubeVideosInput, type YoutubeVideosData } from '@/ai/flows/youtube-videos-flow';
 import { getNaverNews, type NaverNewsInput, type RelatedNewsData } from '@/ai/flows/naver-news-flow';
 import { getDictionaryEntry, type DictionaryInput, type DictionaryEntry } from '@/ai/flows/dictionary-flow';
-import { getGoogleImages, type GoogleImagesInput, type GoogleImagesData } from '@/ai/flows/google-images-flow';
 
 
 /**
@@ -93,21 +92,5 @@ export async function getDictionaryEntryAction(input: DictionaryInput): Promise<
         console.error('Error in getDictionaryEntryAction:', error);
         // 클라이언트에서 에러 상태를 처리할 수 있도록 다시 던집니다.
         throw new Error('Failed to get dictionary entry.');
-    }
-}
-
-/**
- * 구글 이미지 검색 결과를 가져오는 서버 액션입니다.
- * @param input 키워드와 시작 인덱스를 포함하는 객체
- * @returns 이미지 검색 결과와 다음 페이지 인덱스를 포함하는 객체
- */
-export async function getGoogleImagesAction(input: GoogleImagesInput): Promise<GoogleImagesData> {
-    try {
-        const images = await getGoogleImages(input);
-        return images;
-    } catch (error) {
-        console.error('Error in getGoogleImagesAction:', error);
-        // 클라이언트에서 에러 상태를 처리할 수 있도록 다시 던집니다.
-        throw new Error('Failed to get google images.');
     }
 }

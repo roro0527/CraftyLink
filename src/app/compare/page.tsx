@@ -506,4 +506,3 @@ export default function ComparePage() {
 }
 
 // ComparePage에서만 사용되던 '저장된 비교 목록' 섹션을 사이드바로 옮겼으므로 이 페이지에서는 제거합니다.
-```

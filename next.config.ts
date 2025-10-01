@@ -19,8 +19,8 @@ const nextConfig: NextConfig = {
 
     return [
        {
-        source: '/api/getTopVideos',
-        destination: `${functionBaseUrl}/getTopVideos`,
+        source: '/api/:path*',
+        destination: `${functionBaseUrl}/api/:path*`,
       },
     ];
   },

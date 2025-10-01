@@ -90,7 +90,9 @@ const PhotoResults: React.FC<PhotoResultsProps> = ({ query }) => {
         return (
             <div className="columns-2 sm:columns-3 md:columns-4 lg:columns-5 gap-4 space-y-4">
                 {Array.from({ length: 10 }).map((_, i) => (
-                    <Skeleton key={`skel-photo-${i}`} className="h-40 w-full break-inside-avoid-page" />
+                    <div key={`skel-photo-${i}`} className="break-inside-avoid-page">
+                        <Skeleton className="h-auto aspect-video w-full" />
+                    </div>
                 ))}
             </div>
         );

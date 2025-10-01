@@ -26,8 +26,6 @@ const nextConfig: NextConfig = {
     return [
        {
         source: '/api/:path*',
-        // The destination should point to the single 'api' function.
-        // Express will handle the routing for paths like '/getGoogleImages'.
         destination: `${functionBaseUrl}/api/:path*`,
       },
     ];

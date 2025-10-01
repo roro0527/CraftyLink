@@ -46,10 +46,10 @@ export default function RegionExplorePage() {
 
   // --- JSX 렌더링 ---
   return (
-    <div className="container mx-auto p-4 md:p-8">
+    <div className="flex flex-col h-full">
       {/* 헤더: 검색창 */}
-      <header className="mb-8 flex flex-col items-center">
-        <div className="w-full max-w-xl flex gap-2">
+      <header className="sticky top-16 z-10 bg-background/80 backdrop-blur-sm border-b p-4">
+        <div className="w-full max-w-xl mx-auto flex gap-2">
             <Input
                 type="text"
                 placeholder="검색어를 입력하세요..."
@@ -66,41 +66,43 @@ export default function RegionExplorePage() {
         </div>
       </header>
 
-      {/* 탭 메뉴 */}
-      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as SearchCategory)} className="w-full">
-        <TabsList className="grid w-full grid-cols-4 mb-6">
-            <TabsTrigger value="photo">사진</TabsTrigger>
-            <TabsTrigger value="news">뉴스</TabsTrigger>
-            <TabsTrigger value="dictionary">사전</TabsTrigger>
-            <TabsTrigger value="video">동영상</TabsTrigger>
-        </TabsList>
+      <div className="container mx-auto px-4 md:px-8 py-6 flex-1">
+        {/* 탭 메뉴 */}
+        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as SearchCategory)} className="w-full">
+          <TabsList className="grid w-full grid-cols-4 mb-6">
+              <TabsTrigger value="photo">사진</TabsTrigger>
+              <TabsTrigger value="news">뉴스</TabsTrigger>
+              <TabsTrigger value="dictionary">사전</TabsTrigger>
+              <TabsTrigger value="video">동영상</TabsTrigger>
+          </TabsList>
 
-        {/* 탭 콘텐츠 */}
-        <div className="mt-6">
-            {!submittedQuery ? (
-                // 검색어가 제출되기 전의 초기 화면
-                <div className="text-center py-20 text-muted-foreground">
-                    <p>궁금한 내용을 검색해보세요.</p>
-                </div>
-            ) : (
-                // 검색어가 제출된 후 각 탭에 맞는 콘텐츠를 보여줌
-                <>
-                    <TabsContent value="photo">
-                        <PhotoResults query={submittedQuery} setIsParentLoading={setIsSearching} />
-                    </TabsContent>
-                    <TabsContent value="news">
-                        <NewsResults query={submittedQuery} setIsParentLoading={setIsSearching} />
-                    </TabsContent>
-                    <TabsContent value="dictionary">
-                        <DictionaryResult query={submittedQuery} setIsParentLoading={setIsSearching} />
-                    </TabsContent>
-                    <TabsContent value="video">
-                        <VideoResults query={submittedQuery} setIsParentLoading={setIsSearching} />
-                    </TabsContent>
-                </>
-            )}
-        </div>
-      </Tabs>
+          {/* 탭 콘텐츠 */}
+          <div className="mt-6">
+              {!submittedQuery ? (
+                  // 검색어가 제출되기 전의 초기 화면
+                  <div className="text-center py-20 text-muted-foreground">
+                      <p>궁금한 내용을 검색해보세요.</p>
+                  </div>
+              ) : (
+                  // 검색어가 제출된 후 각 탭에 맞는 콘텐츠를 보여줌
+                  <>
+                      <TabsContent value="photo">
+                          <PhotoResults query={submittedQuery} setIsParentLoading={setIsSearching} />
+                      </TabsContent>
+                      <TabsContent value="news">
+                          <NewsResults query={submittedQuery} setIsParentLoading={setIsSearching} />
+                      </TabsContent>
+                      <TabsContent value="dictionary">
+                          <DictionaryResult query={submittedQuery} setIsParentLoading={setIsSearching} />
+                      </TabsContent>
+                      <TabsContent value="video">
+                          <VideoResults query={submittedQuery} setIsParentLoading={setIsSearching} />
+                      </TabsContent>
+                  </>
+              )}
+          </div>
+        </Tabs>
+      </div>
     </div>
   );
 }

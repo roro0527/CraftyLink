@@ -24,9 +24,17 @@ export default function RootLayout({
       </head>
       <body className="font-sans antialiased">
         <div className="min-h-screen bg-background text-foreground">
-          <AppHeader />
-          <Sidebar />
-          {children}
+          <div className="flex flex-col">
+            <AppHeader />
+            <div className="flex-1">
+              <div className="flex">
+                <Sidebar />
+                <main className="flex-1 pl-0 md:pl-64">
+                    {children}
+                </main>
+              </div>
+            </div>
+          </div>
           <Toaster />
         </div>
       </body>

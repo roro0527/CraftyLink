@@ -135,7 +135,7 @@ export default function Home() {
   // --- JSX 렌더링 ---
   return (
     <main className="flex-grow flex flex-col items-center px-4 py-8">
-      <div className="w-full max-w-4xl">
+      <div className="w-full max-w-7xl">
         <HomeSearchSection
           searchInput={searchInput}
           onSearchInputChange={setSearchInput}
@@ -143,17 +143,11 @@ export default function Home() {
           isSearching={isSearching}
         />
         
-        <RecommendedKeywords 
-          keywords={recommendedKeywords}
-          activeIndex={activeIndex}
-          onKeywordClick={setActiveIndex}
-        />
-
         <div className="mt-8 grid gap-6 md:grid-cols-2">
           {/* 트렌드 차트 */}
           <Card className="col-span-1">
              <CardHeader>
-                <CardTitle as="h2" className="text-xl">
+                <CardTitle as="h2" size="lg">
                   주간 트렌드: <span className="text-primary">{currentKeyword}</span>
                 </CardTitle>
                  <CardDescription>최근 2주간의 검색량 추이입니다.</CardDescription>
@@ -169,7 +163,7 @@ export default function Home() {
           {/* 관련 뉴스 섹션 */}
           <Card className="col-span-1">
             <CardHeader>
-              <CardTitle as="h2" className="text-xl">
+              <CardTitle as="h2" size="lg">
                 실시간 관련 뉴스
               </CardTitle>
                <CardDescription>
@@ -214,6 +208,12 @@ export default function Home() {
             </CardContent>
           </Card>
         </div>
+
+        <RecommendedKeywords 
+          keywords={recommendedKeywords}
+          activeIndex={activeIndex}
+          onKeywordClick={setActiveIndex}
+        />
       </div>
     </main>
   );

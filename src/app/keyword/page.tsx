@@ -30,7 +30,7 @@ import {
   TableCell,
 } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
-import { LoaderCircle, Search } from 'lucide-react';
+import { LoaderCircle, Search, ArrowUp, ArrowDown } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { getKeywordTrendsAction, getRelatedKeywordsAction, getYoutubeVideosAction } from '@/app/actions';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartConfig } from '@/components/ui/chart';
@@ -64,6 +64,8 @@ export default function KeywordPage() {
   const [timeRange, setTimeRange] = React.useState<'5d' | '1w' | '1m'>('1w'); // 조회 기간
   const [trendData, setTrendData] = React.useState<KeywordTrendPoint[]>([]); // 트렌드 데이터
   const [totalSearchVolume, setTotalSearchVolume] = React.useState<number | null>(null); // 총 검색량
+  const [peakSearchVolume, setPeakSearchVolume] = React.useState<number | null>(null);
+  const [lowestSearchVolume, setLowestSearchVolume] = React.useState<number | null>(null);
   const [relatedKeywords, setRelatedKeywords] = React.useState<string[]>([]); // 연관 키워드
   const [isFetchingRelated, setIsFetchingRelated] = React.useState(false); // 연관 키워드 로딩 상태
   const [youtubeVideos, setYoutubeVideos] = React.useState<YoutubeVideosData>({ videos: [], nextPageToken: null }); // 유튜브 영상 데이터
@@ -76,13 +78,21 @@ export default function KeywordPage() {
   };
 
   /**
-   * 트렌드 데이터 배열을 받아 총 검색량을 계산합니다.
+   * 트렌드 데이터 배열을 받아 통계를 계산합니다.
    * @param data 키워드 트렌드 포인트 배열
-   * @returns 총 검색량
    */
-  const calculateTotalVolume = (data: KeywordTrendPoint[]) => {
-    if (!data || data.length === 0) return 0;
-    return data.reduce((sum, point) => sum + point.value, 0);
+  const calculateStats = (data: KeywordTrendPoint[]) => {
+    if (!data || data.length === 0) {
+      setTotalSearchVolume(0);
+      setPeakSearchVolume(0);
+      setLowestSearchVolume(0);
+      return;
+    };
+    const total = data.reduce((sum, point) => sum + point.value, 0);
+    const values = data.map(p => p.value);
+    setTotalSearchVolume(total);
+    setPeakSearchVolume(Math.max(...values));
+    setLowestSearchVolume(Math.min(...values));
   };
 
   /**
@@ -99,6 +109,8 @@ export default function KeywordPage() {
     setIsFetchingVideos(true);
     setTrendData([]);
     setTotalSearchVolume(null);
+    setPeakSearchVolume(null);
+    setLowestSearchVolume(null);
     setRelatedKeywords([]);
     setYoutubeVideos({ videos: [], nextPageToken: null });
 
@@ -112,7 +124,7 @@ export default function KeywordPage() {
       
       // 받아온 결과로 state를 업데이트합니다.
       setTrendData(trendResult);
-      setTotalSearchVolume(calculateTotalVolume(trendResult));
+      calculateStats(trendResult);
       setRelatedKeywords(relatedResult);
       setYoutubeVideos(videoResult);
 
@@ -153,7 +165,7 @@ export default function KeywordPage() {
         try {
             const trendResult = await getKeywordTrendsAction({ keyword: keywordSearch, timeRange });
             setTrendData(trendResult);
-            setTotalSearchVolume(calculateTotalVolume(trendResult));
+            calculateStats(trendResult);
         } catch (error) {
             console.error("An error occurred fetching trends:", error);
             toast({
@@ -197,6 +209,24 @@ export default function KeywordPage() {
     window.open(`https://www.youtube.com/watch?v=${videoId}`, '_blank', 'noopener,noreferrer');
   };
 
+  const StatCard = ({ title, value, icon, isLoading }: { title: string; value: number | null; icon: React.ReactNode; isLoading: boolean}) => (
+      <Card>
+        <CardHeader className="pb-2 flex flex-row items-center justify-between">
+          <CardTitle className="text-sm font-medium">{title}</CardTitle>
+          {icon}
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <Skeleton className="h-8 w-24" />
+          ) : (
+            <div className="text-2xl font-bold">
+              {value !== null ? value.toLocaleString() : 'N/A'}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+  )
+
   // --- JSX 렌더링 ---
   return (
     <div id="keyword-page" className="p-6">
@@ -230,21 +260,25 @@ export default function KeywordPage() {
           </div>
           <p className="text-muted-foreground mt-2 ml-2">{keywordData.description}</p>
         </div>
-        <div className="grid grid-cols-1 gap-4 mt-4 md:mt-0 w-full md:w-auto">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">검색량</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {isSearching || isSearchingTrends ? (
-                <Skeleton className="h-8 w-24" />
-              ) : (
-                <div className="text-2xl font-bold">
-                  {totalSearchVolume !== null ? totalSearchVolume.toLocaleString() : 'N/A'}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4 md:mt-0 w-full md:w-auto md:min-w-[500px]">
+            <StatCard 
+                title="총 검색량" 
+                value={totalSearchVolume} 
+                isLoading={isSearching || isSearchingTrends} 
+                icon={<Search className="h-4 w-4 text-muted-foreground" />}
+            />
+            <StatCard 
+                title="최고점" 
+                value={peakSearchVolume} 
+                isLoading={isSearching || isSearchingTrends}
+                icon={<ArrowUp className="h-4 w-4 text-muted-foreground" />}
+            />
+            <StatCard 
+                title="최저점" 
+                value={lowestSearchVolume} 
+                isLoading={isSearching || isSearchingTrends}
+                icon={<ArrowDown className="h-4 w-4 text-muted-foreground" />}
+            />
         </div>
       </div>
 
@@ -263,8 +297,8 @@ export default function KeywordPage() {
       </div>
 
       {/* 메인 영역: 차트, 테이블, 연관 태그 */}
-      <div className="grid md:grid-cols-3 gap-6">
-        <div className="md:col-span-2 space-y-6">
+      <div className="grid md:grid-cols-4 gap-6">
+        <div className="md:col-span-3 space-y-6">
            {/* 키워드 검색 빈도 차트 */}
            <Card>
             <CardHeader>
@@ -360,7 +394,7 @@ export default function KeywordPage() {
             </CardContent>
           </Card>
         </div>
-        <div className="space-y-6">
+        <div className="md:col-span-1 space-y-6">
            {/* 연관 태그 */}
            <Card>
             <CardHeader>

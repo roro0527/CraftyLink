@@ -62,22 +62,14 @@ const SearchResultItem: React.FC<{ item: SearchResult }> = ({ item }) => {
 
 interface PhotoResultsProps {
     query: string; // 부모 컴포넌트로부터 받은 검색어
-    setIsLoading: (isLoading: boolean) => void; // 로딩 상태를 부모에게 전달하는 함수
 }
 
-const PhotoResults: React.FC<PhotoResultsProps> = ({ query, setIsLoading }) => {
+const PhotoResults: React.FC<PhotoResultsProps> = ({ query }) => {
     // 무한 스크롤 구현을 위한 `react-intersection-observer` 훅
     const { ref, inView } = useInView({ threshold: 0.5 });
     // 구글 이미지 검색 로직을 담은 커스텀 훅
     const { results, isLoading, error, hasMore, loadMore } = useGetGoogleImages(query);
     
-    /**
-     * 내부 로딩 상태(isLoading)가 변경될 때마다 부모 컴포넌트의 로딩 상태를 업데이트합니다.
-     */
-    React.useEffect(() => {
-      setIsLoading(isLoading);
-    }, [isLoading, setIsLoading]);
-
     /**
      * 스크롤이 맨 아래로 내려가 ref 엘리먼트가 화면에 보이면(inView) 추가 데이터를 로드합니다.
      */

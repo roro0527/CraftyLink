@@ -18,25 +18,12 @@ import DictionaryResult from '@/components/app/dictionary-result';
 import VideoResults from '@/components/app/video-results';
 import type { SearchCategory } from '@/lib/types';
 
-type LoadingStates = Record<SearchCategory, boolean>;
-
 export default function RegionExplorePage() {
   // --- State 정의 ---
   const [searchQuery, setSearchQuery] = React.useState(''); // 입력창의 현재 검색어
   const [submittedQuery, setSubmittedQuery] = React.useState(''); // 실제 검색을 실행한 검색어
   const [activeTab, setActiveTab] = React.useState<SearchCategory>('photo'); // 현재 활성화된 탭
-  const [loadingStates, setLoadingStates] = React.useState<LoadingStates>({
-    photo: false,
-    news: false,
-    dictionary: false,
-    video: false,
-  });
-
-  const isSearching = Object.values(loadingStates).some(Boolean);
-
-  const handleSetLoading = React.useCallback((category: SearchCategory, isLoading: boolean) => {
-    setLoadingStates(prev => ({ ...prev, [category]: isLoading }));
-  }, []);
+  const [isSearching, setIsSearching] = React.useState(false); // 검색 버튼 자체의 로딩 상태
 
   /**
    * 검색 버튼 클릭 또는 Enter 입력 시 실행될 핸들러.
@@ -44,7 +31,11 @@ export default function RegionExplorePage() {
    */
   const handleSearch = () => {
     if (searchQuery.trim() === '') return;
-    setSubmittedQuery(searchQuery);
+    // 검색어 제출 시, 이전과 다른 검색어일 경우 submittedQuery를 업데이트하여
+    // 자식 컴포넌트들이 새로운 검색을 시작하도록 합니다.
+    if (searchQuery !== submittedQuery) {
+        setSubmittedQuery(searchQuery);
+    }
   };
   
   /**
@@ -99,16 +90,16 @@ export default function RegionExplorePage() {
                   // 검색어가 제출된 후 각 탭에 맞는 콘텐츠를 보여줌
                   <>
                       <TabsContent value="photo">
-                          <PhotoResults query={submittedQuery} setIsLoading={(isLoading) => handleSetLoading('photo', isLoading)} />
+                          <PhotoResults query={submittedQuery} />
                       </TabsContent>
                       <TabsContent value="news">
-                          <NewsResults query={submittedQuery} setIsLoading={(isLoading) => handleSetLoading('news', isLoading)} />
+                          <NewsResults query={submittedQuery} />
                       </TabsContent>
                       <TabsContent value="dictionary">
-                          <DictionaryResult query={submittedQuery} setIsLoading={(isLoading) => handleSetLoading('dictionary', isLoading)} />
+                          <DictionaryResult query={submittedQuery} />
                       </TabsContent>
                       <TabsContent value="video">
-                          <VideoResults query={submittedQuery} setIsLoading={(isLoading) => handleSetLoading('video', isLoading)} />
+                          <VideoResults query={submittedQuery} />
                       </TabsContent>
                   </>
               )}

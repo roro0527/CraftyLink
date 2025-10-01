@@ -19,10 +19,9 @@ import { useInView } from 'react-intersection-observer';
 
 interface VideoResultsProps {
     query: string; // 부모 컴포넌트로부터 받은 검색어
-    setIsLoading: (isLoading: boolean) => void; // 로딩 상태를 부모에게 전달하는 함수
 }
 
-const VideoResults: React.FC<VideoResultsProps> = ({ query, setIsLoading }) => {
+const VideoResults: React.FC<VideoResultsProps> = ({ query }) => {
     // --- State 정의 ---
     const [results, setResults] = React.useState<YoutubeVideo[]>([]); // API 결과 목록
     const [nextPageToken, setNextPageToken] = React.useState<string | null | undefined>(undefined); // 다음 페이지 토큰
@@ -43,7 +42,6 @@ const VideoResults: React.FC<VideoResultsProps> = ({ query, setIsLoading }) => {
         if (!currentQuery) return;
         
         setIsFetching(true);
-        setIsLoading(true); // 항상 부모 로딩 상태 업데이트
         setError(null);
 
         try {
@@ -63,9 +61,8 @@ const VideoResults: React.FC<VideoResultsProps> = ({ query, setIsLoading }) => {
             setError("동영상 정보를 가져오는 데 실패했습니다. 잠시 후 다시 시도해주세요.");
         } finally {
             setIsFetching(false);
-            setIsLoading(false); // 항상 부모 로딩 상태 업데이트
         }
-    }, [setIsLoading]);
+    }, []);
 
     /**
      * query prop이 변경되면 비디오 목록을 초기화하고 첫 페이지를 가져옵니다.

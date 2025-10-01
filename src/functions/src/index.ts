@@ -15,7 +15,7 @@ import express from "express";
 import cors from "cors";
 import axios from "axios";
 import { google } from "googleapis";
-import { onRequest } from "firebase-functions/v2/https";
+import rateLimit from "express-rate-limit";
 
 // Initialize Firebase Admin SDK
 try {
@@ -29,6 +29,21 @@ const app = express();
 
 // Use cors middleware for all routes
 app.use(cors({ origin: true }));
+
+
+// Basic rate limiting to prevent abuse
+const limiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 30, // Limit each IP to 30 requests per windowMs
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: (req, res) => {
+    functions.logger.warn("Rate limit exceeded for IP:", req.ip);
+    res.status(429).send({ error: "Too many requests, please try again later." });
+  },
+});
+
+app.use(limiter); // Apply rate limiter to all routes
 
 
 app.get("/getGoogleImages", async (req, res) => {
@@ -198,10 +213,7 @@ app.get("/getTopVideos", async (req, res) => {
     }
 });
 
-export const api = onRequest(
-    {
-        region: "asia-northeast3",
-        secrets: ["YOUTUBE_API_KEY", "KAKAO_APP_KEY", "GOOGLE_CUSTOM_SEARCH_API_KEY", "GOOGLE_CUSTOM_SEARCH_ENGINE_ID"],
-    },
-    app
-);
+// Export the express app as a v1 cloud function
+export const api = functions.region("asia-northeast3").runWith({
+    secrets: ["YOUTUBE_API_KEY", "KAKAO_APP_KEY", "NAVER_DATALAB_CLIENT_ID", "NAVER_DATALAB_CLIENT_SECRET", "NAVER_CLIENT_ID", "NAVER_CLIENT_SECRET", "GOOGLE_CUSTOM_SEARCH_API_KEY", "GOOGLE_CUSTOM_SEARCH_ENGINE_ID"],
+}).https.onRequest(app);

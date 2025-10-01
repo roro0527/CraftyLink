@@ -1,3 +1,4 @@
+
 import type {NextConfig} from 'next';
 
 const nextConfig: NextConfig = {
@@ -15,7 +16,12 @@ const nextConfig: NextConfig = {
         console.error("NEXT_PUBLIC_FIREBASE_PROJECT_ID is not set. API rewrites will not work.");
         return [];
     }
-    const functionBaseUrl = `http://127.0.0.1:5001/${projectId}/${region}`;
+
+    // For local development, point to the Functions Emulator.
+    // For production, point to the live Cloud Function URL.
+    const functionBaseUrl = process.env.NODE_ENV === 'development'
+        ? `http://127.0.0.1:5001/${projectId}/${region}`
+        : `https://${region}-${projectId}.cloudfunctions.net`;
 
     return [
        {

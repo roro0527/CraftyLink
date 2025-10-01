@@ -8,7 +8,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import type { SearchResult } from '@/lib/types';
-import { getGoogleImagesAction } from '@/app/actions';
+import axios from 'axios';
 
 export const useGetGoogleImages = (query: string) => {
   // --- State 정의 ---
@@ -31,9 +31,14 @@ export const useGetGoogleImages = (query: string) => {
     setError(null);
 
     try {
-      const response = await getGoogleImagesAction({ query: currentQuery, start: start });
+      const response = await axios.get(`/api/getGoogleImages`, {
+          params: {
+            query: currentQuery,
+            start: start,
+          },
+      });
       
-      const { photos, nextPage } = response;
+      const { photos, nextPage } = response.data;
       
       if (start === 1) {
           // 첫 페이지 로드 시: 결과를 새로 설정

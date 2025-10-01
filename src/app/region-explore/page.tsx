@@ -34,9 +34,9 @@ export default function RegionExplorePage() {
 
   const isSearching = Object.values(loadingStates).some(Boolean);
 
-  const handleSetLoading = (category: SearchCategory, isLoading: boolean) => {
+  const handleSetLoading = React.useCallback((category: SearchCategory, isLoading: boolean) => {
     setLoadingStates(prev => ({ ...prev, [category]: isLoading }));
-  };
+  }, []);
 
   /**
    * 검색 버튼 클릭 또는 Enter 입력 시 실행될 핸들러.

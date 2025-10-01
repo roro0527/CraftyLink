@@ -38,6 +38,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
+import { useCompareStore } from '@/store/compare-store';
 
 // 각 데이터 유형에 대한 타입 정의
 type TrendData = Record<string, KeywordTrendPoint[]>; // 키워드별 트렌드 데이터
@@ -63,37 +64,21 @@ const saveColors = [
     { id: 'color-5', value: 'bg-blue-500', ring: 'ring-blue-500' },
 ];
 
-// 저장된 비교 목록의 초기 목업 데이터
-const initialSavedComparisons = [
-  {
-    id: 1,
-    name: '2분기 스마트폰 시장',
-    color: 'bg-blue-500',
-    keywords: ['갤럭시', '아이폰'],
-    date: '2023-06-28',
-  },
-  {
-    id: 2,
-    name: '여름 휴가 여행지',
-    color: 'bg-green-500',
-    keywords: ['제주도', '강릉', '부산'],
-    date: '2023-06-25',
-  },
-  {
-    id: 3,
-    name: 'OTT 서비스 경쟁',
-    color: 'bg-red-500',
-    keywords: ['넷플릭스', '디즈니플러스', '티빙'],
-    date: '2023-06-22',
-  },
-];
-
 
 export default function ComparePage() {
   const { toast } = useToast();
+  // 전역 상태 스토어 사용
+  const {
+    keywords,
+    setKeywords,
+    addKeyword,
+    removeKeyword,
+    clearKeywords,
+    savedItems,
+    addSavedItem,
+  } = useCompareStore();
 
   // --- State 정의 ---
-  const [keywords, setKeywords] = React.useState<string[]>([]); // 비교할 키워드 목록
   const [inputValue, setInputValue] = React.useState(''); // 키워드 입력값
   const [timeRange, setTimeRange] = React.useState<'1w' | '1m' | '5d'>('1w'); // 조회 기간
   const [trendData, setTrendData] = React.useState<TrendData>({}); // API로부터 받은 트렌드 데이터
@@ -104,7 +89,6 @@ export default function ComparePage() {
   const [isSaveDialogOpen, setIsSaveDialogOpen] = React.useState(false); // 저장 다이얼로그 표시 여부
   const [saveName, setSaveName] = React.useState(''); // 저장할 이름
   const [selectedColor, setSelectedColor] = React.useState(saveColors[0].value); // 저장 시 선택한 색상
-  const [savedItems, setSavedItems] = React.useState(initialSavedComparisons); // 저장된 비교 목록
 
   /**
    * keywords 또는 timeRange가 변경될 때마다 모든 키워드에 대한 트렌드 데이터를 API로 가져옵니다.
@@ -199,23 +183,9 @@ export default function ComparePage() {
    */
   const handleAddKeyword = () => {
     if (inputValue && !keywords.includes(inputValue) && keywords.length < 5) {
-      setKeywords([...keywords, inputValue]);
+      addKeyword(inputValue);
       setInputValue('');
     }
-  };
-
-  /**
-   * 특정 키워드를 비교 목록에서 제거하는 핸들러입니다.
-   */
-  const handleRemoveKeyword = (keywordToRemove: string) => {
-    setKeywords(keywords.filter(keyword => keyword !== keywordToRemove));
-  };
-  
-  /**
-   * 모든 키워드를 비교 목록에서 제거(초기화)하는 핸들러입니다.
-   */
-  const handleClearKeywords = () => {
-    setKeywords([]);
   };
 
   /**
@@ -230,7 +200,7 @@ export default function ComparePage() {
       date: new Date().toISOString().split('T')[0],
     };
 
-    setSavedItems(prevItems => [newItem, ...prevItems]);
+    addSavedItem(newItem);
     
     toast({
         title: "저장 완료",
@@ -304,27 +274,6 @@ export default function ComparePage() {
     URL.revokeObjectURL(url);
   };
 
-  /**
-   * 저장된 비교 항목을 불러오는 핸들러입니다.
-   */
-  const handleLoadComparison = (savedKeywords: string[]) => {
-    setKeywords(savedKeywords);
-    toast({
-      title: '불러오기 완료',
-      description: `"${savedKeywords.join(', ')}" 비교를 불러왔습니다.`,
-    });
-  };
-
-  /**
-   * 저장된 비교 항목을 삭제하는 핸들러입니다.
-   */
-  const handleDeleteComparison = (idToDelete: number) => {
-    setSavedItems(prev => prev.filter(item => item.id !== idToDelete));
-    toast({
-        title: "삭제 완료",
-        description: "선택한 항목이 삭제되었습니다.",
-    });
-  };
 
   /**
    * `useMemo`를 사용하여 keywords 또는 trendData가 변경될 때만 차트 설정을 다시 계산합니다.
@@ -380,7 +329,7 @@ export default function ComparePage() {
           <Button onClick={handleAddKeyword} disabled={keywords.length >= 5}>
             <Plus className="mr-2 h-4 w-4" /> 추가
           </Button>
-          <Button onClick={handleClearKeywords} variant="outline">
+          <Button onClick={clearKeywords} variant="outline">
             <Trash2 className="mr-2 h-4 w-4" /> 초기화
           </Button>
           <Select value={timeRange} onValueChange={(value) => setTimeRange(value as '1w' | '1m' | '5d')}>
@@ -402,7 +351,7 @@ export default function ComparePage() {
             {keywords.map((keyword, index) => (
             <span key={index} className="inline-flex items-center bg-muted text-muted-foreground rounded-full pl-3 pr-1 py-1 text-sm font-semibold">
                 {keyword}
-                <Button variant="ghost" size="icon" className="h-6 w-6 ml-1 rounded-full" onClick={() => handleRemoveKeyword(keyword)}>
+                <Button variant="ghost" size="icon" className="h-6 w-6 ml-1 rounded-full" onClick={() => removeKeyword(keyword)}>
                     <X className="h-4 w-4"/>
                 </Button>
             </span>
@@ -516,56 +465,6 @@ export default function ComparePage() {
         </Card>
       </section>
 
-      {/* 저장된 비교 목록 섹션 */}
-      <section id="saved-comparisons">
-        <Card>
-          <CardHeader>
-            <CardTitle>저장된 비교 목록</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {savedItems.length > 0 ? (
-              <div className="space-y-2">
-                {savedItems.map((item) => (
-                  <div
-                    key={item.id}
-                    className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors"
-                  >
-                    <div 
-                      className="flex items-center gap-3 cursor-pointer flex-grow"
-                      onClick={() => handleLoadComparison(item.keywords)}
-                    >
-                      <span className={`h-4 w-4 rounded-full ${item.color}`}></span>
-                      <span className="font-semibold">{item.name}</span>
-                      <span className="text-sm text-muted-foreground hidden sm:inline">
-                        ({item.keywords.join(', ')})
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                       <span className='hidden sm:inline'>{item.date}</span>
-                       <Button 
-                         variant="ghost" 
-                         size="icon" 
-                         className="h-8 w-8"
-                         onClick={(e) => {
-                            e.stopPropagation(); // 부모 div의 onClick 이벤트 전파 방지
-                            handleDeleteComparison(item.id);
-                         }}
-                       >
-                         <Trash2 className="h-4 w-4" />
-                       </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-10 text-muted-foreground">
-                <p>저장된 비교 항목이 없습니다.</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </section>
-
       {/* 저장 다이얼로그 */}
       <Dialog open={isSaveDialogOpen} onOpenChange={setIsSaveDialogOpen}>
         <DialogContent className="sm:max-w-md">
@@ -605,3 +504,6 @@ export default function ComparePage() {
     </div>
   );
 }
+
+// ComparePage에서만 사용되던 '저장된 비교 목록' 섹션을 사이드바로 옮겼으므로 이 페이지에서는 제거합니다.
+```

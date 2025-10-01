@@ -2,6 +2,8 @@
 'use client';
 
 import * as React from 'react';
+import { cn } from '@/lib/utils';
+import { Badge } from '../ui/badge';
 
 interface RecommendedKeywordsProps {
   keywords: string[];
@@ -14,34 +16,17 @@ const RecommendedKeywords: React.FC<RecommendedKeywordsProps> = ({
   activeIndex,
   onKeywordClick,
 }) => {
-  const indicatorColors = [
-    'bg-red-500',
-    'bg-yellow-500',
-    'bg-green-500',
-    'bg-blue-500',
-    'bg-purple-400',
-  ];
-
   return (
-    <div className="flex justify-center items-center gap-3 h-4">
+    <div className="flex flex-wrap justify-center items-center gap-2 my-4">
       {keywords.map((keyword, index) => (
-        <div
+        <Badge
           key={keyword}
+          variant={activeIndex === index ? 'default' : 'secondary'}
           onClick={() => onKeywordClick(index)}
-          className={`relative h-2.5 rounded-full cursor-pointer transition-all duration-300 overflow-hidden ${
-            activeIndex === index
-              ? 'w-8 bg-gray-400'
-              : 'w-2.5 bg-gray-300 hover:bg-gray-400'
-          }`}
-          title={`'${keyword}' 검색`}
+          className="cursor-pointer transition-colors text-sm"
         >
-          {activeIndex === index && (
-            <div
-              key={activeIndex}
-              className={`h-full ${indicatorColors[activeIndex]} origin-left animate-indicator-progress`}
-            ></div>
-          )}
-        </div>
+          #{keyword}
+        </Badge>
       ))}
     </div>
   );

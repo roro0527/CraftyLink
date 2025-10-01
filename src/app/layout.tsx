@@ -1,8 +1,11 @@
 import type {Metadata} from 'next';
+import { Inter } from 'next/font/google';
 import './globals.css';
 import AppHeader from '@/components/app/app-header';
 import { Sidebar } from '@/components/ui/sidebar';
 import { Toaster } from '@/components/ui/toaster';
+
+const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
 export const metadata: Metadata = {
   title: 'CraftyLink',
@@ -15,13 +18,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ko">
+    <html lang="ko" className={inter.variable}>
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+        {/* Google Fonts link is handled by next/font */}
       </head>
-      <body className="font-body antialiased">
+      <body className="font-sans antialiased">
         <div className="min-h-screen bg-background text-foreground">
           <AppHeader />
           <Sidebar />

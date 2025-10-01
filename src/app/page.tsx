@@ -9,13 +9,13 @@
 import * as React from 'react';
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import UrlInputSection from '@/components/app/url-input-section';
+import HomeSearchSection from '@/components/app/home-search-section';
 import RecommendedKeywords from '@/components/app/recommended-keywords';
 import HomeTrendChart from '@/components/app/home-trend-chart';
 import { useRouter } from 'next/navigation';
 import { getKeywordTrendsAction, getNaverNewsAction } from '@/app/actions';
 import type { KeywordTrendPoint } from '@/lib/types';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { RelatedNewsData } from '@/ai/flows/naver-news-flow';
 
@@ -52,7 +52,7 @@ export default function Home() {
       setIsLoadingNews(true);
 
       // 트렌드 데이터 요청 Promise 배열 생성
-      const trendPromises = recommendedKeywords.map(keyword => 
+      const trendPromises = recommendedKeywords.map(keyword =>
         getKeywordTrendsAction({ keyword, timeRange: '2w' }).catch(e => {
           console.error(`Failed to fetch trends for ${keyword}`, e);
           return []; // 에러 발생 시 빈 배열 반환
@@ -134,74 +134,87 @@ export default function Home() {
   
   // --- JSX 렌더링 ---
   return (
-    <>
-      <main className="flex-grow flex flex-col items-center px-4 py-8">
-        <div className="w-full">
-          <div className="bg-muted rounded-2xl flex flex-col items-center justify-center p-8 md:p-12">
-            {/* 키워드 검색 입력 섹션 */}
-            <div className="w-full max-w-2xl">
-               <UrlInputSection
-                urlsInput={searchInput}
-                onUrlsInputChange={setSearchInput}
-                onSearch={handleSearch}
-                isSearching={isSearching}
-              />
-            </div>
-            {/* 트렌드 차트 */}
-            <div className="w-full mt-8 h-60">
-              <HomeTrendChart 
-                data={trendData[currentKeyword]} 
-                isLoading={isLoadingTrends}
-              />
-            </div>
-          </div>
-        </div>
+    <main className="flex-grow flex flex-col items-center px-4 py-8">
+      <div className="w-full max-w-4xl">
+        <HomeSearchSection
+          searchInput={searchInput}
+          onSearchInputChange={setSearchInput}
+          onSearch={handleSearch}
+          isSearching={isSearching}
+        />
         
-        <div className="w-full max-w-4xl mt-6 flex flex-col items-center">
-          {/* 추천 키워드 인디케이터 */}
-          <RecommendedKeywords 
-            keywords={recommendedKeywords}
-            activeIndex={activeIndex}
-            onKeywordClick={setActiveIndex}
-          />
+        <RecommendedKeywords 
+          keywords={recommendedKeywords}
+          activeIndex={activeIndex}
+          onKeywordClick={setActiveIndex}
+        />
+
+        <div className="mt-8 grid gap-6 md:grid-cols-2">
+          {/* 트렌드 차트 */}
+          <Card className="col-span-1">
+             <CardHeader>
+                <CardTitle as="h2" className="text-xl">
+                  주간 트렌드: <span className="text-primary">{currentKeyword}</span>
+                </CardTitle>
+                 <CardDescription>최근 2주간의 검색량 추이입니다.</CardDescription>
+              </CardHeader>
+              <CardContent className="h-60">
+                 <HomeTrendChart 
+                    data={trendData[currentKeyword]} 
+                    isLoading={isLoadingTrends}
+                 />
+              </CardContent>
+          </Card>
 
           {/* 관련 뉴스 섹션 */}
-          <div className="w-full mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>관련 뉴스</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {isLoadingNews ? (
-                  // 로딩 중 스켈레톤 UI
-                   <div className="space-y-4">
-                      <Skeleton className="h-20 w-full" />
-                      <Skeleton className="h-20 w-full" />
-                      <Skeleton className="h-20 w-full" />
-                   </div>
-                ) : relatedNews[currentKeyword] && relatedNews[currentKeyword].length > 0 ? (
-                  // 뉴스가 있을 경우
-                    <ul className="space-y-4">
-                        {relatedNews[currentKeyword].slice(0, 5).map((news, index) => (
-                           <li key={index} className="border-b pb-4 last:border-b-0 last:pb-0">
-                               <a href={news.url} target="_blank" rel="noopener noreferrer" className="hover:underline">
-                                 <h3 className="font-semibold">{news.title}</h3>
-                               </a>
-                               <p className="text-sm text-muted-foreground mt-1">{news.summary}</p>
-                           </li>
-                        ))}
-                    </ul>
-                ) : (
-                  // 뉴스가 없을 경우
-                    <div className="text-center py-10">
-                        <p className="text-muted-foreground">관련된 뉴스를 찾을 수 없습니다.</p>
+          <Card className="col-span-1">
+            <CardHeader>
+              <CardTitle as="h2" className="text-xl">
+                실시간 관련 뉴스
+              </CardTitle>
+               <CardDescription>
+                현재 가장 주목받는 소식들을 확인해보세요.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {isLoadingNews ? (
+                // 로딩 중 스켈레톤 UI
+                 <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Skeleton className="h-4 w-full" />
+                      <Skeleton className="h-4 w-5/6" />
                     </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
+                     <div className="space-y-2">
+                      <Skeleton className="h-4 w-full" />
+                      <Skeleton className="h-4 w-4/6" />
+                    </div>
+                     <div className="space-y-2">
+                      <Skeleton className="h-4 w-full" />
+                      <Skeleton className="h-4 w-5/6" />
+                    </div>
+                 </div>
+              ) : relatedNews[currentKeyword] && relatedNews[currentKeyword].length > 0 ? (
+                // 뉴스가 있을 경우
+                  <ul className="space-y-3">
+                      {relatedNews[currentKeyword].slice(0, 3).map((news, index) => (
+                         <li key={index}>
+                             <a href={news.url} target="_blank" rel="noopener noreferrer" className="group block">
+                               <h3 className="font-medium text-sm truncate group-hover:underline">{news.title}</h3>
+                               <p className="text-xs text-muted-foreground mt-1 truncate">{news.summary}</p>
+                             </a>
+                         </li>
+                      ))}
+                  </ul>
+              ) : (
+                // 뉴스가 없을 경우
+                  <div className="flex h-full min-h-[150px] items-center justify-center">
+                      <p className="text-sm text-muted-foreground">관련된 뉴스를 찾을 수 없습니다.</p>
+                  </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
-      </main>
-    </>
+      </div>
+    </main>
   );
 }

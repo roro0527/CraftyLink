@@ -3,7 +3,6 @@
  * @fileOverview Firebase Cloud Functions for CraftyLink.
  *
  * This file defines independent HTTP endpoints using Firebase Functions v2.
- * - api/getGoogleImages: Fetches images from Google Custom Search API.
  * - api/getTopVideos: Fetches top YouTube videos for a given location.
  */
 
@@ -22,74 +21,6 @@ try {
 }
 
 const corsMiddleware = cors({ origin: true });
-
-// --- Google Images Function ---
-export const getGoogleImages = onRequest(
-    {
-        region: "asia-northeast3",
-        secrets: ["GOOGLE_CUSTOM_SEARCH_API_KEY", "GOOGLE_CUSTOM_SEARCH_ENGINE_ID"],
-    },
-    (req, res) => {
-        corsMiddleware(req, res, async () => {
-            const { query, start } = req.query;
-
-            if (typeof query !== "string") {
-                res.status(400).send({ error: "query parameter is missing or invalid." });
-                return;
-            }
-
-            const apiKey = process.env.GOOGLE_CUSTOM_SEARCH_API_KEY;
-            const cseId = process.env.GOOGLE_CUSTOM_SEARCH_ENGINE_ID;
-
-            if (!apiKey || !cseId) {
-                functions.logger.error("Google Custom Search API Key or Engine ID is not configured.");
-                res.status(500).send({ error: "Server configuration error." });
-                return;
-            }
-
-            const url = "https://www.googleapis.com/customsearch/v1";
-
-            try {
-                const response = await axios.get(url, {
-                    params: {
-                        key: apiKey,
-                        cx: cseId,
-                        q: query,
-                        searchType: "image",
-                        num: 10,
-                        start: start || 1,
-                    },
-                });
-
-                const items = response.data.items || [];
-                const searchResult = items.map((item: any) => ({
-                    id: item.cacheId || `${item.link}-${Math.random()}`,
-                    title: item.title,
-                    url: item.image.contextLink,
-                    imageUrl: item.link,
-                    description: item.snippet,
-                    source: item.displayLink,
-                }));
-                
-                const nextPageIndex = response.data.queries?.nextPage?.[0]?.startIndex;
-
-                res.status(200).json({ 
-                    photos: searchResult,
-                    nextPage: nextPageIndex,
-                });
-
-            } catch (error) {
-                if (axios.isAxiosError(error)) {
-                    functions.logger.error("Google Custom Search API call failed:", error.response?.data || error.message);
-                    res.status(error.response?.status || 500).send({ error: "Failed to fetch images from Google.", details: error.response?.data });
-                } else {
-                    functions.logger.error("An unexpected error occurred while fetching Google Images:", error);
-                    res.status(500).send({ error: "An unexpected error occurred." });
-                }
-            }
-        });
-    }
-);
 
 
 // --- YouTube and Kakao API Setup ---

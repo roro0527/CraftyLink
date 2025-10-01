@@ -18,10 +18,6 @@ const nextConfig: NextConfig = {
     const functionBaseUrl = `http://127.0.0.1:5001/${projectId}/${region}`;
 
     return [
-      {
-        source: '/api/getGoogleImages',
-        destination: `${functionBaseUrl}/getGoogleImages`,
-      },
        {
         source: '/api/getTopVideos',
         destination: `${functionBaseUrl}/getTopVideos`,

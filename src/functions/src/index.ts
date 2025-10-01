@@ -47,63 +47,6 @@ const limiter = rateLimit({
 app.use(limiter); // Apply rate limiter to all routes
 
 
-app.get("/getGoogleImages", async (req, res) => {
-  const { query, start } = req.query;
-
-  if (typeof query !== "string") {
-    return res.status(400).send({ error: "query parameter is missing or invalid." });
-  }
-
-  const apiKey = process.env.GOOGLE_CUSTOM_SEARCH_API_KEY;
-  const cseId = process.env.GOOGLE_CUSTOM_SEARCH_ENGINE_ID;
-
-  if (!apiKey || !cseId) {
-    functions.logger.error("Google Custom Search API Key or Engine ID is not configured in function secrets.");
-    return res.status(500).send({ error: "Server configuration error." });
-  }
-
-  const url = "https://www.googleapis.com/customsearch/v1";
-
-  try {
-    const response = await axios.get(url, {
-      params: {
-        key: apiKey,
-        cx: cseId,
-        q: query,
-        searchType: "image",
-        num: 10,
-        start: start || 1,
-      },
-    });
-
-    const items = response.data.items || [];
-    const searchResult = items.map((item: any) => ({
-      id: item.cacheId || `${item.link}-${Math.random()}`,
-      title: item.title,
-      url: item.image.contextLink,
-      imageUrl: item.link, // Direct image link
-      description: item.snippet,
-      source: item.displayLink,
-    }));
-    
-    const nextPageIndex = response.data.queries?.nextPage?.[0]?.startIndex;
-
-    return res.status(200).json({ 
-        photos: searchResult,
-        nextPage: nextPageIndex,
-    });
-
-  } catch (error) {
-    if (axios.isAxiosError(error)) {
-      functions.logger.error("Google Custom Search API call failed:", error.response?.data || error.message);
-      return res.status(error.response?.status || 500).send({ error: "Failed to fetch images from Google.", details: error.response?.data });
-    }
-    functions.logger.error("An unexpected error occurred while fetching Google Images:", error);
-    return res.status(500).send({ error: "An unexpected error occurred." });
-  }
-});
-
-
 // --- YouTube and Kakao API Setup ---
 const youtube = google.youtube({
   version: "v3",
@@ -213,6 +156,9 @@ app.get("/getTopVideos", async (req, res) => {
         return res.status(500).send({ error: "An unexpected error occurred." });
     }
 });
+
+// Note: The /getGoogleImages endpoint is removed as it's now handled by a Genkit flow.
+// This simplifies the Cloud Function logic and keeps API calls managed in one place (Genkit flows).
 
 export const api = onRequest(
     {

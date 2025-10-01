@@ -8,7 +8,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import type { SearchResult } from '@/lib/types';
-import axios from 'axios';
+import { getGoogleImagesAction } from '@/app/actions';
 
 export const useGetGoogleImages = (query: string) => {
   // --- State 정의 ---
@@ -19,7 +19,7 @@ export const useGetGoogleImages = (query: string) => {
   const [hasMore, setHasMore] = useState(true); // 추가 데이터 존재 여부
   
   /**
-   * 이미지 검색 Cloud Function을 호출하여 데이터를 가져오는 함수.
+   * 이미지 검색 서버 액션을 호출하여 데이터를 가져오는 함수.
    * useCallback으로 메모이제이션하여 불필요한 함수 재생성을 방지합니다.
    * @param currentQuery 현재 검색어
    * @param start 검색 시작 인덱스
@@ -31,14 +31,9 @@ export const useGetGoogleImages = (query: string) => {
     setError(null);
 
     try {
-        const response = await axios.get(`/api/getGoogleImages`, {
-            params: {
-              query: currentQuery,
-              start: start,
-            }
-        });
+      const response = await getGoogleImagesAction({ query: currentQuery, start });
       
-      const { photos, nextPage } = response.data;
+      const { photos, nextPage } = response;
       
       if (start === 1) {
           // 첫 페이지 로드 시: 결과를 새로 설정
@@ -60,7 +55,7 @@ export const useGetGoogleImages = (query: string) => {
       }
 
     } catch (err: any) {
-      console.error("Failed to fetch images via cloud function", err);
+      console.error("Failed to fetch images via action", err);
       setError("이미지를 불러오는 데 실패했습니다. 잠시 후 다시 시도해주세요.");
     } finally {
       setIsLoading(false);

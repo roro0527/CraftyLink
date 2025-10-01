@@ -86,7 +86,7 @@ export default function RegionExplorePage() {
                 // 검색어가 제출된 후 각 탭에 맞는 콘텐츠를 보여줌
                 <>
                     <TabsContent value="photo">
-                        <PhotoResults query={submittedQuery} setIsLoadingParentLoading={setIsSearching} />
+                        <PhotoResults query={submittedQuery} setIsParentLoading={setIsSearching} />
                     </TabsContent>
                     <TabsContent value="news">
                         <NewsResults query={submittedQuery} setIsParentLoading={setIsSearching} />

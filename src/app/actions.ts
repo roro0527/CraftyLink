@@ -7,34 +7,12 @@
  * 이 파일은 클라이언트와 서버 사이의 통신 브릿지 역할을 합니다.
  */
 
-import type { SuperParam } from '@/lib/types';
 import { getKeywordTrends, type KeywordTrendsInput, type KeywordTrendsData } from '@/ai/flows/keyword-trends-flow';
 import { getRelatedKeywords } from '@/ai/flows/related-keywords-flow';
 import { getYoutubeVideos, type YoutubeVideosInput, type YoutubeVideosData } from '@/ai/flows/youtube-videos-flow';
 import { getNaverNews, type NaverNewsInput, type RelatedNewsData } from '@/ai/flows/naver-news-flow';
 import { getDictionaryEntry, type DictionaryInput, type DictionaryEntry } from '@/ai/flows/dictionary-flow';
-// getGoogleImagesAction is removed, so we remove the related imports
 
-/**
- * (현재 미사용) URL을 기반으로 AI를 통해 '슈퍼 파라미터'를 제안하는 액션 함수입니다.
- * @param urls 분석할 URL 배열
- * @returns AI가 제안하는 파라미터 객체 배열
- */
-export async function suggestSuperParametersAction(
-  urls: string[]
-): Promise<Omit<SuperParam, 'id'>[]> {
-  if (!urls || urls.length === 0) {
-    return [];
-  }
-  
-  try {
-    // The AI might return null or an empty object.
-    return [];
-  } catch (error) {
-    console.error('Error suggesting super-parameters:', error);
-    throw new Error('AI로부터 제안을 받아오지 못했습니다. 다시 시도해주세요.');
-  }
-}
 
 /**
  * 키워드 트렌드 데이터를 가져오는 서버 액션입니다.

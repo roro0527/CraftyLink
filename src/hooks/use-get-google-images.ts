@@ -8,7 +8,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import type { SearchResult } from '@/lib/types';
-import { getGoogleImagesAction } from '@/app/actions';
+import axios from 'axios';
+import { getFirebase } from '@/firebase/client';
 
 export const useGetGoogleImages = (query: string) => {
   // --- State 정의 ---
@@ -17,9 +18,13 @@ export const useGetGoogleImages = (query: string) => {
   const [error, setError] = useState<string | null>(null); // 에러 메시지
   const [startIndex, setStartIndex] = useState(1); // 다음 검색 시작 인덱스
   const [hasMore, setHasMore] = useState(true); // 추가 데이터 존재 여부
+  
+  const { functions } = getFirebase();
+  // TODO: Use a real deployed Cloud Function URL
+  const functionsUrl = `http://127.0.0.1:5001/${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}/asia-northeast3/api`;
 
   /**
-   * 이미지 검색 서버 액션을 호출하여 데이터를 가져오는 함수.
+   * 이미지 검색 Cloud Function을 호출하여 데이터를 가져오는 함수.
    * useCallback으로 메모이제이션하여 불필요한 함수 재생성을 방지합니다.
    * @param currentQuery 현재 검색어
    * @param start 검색 시작 인덱스
@@ -31,8 +36,14 @@ export const useGetGoogleImages = (query: string) => {
     setError(null);
 
     try {
-      const response = await getGoogleImagesAction({ query: currentQuery, start: start });
-      const { photos, nextPage } = response;
+        const response = await axios.get(`${functionsUrl}/getGoogleImages`, {
+            params: {
+              query: currentQuery,
+              start: start,
+            }
+        });
+      
+      const { photos, nextPage } = response.data;
       
       if (start === 1) {
           // 첫 페이지 로드 시: 결과를 새로 설정
@@ -54,12 +65,12 @@ export const useGetGoogleImages = (query: string) => {
       }
 
     } catch (err: any) {
-      console.error("Failed to fetch images via server action", err);
+      console.error("Failed to fetch images via cloud function", err);
       setError("이미지를 불러오는 데 실패했습니다. 잠시 후 다시 시도해주세요.");
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [functionsUrl]);
 
   /**
    * 검색어(query)가 변경되면 상태를 초기화하고 첫 페이지 데이터를 가져옵니다.

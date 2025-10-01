@@ -2,10 +2,9 @@
 /**
  * @fileOverview Firebase Cloud Functions for CraftyLink.
  *
- * This file defines two main HTTP endpoints using an Express app:
- * 1. /getTopVideos: Fetches top YouTube videos for a given location, using Kakao API for geocoding.
- * 2. /getGoogleImages: Fetches images from Google Custom Search API.
- *
+ * This file defines an Express app that serves multiple HTTP endpoints,
+ * which is then exported as a single Firebase Cloud Function (`api`).
+ * This approach allows for structured routing and middleware usage.
  * All endpoints include caching, rate limiting, and robust error handling.
  */
 
@@ -16,6 +15,7 @@ import cors from "cors";
 import axios from "axios";
 import { google } from "googleapis";
 import rateLimit from "express-rate-limit";
+import { onRequest } from "firebase-functions/v2/https";
 
 // Initialize Firebase Admin SDK
 try {
@@ -23,7 +23,6 @@ try {
 } catch (e) {
   console.error('Firebase admin initialization error', e);
 }
-
 
 const app = express();
 
@@ -53,6 +52,7 @@ app.get("/getGoogleImages", async (req, res) => {
     return res.status(400).send({ error: "query parameter is missing or invalid." });
   }
 
+  // Secrets are correctly accessed via process.env in v2 functions
   const apiKey = process.env.GOOGLE_CUSTOM_SEARCH_API_KEY;
   const cseId = process.env.GOOGLE_CUSTOM_SEARCH_ENGINE_ID;
 
@@ -213,7 +213,13 @@ app.get("/getTopVideos", async (req, res) => {
     }
 });
 
-// Export the express app as a v1 cloud function
-export const api = functions.region("asia-northeast3").runWith({
-    secrets: ["YOUTUBE_API_KEY", "KAKAO_APP_KEY", "NAVER_DATALAB_CLIENT_ID", "NAVER_DATALAB_CLIENT_SECRET", "NAVER_CLIENT_ID", "NAVER_CLIENT_SECRET", "GOOGLE_CUSTOM_SEARCH_API_KEY", "GOOGLE_CUSTOM_SEARCH_ENGINE_ID"],
-}).https.onRequest(app);
+
+// Export the express app as a v2 Cloud Function.
+export const api = onRequest(
+    {
+        region: "asia-northeast3",
+        // All secrets must be declared here for the function to access them via process.env
+        secrets: ["YOUTUBE_API_KEY", "KAKAO_APP_KEY", "NAVER_DATALAB_CLIENT_ID", "NAVER_DATALAB_CLIENT_SECRET", "NAVER_CLIENT_ID", "NAVER_CLIENT_SECRET", "GOOGLE_CUSTOM_SEARCH_API_KEY", "GOOGLE_CUSTOM_SEARCH_ENGINE_ID"],
+    },
+    app
+);

@@ -113,7 +113,7 @@ const DictionaryResult: React.FC<DictionaryResultProps> = ({ query, setIsParentL
             <CardContent className="space-y-6">
                  <div className="space-y-2">
                     <h3 className="font-semibold flex items-center gap-2 text-lg"><Pin className="h-5 w-5 text-primary"/>정의</h3>
-                    <p className="text-muted-foreground leading-relaxed">{result.definition}</p>LAGOM
+                    <p className="text-muted-foreground leading-relaxed">{result.definition}</p>
                 </div>
 
                 {result.etymology && (

@@ -8,7 +8,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import type { SearchResult } from '@/lib/types';
-import axios from 'axios';
+import { getGoogleImagesAction } from '@/app/actions';
 
 export const useGetGoogleImages = (query: string) => {
   // --- State 정의 ---
@@ -31,14 +31,9 @@ export const useGetGoogleImages = (query: string) => {
     setError(null);
 
     try {
-      const response = await axios.get(`/api/getGoogleImages`, {
-          params: {
-            query: currentQuery,
-            start: start,
-          },
-      });
+        const response = await getGoogleImagesAction({ query: currentQuery, start: start });
       
-      const { photos, nextPage } = response.data;
+      const { photos, nextPage } = response;
       
       if (start === 1) {
           // 첫 페이지 로드 시: 결과를 새로 설정
@@ -60,7 +55,7 @@ export const useGetGoogleImages = (query: string) => {
       }
 
     } catch (err: any) {
-      console.error("Failed to fetch images via API:", err);
+      console.error("Failed to fetch images via Action:", err);
       setError("이미지를 불러오는 데 실패했습니다. 잠시 후 다시 시도해주세요.");
     } finally {
       setIsLoading(false);

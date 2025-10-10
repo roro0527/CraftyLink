@@ -1,8 +1,8 @@
 
 import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getAuth, connectAuthEmulator } from 'firebase/auth';
-import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
-import { getFunctions, connectFunctionsEmulator } from 'firebase/functions';
+import { getAuth } from 'firebase/auth';
+import { getFirestore } from 'firebase/firestore';
+import { getFunctions } from 'firebase/functions';
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -20,18 +20,8 @@ function initializeServices() {
   const firestore = getFirestore(firebaseApp);
   const functions = getFunctions(firebaseApp, 'asia-northeast3'); // Specify region
 
-  if (process.env.NEXT_PUBLIC_USE_EMULATORS === 'true') {
-    if (auth.emulatorConfig === null) {
-      connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true });
-    }
-    if (firestore.emulatorConfig === null) {
-      connectFirestoreEmulator(firestore, '127.0.0.1', 8080);
-    }
-    if (functions.emulatorConfig === null) {
-        connectFunctionsEmulator(functions, "127.0.0.1", 5001);
-    }
-  }
-
+  // 에뮬레이터 연결 코드를 제거하여 실제 Firebase 서비스를 사용하도록 합니다.
+  
   return { firebaseApp, auth, firestore, functions };
 }
 

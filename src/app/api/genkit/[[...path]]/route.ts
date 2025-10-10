@@ -1,4 +1,3 @@
-import { nextPlugin } from '@genkit-ai/next';
-import '@/ai/genkit';
+import { GET, POST } from '@/ai/dev';
 
-export const { GET, POST } = nextPlugin();
+export { GET, POST };

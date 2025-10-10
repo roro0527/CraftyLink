@@ -2,11 +2,7 @@
 /**
  * @fileOverview Firebase Cloud Functions for CraftyLink.
  *
- * This file defines two main HTTP endpoints:
- * 1. /getTopVideos: Fetches top YouTube videos for a given location, using Kakao API for geocoding.
- * 2. /getGoogleImages: This endpoint is DEPRECATED and logic has been moved to a Genkit flow.
- *
- * All endpoints include caching, rate limiting, and robust error handling.
+ * This file defines the HTTP endpoint /getTopVideos to fetch top YouTube videos.
  */
 
 import * as functions from "firebase-functions";
@@ -15,7 +11,6 @@ import express from "express";
 import cors from "cors";
 import axios from "axios";
 import { google } from "googleapis";
-import { onRequest } from "firebase-functions/v2/https";
 
 // Initialize Firebase Admin SDK
 try {

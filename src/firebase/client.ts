@@ -1,8 +1,8 @@
 
 import { initializeApp, getApps, getApp, type FirebaseApp } from 'firebase/app';
-import { getFirestore, type Firestore } from 'firebase/firestore';
-import { getFunctions, type Functions } from 'firebase/functions';
-import { getAuth, type Auth } from 'firebase/auth';
+import { getFirestore, type Firestore, connectFirestoreEmulator } from 'firebase/firestore';
+import { getFunctions, type Functions, connectFunctionsEmulator } from 'firebase/functions';
+import { getAuth, type Auth, connectAuthEmulator } from 'firebase/auth';
 
 const firebaseConfig = {
   "projectId": "craftylink",
@@ -35,9 +35,9 @@ function initializeServices(): FirebaseServices {
 
   // 에뮬레이터 연결 코드는 프로덕션 빌드에서 제외됩니다.
   if (process.env.NODE_ENV === 'development') {
-    // connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true });
-    // connectFirestoreEmulator(firestore, '127.0.0.1', 8080);
-    // connectFunctionsEmulator(functions, '127.0.0.1', 5001);
+    connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true });
+    connectFirestoreEmulator(firestore, '127.0.0.1', 8080);
+    connectFunctionsEmulator(functions, '127.0.0.1', 5001);
   }
   
   services = { firebaseApp, firestore, functions, auth };

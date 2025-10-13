@@ -3,7 +3,7 @@
 
 /**
  * @file 서버 액션 함수들을 정의합니다.
- * 클라이언트 컴포넌트는 이 함수들을 직접 호출하여 서버 사이드 로직(Genkit Flows)을 실행하고 데이터를 받아올 수 있습니다.
+ * 클라이언트 컴포넌트는 이 함수들을 직접 호출하여 서버 사이드 로직(Genkit Flows 또는 API)을 실행하고 데이터를 받아올 수 있습니다.
  * 이 파일은 클라이언트와 서버 사이의 통신 브릿지 역할을 합니다.
  */
 
@@ -12,7 +12,18 @@ import { getRelatedKeywords } from '@/ai/flows/related-keywords-flow';
 import { getYoutubeVideos, type YoutubeVideosInput, type YoutubeVideosData } from '@/ai/flows/youtube-videos-flow';
 import { getNaverNews, type NaverNewsInput, type RelatedNewsData } from '@/ai/flows/naver-news-flow';
 import { getDictionaryEntry, type DictionaryInput, type DictionaryEntry } from '@/ai/flows/dictionary-flow';
-import { getGoogleImagesFlow, type GoogleImagesInput, type GoogleImagesData } from '@/ai/flows/google-images-flow';
+import axios from 'axios';
+import type { SearchResult } from '@/lib/types';
+
+// Google 이미지 검색을 위한 타입 정의
+export interface GoogleImagesInput {
+  query: string;
+  start?: number;
+}
+export interface GoogleImagesData {
+  photos: SearchResult[];
+  nextPage?: number | null;
+}
 
 
 /**
@@ -97,17 +108,24 @@ export async function getDictionaryEntryAction(input: DictionaryInput): Promise<
 }
 
 /**
- * 구글 이미지 목록을 가져오는 서버 액션입니다.
+ * 구글 이미지 목록을 가져오는 서버 액션입니다. (Cloud Function 사용)
  * @param input 키워드와 시작 인덱스를 포함하는 객체
  * @returns 이미지 데이터와 다음 페이지 인덱스를 포함하는 객체
  */
 export async function getGoogleImagesAction(input: GoogleImagesInput): Promise<GoogleImagesData> {
     try {
-        const images = await getGoogleImagesFlow(input);
-        return images;
+        // Next.js의 rewrites 설정을 통해 Cloud Function으로 요청이 전달됩니다.
+        const response = await axios.get('/api/getGoogleImages', {
+            params: {
+                query: input.query,
+                start: input.start || 1,
+            }
+        });
+        return response.data;
     } catch (error) {
-        console.error('Error in getGoogleImagesAction:', error);
-        // 클라이언트에서 에러 상태를 처리할 수 있도록 다시 던집니다.
-        throw new Error('Failed to get google images.');
+        console.error('Error in getGoogleImagesAction calling Cloud Function:', error);
+        throw new Error('Failed to get google images from a cloud function.');
     }
 }
+
+    

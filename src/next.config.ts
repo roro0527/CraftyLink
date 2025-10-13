@@ -1,3 +1,4 @@
+
 import type {NextConfig} from 'next';
 
 const nextConfig: NextConfig = {
@@ -9,13 +10,9 @@ const nextConfig: NextConfig = {
     ignoreDuringBuilds: true,
   },
   async rewrites() {
-    const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+    const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'craftylink';
     const region = 'asia-northeast3';
-    if (!projectId) {
-        console.error("NEXT_PUBLIC_FIREBASE_PROJECT_ID is not set. API rewrites will not work.");
-        return [];
-    }
-
+    
     // For local development, point to the Functions Emulator.
     // For production, point to the live Cloud Function URL.
     const functionBaseUrl = process.env.NODE_ENV === 'development'
@@ -62,3 +59,5 @@ const nextConfig: NextConfig = {
 };
 
 export default nextConfig;
+
+    

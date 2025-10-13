@@ -1,9 +1,11 @@
+
 import type {Metadata} from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import AppHeader from '@/components/app/app-header';
 import { Sidebar } from '@/components/ui/sidebar';
 import { Toaster } from '@/components/ui/toaster';
+import { AuthProvider } from '@/hooks/use-auth.tsx';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
@@ -23,20 +25,22 @@ export default function RootLayout({
         {/* Google Fonts link is handled by next/font */}
       </head>
       <body className="font-sans antialiased">
-        <div className="min-h-screen bg-background text-foreground">
-          <div className="flex flex-col">
-            <AppHeader />
-            <div className="flex-1">
-              <div className="flex">
-                <Sidebar />
-                <main className="flex-1 pl-0 md:pl-64">
-                    {children}
-                </main>
+        <AuthProvider>
+            <div className="min-h-screen bg-background text-foreground">
+              <div className="flex flex-col">
+                <AppHeader />
+                <div className="flex-1">
+                  <div className="flex">
+                    <Sidebar />
+                    <main className="flex-1 pl-0 md:pl-64">
+                        {children}
+                    </main>
+                  </div>
+                </div>
               </div>
+              <Toaster />
             </div>
-          </div>
-          <Toaster />
-        </div>
+        </AuthProvider>
       </body>
     </html>
   );

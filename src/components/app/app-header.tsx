@@ -6,16 +6,25 @@
  * 로고, 네비게이션 링크, 모바일 메뉴 트리거를 포함합니다.
  */
 
-import { Link2, Menu } from 'lucide-react';
+import { Link2, Menu, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import * as React from 'react';
 import { useMobileSidebar } from '@/hooks/use-mobile-sidebar';
 import Link from 'next/link';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 interface AppHeaderProps {}
 
 const AppHeader: React.FC<AppHeaderProps> = ({}) => {
   const { onOpen } = useMobileSidebar();
+  const [isLoginOpen, setIsLoginOpen] = React.useState(false);
 
   return (
     <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-30">
@@ -42,6 +51,28 @@ const AppHeader: React.FC<AppHeaderProps> = ({}) => {
         </div>
         {/* 네비게이션 및 액션 버튼 영역 */}
         <div className="flex-1 flex justify-end items-center gap-4">
+            <Dialog open={isLoginOpen} onOpenChange={setIsLoginOpen}>
+                <DialogTrigger asChild>
+                    <Button>
+                        <LogIn className="mr-2 h-4 w-4" />
+                        로그인
+                    </Button>
+                </DialogTrigger>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>로그인</DialogTitle>
+                        <DialogDescription>
+                            소셜 계정으로 간편하게 로그인하세요.
+                        </DialogDescription>
+                    </DialogHeader>
+                    {/* 여기에 소셜 로그인 버튼들이 추가될 예정입니다. */}
+                    <div className="flex flex-col space-y-2 mt-4">
+                        <Button variant="outline" disabled>Google로 로그인 (개발중)</Button>
+                        <Button variant="outline" disabled>Facebook으로 로그인 (개발중)</Button>
+                        <Button variant="outline" disabled>GitHub으로 로그인 (개발중)</Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div>
       </div>
     </header>

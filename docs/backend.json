@@ -1,7 +1,7 @@
+
 {
   "entities": {
     "User": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "User",
       "type": "object",
       "description": "Represents a user of the CraftyLink application.",
@@ -16,21 +16,13 @@
           "format": "email"
         }
       },
-      "required": [
-        "id",
-        "email"
-      ]
+      "required": ["id", "email"]
     },
     "SavedComparisonPage": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "SavedComparisonPage",
       "type": "object",
       "description": "Represents a saved comparison page configuration for a user.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the SavedComparisonPage entity."
-        },
         "userId": {
           "type": "string",
           "description": "Reference to User. (Relationship: User 1:N SavedComparisonPage)"
@@ -39,75 +31,33 @@
           "type": "string",
           "description": "Name of the saved comparison page."
         },
-        "urlInputs": {
-          "type": "array",
-          "description": "List of input URLs for the comparison page.",
-          "items": {
-            "type": "string"
-          }
+        "color": {
+          "type": "string",
+          "description": "Color tag for the saved item."
         },
-        "superParameters": {
+        "keywords": {
           "type": "array",
-          "description": "List of configured super-parameters for the comparison page.",
-          "items": {
-            "type": "string"
-          }
+          "description": "List of keywords for the comparison.",
+          "items": { "type": "string" }
+        },
+        "date": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The date the comparison was saved."
         }
       },
-      "required": [
-        "id",
-        "userId",
-        "name",
-        "urlInputs",
-        "superParameters"
-      ]
+      "required": ["userId", "name", "color", "keywords", "date"]
     }
   },
   "auth": {
-    "providers": [
-      "password",
-      "anonymous"
-    ]
+    "providers": ["password", "anonymous", "google.com"]
   },
   "firestore": {
-    "structure": [
-      {
-        "path": "/users/{userId}",
-        "definition": {
-          "entityName": "User",
-          "schema": {
-            "$ref": "#/backend/entities/User"
-          },
-          "description": "Stores user profile data. The userId path parameter matches the user's Firebase Auth UID.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier of the user, matching the Firebase Auth UID."
-            }
-          ]
-        }
+    "/users/{userId}/savedComparisonPages/{savedComparisonPageId}": {
+      "schema": {
+        "$ref": "#/entities/SavedComparisonPage"
       },
-      {
-        "path": "/users/{userId}/savedComparisonPages/{savedComparisonPageId}",
-        "definition": {
-          "entityName": "SavedComparisonPage",
-          "schema": {
-            "$ref": "#/backend/entities/SavedComparisonPage"
-          },
-          "description": "Stores saved comparison page configurations for a specific user. Access is restricted to the owning user based on the 'userId' path parameter.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier of the user who owns this saved comparison page."
-            },
-            {
-              "name": "savedComparisonPageId",
-              "description": "The unique identifier of the saved comparison page."
-            }
-          ]
-        }
-      }
-    ],
-    "reasoning": "The data structure prioritizes secure data access and scalability by leveraging path-based ownership for user-specific data. Saved comparison pages are stored within user-specific subcollections, ensuring that each user has exclusive access to their saved pages. This approach eliminates the need for complex security rules involving `get()` operations, thus achieving Authorization Independence. The structure also facilitates straightforward `list` operations, as each user's saved comparison pages are neatly segregated into their respective subcollections.\n\nSpecifically, the `SavedComparisonPage` entity is stored under `/users/{userId}/savedComparisonPages/{savedComparisonPageId}`. The `userId` field within the `SavedComparisonPage` document is technically redundant since the document path implicitly defines ownership. However, including `userId` within the document allows for potential future queries across all saved comparison pages, should the application requirements evolve. Although those queries would require more complex security rule considerations.\n\nThis structure ensures that security rules can be written based solely on the `request.auth.uid` and the document path, avoiding the need to read data from other documents to determine access control. QAPs are supported because listing saved comparison pages only requires access to a specific user's subcollection."
+      "description": "Stores saved comparison page configurations for a specific user. Access is restricted to the owning user."
+    }
   }
 }

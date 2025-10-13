@@ -4,7 +4,7 @@
 /**
  * @file 키워드 비교 페이지 컴포넌트입니다.
  * 사용자는 여러 키워드를 추가하여 검색량 추이, 요약 통계 등을 차트와 테이블로 비교할 수 있습니다.
- * 비교 결과는 저장하고 불러올 수 있습니다.
+ * 로그인된 사용자는 비교 결과를 자신의 계정에 저장할 수 있습니다.
  */
 
 import * as React from 'react';
@@ -39,6 +39,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogC
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { useCompareStore } from '@/store/compare-store';
+import { useAuth } from '@/hooks/use-auth';
+import { getFirebase } from '@/firebase/client';
+import { collection, addDoc } from 'firebase/firestore';
+import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 
 // 각 데이터 유형에 대한 타입 정의
 type TrendData = Record<string, KeywordTrendPoint[]>; // 키워드별 트렌드 데이터
@@ -67,15 +71,15 @@ const saveColors = [
 
 export default function ComparePage() {
   const { toast } = useToast();
+  const { user, loading: userLoading } = useAuth();
+  const { firestore } = getFirebase();
+
   // 전역 상태 스토어 사용
   const {
     keywords,
-    setKeywords,
     addKeyword,
     removeKeyword,
     clearKeywords,
-    savedItems,
-    addSavedItem,
   } = useCompareStore();
 
   // --- State 정의 ---
@@ -189,19 +193,32 @@ export default function ComparePage() {
   };
 
   /**
-   * 현재 비교 결과를 저장하는 핸들러입니다.
+   * 현재 비교 결과를 Firestore에 저장하는 핸들러입니다.
    */
   const handleSave = () => {
-    const newItem = {
-      id: Date.now(),
+    if (!user) {
+      toast({
+        variant: 'destructive',
+        title: '로그인이 필요합니다.',
+        description: '비교 결과를 저장하려면 먼저 로그인해주세요.',
+      });
+      return;
+    }
+
+    const collectionRef = collection(firestore, 'users', user.uid, 'savedComparisonPages');
+    const newDoc = {
+      userId: user.uid,
       name: saveName,
       color: selectedColor,
       keywords: keywords,
-      date: new Date().toISOString().split('T')[0],
+      date: new Date().toISOString(),
+      // superParameters는 현재 사용하지 않으므로 빈 배열로 저장
+      urlInputs: [], 
+      superParameters: [],
     };
 
-    addSavedItem(newItem);
-    
+    addDocumentNonBlocking(collectionRef, newDoc);
+
     toast({
         title: "저장 완료",
         description: `'${saveName}'(으)로 비교 결과가 저장되었습니다.`,
@@ -221,6 +238,14 @@ export default function ComparePage() {
         variant: 'destructive',
         title: '저장할 데이터가 없습니다.',
         description: '먼저 키워드를 추가하여 비교해주세요.',
+      });
+      return;
+    }
+     if (!user) {
+      toast({
+        variant: 'destructive',
+        title: '로그인이 필요합니다.',
+        description: '비교 결과를 저장하려면 먼저 로그인해주세요.',
       });
       return;
     }
@@ -358,9 +383,11 @@ export default function ComparePage() {
             ))}
         </div>
         <div className="flex gap-2">
-            <Button onClick={handleOpenSaveDialog} variant="outline">
-                <Save className="mr-2 h-4 w-4" /> 저장
-            </Button>
+            {user && (
+              <Button onClick={handleOpenSaveDialog} variant="outline">
+                  <Save className="mr-2 h-4 w-4" /> 저장
+              </Button>
+            )}
             <Button onClick={handleExportCsv} disabled={keywords.length === 0}>CSV 내보내기</Button>
         </div>
       </div>
@@ -504,5 +531,3 @@ export default function ComparePage() {
     </div>
   );
 }
-
-// ComparePage에서만 사용되던 '저장된 비교 목록' 섹션을 사이드바로 옮겼으므로 이 페이지에서는 제거합니다.

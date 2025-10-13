@@ -5,12 +5,11 @@ import { getFunctions, type Functions } from 'firebase/functions';
 import { getAuth, type Auth } from 'firebase/auth';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBGm21LtpinX_pKIxqwtwEGNGk4BjLUmGU",
-  authDomain: "craftylink.firebaseapp.com",
-  projectId: "craftylink",
-  storageBucket: "craftylink.appspot.com",
-  messagingSenderId: "439428212295",
-  appId: "1:439428212295:web:7b44282ec320220b5c7362",
+  "projectId": "craftylink",
+  "appId": "1:439428212295:web:7b44282ec320220b5c7362",
+  "apiKey": "AIzaSyBGm21LtpinX_pKIxqwtwEGNGk4BjLUmGU",
+  "authDomain": "craftylink.firebaseapp.com",
+  "messagingSenderId": "439428212295"
 };
 
 type FirebaseServices = {

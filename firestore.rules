@@ -1,0 +1,99 @@
+/**
+ * @fileoverview Firestore Security Rules for CraftyLink.
+ *
+ * Core Philosophy:
+ * This ruleset enforces a strict user-ownership model for both user profiles and saved comparison pages. Users can only access their own data, ensuring privacy and preventing unauthorized access.
+ *
+ * Data Structure:
+ * - User profiles are stored in `/users/{userId}`, where `{userId}` matches the Firebase Auth UID.
+ * - Saved comparison pages are stored in `/users/{userId}/savedComparisonPages/{savedComparisonPageId}`, nested under the user's profile.
+ *
+ * Key Security Decisions:
+ * - User listing is disallowed to prevent enumeration.
+ * - All writes are protected by authorization checks, ensuring only the owner can modify data.
+ * - The rules explicitly deny any operation that is not explicitly allowed.
+ *
+ * Denormalization for Authorization:
+ * The `userId` is present both in the document path and as a field within the `SavedComparisonPage` document. This redundancy allows for simpler rules that only need to check the path and avoids additional `get()` operations.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /**
+     * @description Ensures the user is signed in.
+     */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /**
+     * @description Checks if the request is made by the owner of the document.
+     */
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    /**
+     * @description Checks if the request is made by the owner of an existing document.
+     * Ensures the document exists to prevent accidental operations on non-existent data.
+     */
+    function isExistingOwner(userId) {
+      return isOwner(userId) && resource != null;
+    }
+
+    /**
+     * @description Enforces that the user ID in the request matches the user ID in the path.
+     * @param {string} userId The user ID from the path.
+     * @returns {boolean} True if the user ID in the request matches the user ID in the path, false otherwise.
+     */
+    function isValidOwnerCreate(userId) {
+      return request.resource.data.id == userId;
+    }
+    /**
+     * @description
+     * Rules for the /users/{userId} collection. Enforces strict user-ownership: only the authenticated user can read or write their own profile data.
+     *
+     * @path /users/{userId}
+     * @allow (create) User with UID 'user_abc' can create their own profile if request.auth.uid == 'user_abc'.
+     * @deny (create) User with UID 'user_def' cannot create a profile for 'user_abc'.
+     * @allow (get) User with UID 'user_abc' can read their own profile if request.auth.uid == 'user_abc'.
+     * @deny (get) User with UID 'user_def' cannot read the profile of 'user_abc'.
+     * @allow (update) User with UID 'user_abc' can update their own profile if request.auth.uid == 'user_abc'.
+     * @deny (update) User with UID 'user_def' cannot update the profile of 'user_abc'.
+     * @allow (delete) User with UID 'user_abc' can delete their own profile if request.auth.uid == 'user_abc'.
+     * @deny (delete) User with UID 'user_def' cannot delete the profile of 'user_abc'.
+     * @principle Enforces document ownership for all operations.
+     */
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow list: if false;
+      allow create: if isSignedIn() && isOwner(userId) && isValidOwnerCreate(userId);
+      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
+      allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description
+     * Rules for the /users/{userId}/savedComparisonPages/{savedComparisonPageId} collection. Enforces strict user-ownership: only the authenticated user can manage their own saved comparison pages.
+     *
+     * @path /users/{userId}/savedComparisonPages/{savedComparisonPageId}
+     * @allow (create) User 'user_abc' can create a saved comparison page under their profile.
+     * @deny (create) User 'user_def' cannot create a saved comparison page under 'user_abc's profile.
+     * @allow (get) User 'user_abc' can read a saved comparison page under their profile.
+     * @deny (get) User 'user_def' cannot read a saved comparison page under 'user_abc's profile.
+     * @allow (update) User 'user_abc' can update a saved comparison page under their profile.
+     * @deny (update) User 'user_def' cannot update a saved comparison page under 'user_abc's profile.
+     * @allow (delete) User 'user_abc' can delete a saved comparison page under their profile.
+     * @deny (delete) User 'user_def' cannot delete a saved comparison page under 'user_abc's profile.
+     * @principle Enforces document ownership and prevents cross-user data access.
+     */
+    match /users/{userId}/savedComparisonPages/{savedComparisonPageId} {
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isSignedIn() && isOwner(userId) && request.resource.data.userId == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+      allow delete: if isExistingOwner(userId);
+    }
+  }
+}

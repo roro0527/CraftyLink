@@ -16,7 +16,7 @@ import cors from "cors";
 import axios from "axios";
 import { google } from "googleapis";
 import rateLimit from "express-rate-limit";
-import { onRequest } from "firebase-functions/v2/https";
+import { onRequest } from "firebase-functions/v1/https";
 
 // Initialize Firebase Admin SDK
 try {
@@ -25,11 +25,15 @@ try {
   console.error('Firebase admin initialization error', e);
 }
 
-
 const app = express();
 
 // Use cors middleware for all routes
 app.use(cors({ origin: true }));
+
+// Simple health check endpoint
+app.get('/', (req, res) => {
+    res.json({ status: 'ok', message: 'CraftyLink API is running' });
+});
 
 
 // Basic rate limiting to prevent abuse
@@ -214,10 +218,4 @@ app.get("/getTopVideos", async (req, res) => {
     }
 });
 
-export const api = onRequest(
-    {
-        region: "asia-northeast3",
-        secrets: ["YOUTUBE_API_KEY", "KAKAO_APP_KEY", "NAVER_DATALAB_CLIENT_ID", "NAVER_DATALAB_CLIENT_SECRET", "NAVER_CLIENT_ID", "NAVER_CLIENT_SECRET", "GOOGLE_CUSTOM_SEARCH_API_KEY", "GOOGLE_CUSTOM_SEARCH_ENGINE_ID"],
-    },
-    app
-);
+export const api = onRequest(app);

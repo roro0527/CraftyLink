@@ -53,7 +53,7 @@ const cors_1 = __importDefault(require("cors"));
 const axios_1 = __importDefault(require("axios"));
 const googleapis_1 = require("googleapis");
 const express_rate_limit_1 = __importDefault(require("express-rate-limit"));
-const https_1 = require("firebase-functions/v2/https");
+const https_1 = require("firebase-functions/v1/https");
 // Initialize Firebase Admin SDK
 try {
     admin.initializeApp();
@@ -64,6 +64,10 @@ catch (e) {
 const app = (0, express_1.default)();
 // Use cors middleware for all routes
 app.use((0, cors_1.default)({ origin: true }));
+// Simple health check endpoint
+app.get('/', (req, res) => {
+    res.json({ status: 'ok', message: 'CraftyLink API is running' });
+});
 // Basic rate limiting to prevent abuse
 const limiter = (0, express_rate_limit_1.default)({
     windowMs: 60 * 1000, // 1 minute
@@ -222,8 +226,5 @@ app.get("/getTopVideos", async (req, res) => {
         return res.status(500).send({ error: "An unexpected error occurred." });
     }
 });
-exports.api = (0, https_1.onRequest)({
-    region: "asia-northeast3",
-    secrets: ["YOUTUBE_API_KEY", "KAKAO_APP_KEY", "NAVER_DATALAB_CLIENT_ID", "NAVER_DATALAB_CLIENT_SECRET", "NAVER_CLIENT_ID", "NAVER_CLIENT_SECRET", "GOOGLE_CUSTOM_SEARCH_API_KEY", "GOOGLE_CUSTOM_SEARCH_ENGINE_ID"],
-}, app);
+exports.api = (0, https_1.onRequest)(app);
 //# sourceMappingURL=index.js.map

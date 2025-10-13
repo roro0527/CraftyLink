@@ -1,6 +1,5 @@
 
 import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getFunctions } from 'firebase/functions';
 
@@ -16,13 +15,12 @@ const firebaseConfig = {
 function initializeServices() {
   const isConfigured = getApps().length > 0;
   const firebaseApp = isConfigured ? getApp() : initializeApp(firebaseConfig);
-  const auth = getAuth(firebaseApp);
   const firestore = getFirestore(firebaseApp);
   const functions = getFunctions(firebaseApp, 'asia-northeast3'); // Specify region
 
   // 에뮬레이터 연결 코드를 제거하여 실제 Firebase 서비스를 사용하도록 합니다.
   
-  return { firebaseApp, auth, firestore, functions };
+  return { firebaseApp, firestore, functions };
 }
 
 export function getFirebase() {

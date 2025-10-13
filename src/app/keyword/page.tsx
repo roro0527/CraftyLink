@@ -42,6 +42,7 @@ import type { KeywordTrendPoint } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import type { YoutubeVideosData } from '@/ai/flows/youtube-videos-flow';
+import { Suspense } from 'react';
 
 
 // 차트 설정을 정의합니다.
@@ -52,7 +53,8 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
-export default function KeywordPage() {
+// useSearchParams를 사용하는 컴포넌트를 분리합니다.
+function KeywordPageContent() {
   const searchParams = useSearchParams();
   const initialKeyword = searchParams.get('q') || ''; // URL 쿼리 파라미터에서 초기 키워드를 가져옵니다.
   const { toast } = useToast();
@@ -432,5 +434,14 @@ export default function KeywordPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+// 메인 컴포넌트를 Suspense로 감싸서 export합니다.
+export default function KeywordPage() {
+  return (
+    <Suspense fallback={<div className="p-6"><Skeleton className="h-96 w-full" /></div>}>
+      <KeywordPageContent />
+    </Suspense>
   );
 }

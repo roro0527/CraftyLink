@@ -9,27 +9,6 @@ const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
-  async rewrites() {
-    const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
-    const region = 'asia-northeast3';
-    if (!projectId) {
-        console.error("NEXT_PUBLIC_FIREBASE_PROJECT_ID is not set. API rewrites will not work.");
-        return [];
-    }
-
-    // For local development, point to the Functions Emulator.
-    // For production, point to the live Cloud Function URL.
-    const functionBaseUrl = process.env.NODE_ENV === 'development'
-        ? `http://127.0.0.1:5001/${projectId}/${region}`
-        : `https://${region}-${projectId}.cloudfunctions.net`;
-
-    return [
-       {
-        source: '/api/:path*',
-        destination: `${functionBaseUrl}/api/:path*`,
-      },
-    ];
-  },
   images: {
     remotePatterns: [
       {

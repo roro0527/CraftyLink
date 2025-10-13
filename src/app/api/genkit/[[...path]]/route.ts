@@ -1,4 +1,4 @@
-import { createApiHandler } from '@genkit-ai/next';
-import '@/ai/genkit';
+import { appRoute } from '@genkit-ai/next';
+import { ai } from '@/ai/genkit';
 
-export const { GET, POST } = createApiHandler();
+export const { GET, POST } = appRoute(ai);

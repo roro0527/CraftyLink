@@ -1,3 +1,4 @@
+
 'use client';
 
 /**
@@ -10,15 +11,11 @@ import { Button } from '@/components/ui/button';
 import * as React from 'react';
 import { useMobileSidebar } from '@/hooks/use-mobile-sidebar';
 import Link from 'next/link';
-import { useAuth } from '@/hooks/use-auth';
-import { Skeleton } from '../ui/skeleton';
-
 
 interface AppHeaderProps {}
 
 const AppHeader: React.FC<AppHeaderProps> = ({}) => {
   const { onOpen } = useMobileSidebar();
-  const { user, loading, signInWithGoogle, signOut } = useAuth();
 
   return (
     <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-30">
@@ -45,17 +42,6 @@ const AppHeader: React.FC<AppHeaderProps> = ({}) => {
         </div>
         {/* 네비게이션 및 액션 버튼 영역 */}
         <div className="flex-1 flex justify-end items-center gap-4">
-          {/* 로그인/사용자 정보 버튼 */}
-          {loading ? (
-               <Skeleton className="h-10 w-24 rounded-lg" />
-          ) : user ? (
-            <div className="flex items-center gap-4">
-              <span className="hidden sm:inline">{user.displayName}</span>
-              <Button onClick={signOut} variant="outline">로그아웃</Button>
-            </div>
-          ) : (
-            <Button onClick={signInWithGoogle}>로그인</Button>
-          )}
         </div>
       </div>
     </header>

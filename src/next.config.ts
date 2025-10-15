@@ -9,34 +9,11 @@ const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
-  async rewrites() {
-    const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'craftylink';
-    const region = 'asia-northeast3';
-    
-    // For local development, point to the Functions Emulator.
-    // For production, point to the live Cloud Function URL.
-    const functionBaseUrl = process.env.NODE_ENV === 'development'
-        ? `http://127.0.0.1:5001/${projectId}/${region}`
-        : `https://${region}-${projectId}.cloudfunctions.net`;
-
-    return [
-       {
-        source: '/api/:path*',
-        destination: `${functionBaseUrl}/api/:path*`,
-      },
-    ];
-  },
   images: {
     remotePatterns: [
       {
         protocol: 'https',
         hostname: 'placehold.co',
-        port: '',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'picsum.photos',
         port: '',
         pathname: '/**',
       },
@@ -59,5 +36,3 @@ const nextConfig: NextConfig = {
 };
 
 export default nextConfig;
-
-    

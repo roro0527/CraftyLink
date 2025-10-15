@@ -28,9 +28,14 @@ interface AppHeaderProps {}
 const AppHeader: React.FC<AppHeaderProps> = ({}) => {
   const { onOpen } = useMobileSidebar();
   const { user, loading, signInWithGoogle, signOut } = useAuth();
+  const [isClient, setIsClient] = React.useState(false);
+
+  React.useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const UserButton = () => {
-    if (loading) {
+    if (!isClient || loading) {
       return <Skeleton className="h-10 w-10 rounded-full" />;
     }
     

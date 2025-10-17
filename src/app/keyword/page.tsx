@@ -3,7 +3,7 @@
 
 /**
  * @file 단일 키워드 상세 분석 페이지 컴포넌트입니다.
- * 사용자는 키워드를 검색하여 검색량 추이, 관련 영상, 연관 태그 등 다양한 정보를 확인할 수 있습니다.
+ * 사용자는 키워드를 검색하여 검색량 추이, 관련 영상 등 다양한 정보를 확인할 수 있습니다.
  */
 
 import * as React from 'react';
@@ -32,14 +32,13 @@ import {
 import { Input } from '@/components/ui/input';
 import { LoaderCircle, Search, ArrowUp, ArrowDown } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
-import { getKeywordTrendsAction, getRelatedKeywordsAction, getYoutubeVideosAction } from '@/app/actions';
+import { getKeywordTrendsAction, getYoutubeVideosAction } from '@/app/actions';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartConfig } from '@/components/ui/chart';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { format, parseISO } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { KeywordTrendPoint } from '@/lib/types';
-import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import type { YoutubeVideosData } from '@/ai/flows/youtube-videos-flow';
 import { Suspense } from 'react';
@@ -68,8 +67,6 @@ function KeywordPageContent() {
   const [totalSearchVolume, setTotalSearchVolume] = React.useState<number | null>(null); // 총 검색량
   const [peakSearchVolume, setPeakSearchVolume] = React.useState<number | null>(null);
   const [lowestSearchVolume, setLowestSearchVolume] = React.useState<number | null>(null);
-  const [relatedKeywords, setRelatedKeywords] = React.useState<string[]>([]); // 연관 키워드
-  const [isFetchingRelated, setIsFetchingRelated] = React.useState(false); // 연관 키워드 로딩 상태
   const [youtubeVideos, setYoutubeVideos] = React.useState<YoutubeVideosData>({ videos: [], nextPageToken: null }); // 유튜브 영상 데이터
   const [isFetchingVideos, setIsFetchingVideos] = React.useState(false); // 유튜브 영상 로딩 상태
 
@@ -98,7 +95,7 @@ function KeywordPageContent() {
   };
 
   /**
-   * 키워드에 대한 모든 관련 데이터(트렌드, 연관 키워드, 유튜브 영상)를 병렬로 가져오는 함수입니다.
+   * 키워드에 대한 모든 관련 데이터(트렌드, 유튜브 영상)를 병렬로 가져오는 함수입니다.
    * @param keyword 검색할 키워드
    */
   const handleSearch = React.useCallback(async (keyword: string) => {
@@ -107,27 +104,23 @@ function KeywordPageContent() {
     // 모든 로딩 상태를 true로 설정하고 이전 데이터를 초기화합니다.
     setIsSearching(true);
     setIsSearchingTrends(true);
-    setIsFetchingRelated(true);
     setIsFetchingVideos(true);
     setTrendData([]);
     setTotalSearchVolume(null);
     setPeakSearchVolume(null);
     setLowestSearchVolume(null);
-    setRelatedKeywords([]);
     setYoutubeVideos({ videos: [], nextPageToken: null });
 
     try {
       // 모든 데이터 요청을 Promise.all을 사용하여 병렬로 처리합니다.
-      const [trendResult, relatedResult, videoResult] = await Promise.all([
+      const [trendResult, videoResult] = await Promise.all([
         getKeywordTrendsAction({ keyword, timeRange }),
-        getRelatedKeywordsAction({ keyword }),
         getYoutubeVideosAction({ keyword })
       ]);
       
       // 받아온 결과로 state를 업데이트합니다.
       setTrendData(trendResult);
       calculateStats(trendResult);
-      setRelatedKeywords(relatedResult);
       setYoutubeVideos(videoResult);
 
     } catch (error) {
@@ -142,7 +135,6 @@ function KeywordPageContent() {
         setIsSearching(false);
         setIsSearchingTrends(false);
         setIsFetchingVideos(false);
-        setIsFetchingRelated(false);
     }
   }, [timeRange, toast]); // timeRange 또는 toast 함수가 변경될 때만 이 함수를 재생성합니다.
 
@@ -194,14 +186,6 @@ function KeywordPageContent() {
     if (event.key === 'Enter') {
       handleSearch(keywordSearch);
     }
-  };
-  
-  /**
-   * 연관 태그를 클릭하면 해당 태그로 새로운 검색을 실행하는 핸들러입니다.
-   */
-  const handleTagClick = (tag: string) => {
-    setKeywordSearch(tag);
-    handleSearch(tag);
   };
   
   /**
@@ -298,140 +282,102 @@ function KeywordPageContent() {
         </Select>
       </div>
 
-      {/* 메인 영역: 차트, 테이블, 연관 태그 */}
-      <div className="grid md:grid-cols-4 gap-6">
-        <div className="md:col-span-3 space-y-6">
-           {/* 키워드 검색 빈도 차트 */}
-           <Card>
-            <CardHeader>
-              <CardTitle>키워드 검색 빈도</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="h-72">
-                {isSearching || isSearchingTrends ? (
-                  <Skeleton className="w-full h-full" />
-                ) : trendData.length > 0 ? (
-                  <ChartContainer config={chartConfig} className="w-full h-full">
-                    <LineChart data={trendData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
-                      <CartesianGrid vertical={false} />
-                      <XAxis
-                        dataKey="date"
-                        tickLine={false}
-                        axisLine={false}
-                        tickMargin={8}
-                        tickFormatter={(value) => format(parseISO(value), 'M/d', { locale: ko })}
-                      />
-                      <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
-                       <ChartTooltip
-                        cursor={false}
-                        content={<ChartTooltipContent indicator="dot" />}
-                      />
-                      <Line
-                        dataKey="value"
-                        type="monotone"
-                        stroke="var(--color-value)"
-                        strokeWidth={2}
-                        dot={false}
-                      />
-                    </LineChart>
-                  </ChartContainer>
-                ) : (
-                  <div className="h-full bg-muted rounded-md flex items-center justify-center">
-                    <p className="text-muted-foreground">차트 데이터가 없습니다.</p>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-          {/* 관련 영상 목록 테이블 */}
-          <Card>
-            <CardHeader>
-              <CardTitle>관련 영상 목록</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>제목</TableHead>
-                    <TableHead>업로드일</TableHead>
-                    <TableHead>조회수</TableHead>
-                    <TableHead>채널</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                   {isFetchingVideos ? (
-                    // 로딩 중 스켈레톤 UI
-                    Array.from({ length: 5 }).map((_, i) => (
-                      <TableRow key={`skel-${i}`}>
-                        <TableCell><Skeleton className="h-5 w-48" /></TableCell>
-                        <TableCell><Skeleton className="h-5 w-24" /></TableCell>
-                        <TableCell><Skeleton className="h-5 w-20" /></TableCell>
-                        <TableCell><Skeleton className="h-5 w-28" /></TableCell>
-                      </TableRow>
-                    ))
-                  ) : youtubeVideos.videos.length > 0 ? (
-                    // 데이터가 있을 경우
-                    youtubeVideos.videos.map((video) => (
-                      <TableRow 
-                        key={video.id} 
-                        className="cursor-pointer hover:bg-muted/50"
-                        onClick={() => handleVideoClick(video.id)}
-                      >
-                        <TableCell className="font-medium">{video.title}</TableCell>
-                        <TableCell>{format(parseISO(video.publishedAt), 'yyyy-MM-dd')}</TableCell>
-                        <TableCell>{parseInt(video.viewCount).toLocaleString()}</TableCell>
-                        <TableCell>{video.channelTitle}</TableCell>
-                      </TableRow>
-                    ))
-                  ) : (
-                    // 데이터가 없을 경우
-                    <TableRow>
-                      <TableCell colSpan={4} className="text-center h-24">
-                        데이터가 없습니다.
-                      </TableCell>
+      {/* 메인 영역: 차트, 테이블 */}
+      <div className="space-y-6">
+        {/* 키워드 검색 빈도 차트 */}
+        <Card>
+        <CardHeader>
+            <CardTitle>키워드 검색 빈도</CardTitle>
+        </CardHeader>
+        <CardContent>
+            <div className="h-72">
+            {isSearching || isSearchingTrends ? (
+                <Skeleton className="w-full h-full" />
+            ) : trendData.length > 0 ? (
+                <ChartContainer config={chartConfig} className="w-full h-full">
+                <LineChart data={trendData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
+                    <CartesianGrid vertical={false} />
+                    <XAxis
+                    dataKey="date"
+                    tickLine={false}
+                    axisLine={false}
+                    tickMargin={8}
+                    tickFormatter={(value) => format(parseISO(value), 'M/d', { locale: ko })}
+                    />
+                    <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
+                    <ChartTooltip
+                    cursor={false}
+                    content={<ChartTooltipContent indicator="dot" />}
+                    />
+                    <Line
+                    dataKey="value"
+                    type="monotone"
+                    stroke="var(--color-value)"
+                    strokeWidth={2}
+                    dot={false}
+                    />
+                </LineChart>
+                </ChartContainer>
+            ) : (
+                <div className="h-full bg-muted rounded-md flex items-center justify-center">
+                <p className="text-muted-foreground">차트 데이터가 없습니다.</p>
+                </div>
+            )}
+            </div>
+        </CardContent>
+        </Card>
+        {/* 관련 영상 목록 테이블 */}
+        <Card>
+        <CardHeader>
+            <CardTitle>관련 영상 목록</CardTitle>
+        </CardHeader>
+        <CardContent>
+            <Table>
+            <TableHeader>
+                <TableRow>
+                <TableHead>제목</TableHead>
+                <TableHead>업로드일</TableHead>
+                <TableHead>조회수</TableHead>
+                <TableHead>채널</TableHead>
+                </TableRow>
+            </TableHeader>
+            <TableBody>
+                {isFetchingVideos ? (
+                // 로딩 중 스켈레톤 UI
+                Array.from({ length: 5 }).map((_, i) => (
+                    <TableRow key={`skel-${i}`}>
+                    <TableCell><Skeleton className="h-5 w-48" /></TableCell>
+                    <TableCell><Skeleton className="h-5 w-24" /></TableCell>
+                    <TableCell><Skeleton className="h-5 w-20" /></TableCell>
+                    <TableCell><Skeleton className="h-5 w-28" /></TableCell>
                     </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </div>
-        <div className="md:col-span-1 space-y-6">
-           {/* 연관 태그 */}
-           <Card>
-            <CardHeader>
-              <CardTitle>연관 태그</CardTitle>
-            </CardHeader>
-            <CardContent className="h-full min-h-[240px]">
-              {isFetchingRelated ? (
-                 <div className="space-y-2 pt-2">
-                    <Skeleton className="h-8 w-full" />
-                    <Skeleton className="h-8 w-4/5" />
-                    <Skeleton className="h-8 w-full" />
-                    <Skeleton className="h-8 w-3/4" />
-                    <Skeleton className="h-8 w-5/6" />
-                 </div>
-              ) : relatedKeywords.length > 0 ? (
-                <div className="flex flex-wrap gap-2">
-                  {relatedKeywords.map((tag) => (
-                    <Badge 
-                      key={tag} 
-                      variant="secondary" 
-                      className="text-base font-normal cursor-pointer hover:bg-primary/20"
-                      onClick={() => handleTagClick(tag)}
+                ))
+                ) : youtubeVideos.videos.length > 0 ? (
+                // 데이터가 있을 경우
+                youtubeVideos.videos.map((video) => (
+                    <TableRow 
+                    key={video.id} 
+                    className="cursor-pointer hover:bg-muted/50"
+                    onClick={() => handleVideoClick(video.id)}
                     >
-                      #{tag}
-                    </Badge>
-                  ))}
-                </div>
-              ) : (
-                <div className="h-full flex items-center justify-center">
-                   <p className="text-muted-foreground">연관 태그가 없습니다.</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+                    <TableCell className="font-medium">{video.title}</TableCell>
+                    <TableCell>{format(parseISO(video.publishedAt), 'yyyy-MM-dd')}</TableCell>
+                    <TableCell>{parseInt(video.viewCount).toLocaleString()}</TableCell>
+                    <TableCell>{video.channelTitle}</TableCell>
+                    </TableRow>
+                ))
+                ) : (
+                // 데이터가 없을 경우
+                <TableRow>
+                    <TableCell colSpan={4} className="text-center h-24">
+                    데이터가 없습니다.
+                    </TableCell>
+                </TableRow>
+                )}
+            </TableBody>
+            </Table>
+        </CardContent>
+        </Card>
       </div>
     </div>
   );

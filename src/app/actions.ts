@@ -8,7 +8,6 @@
  */
 
 import { getKeywordTrends, type KeywordTrendsInput, type KeywordTrendsData } from '@/ai/flows/keyword-trends-flow';
-import { getRelatedKeywordsFlow, type RelatedKeywordsInput } from '@/ai/flows/related-keywords-flow';
 import { getYoutubeVideos, type YoutubeVideosInput, type YoutubeVideosData } from '@/ai/flows/youtube-videos-flow';
 import { getNaverNews, type NaverNewsInput, type RelatedNewsData } from '@/ai/flows/naver-news-flow';
 import { getGoogleImages } from '@/ai/flows/google-images-flow';
@@ -28,23 +27,6 @@ export async function getKeywordTrendsAction(input: KeywordTrendsInput): Promise
     // 에러 발생 시 클라이언트 컴포넌트에서 처리할 수 있도록 다시 던집니다.
     throw error;
   }
-}
-
-/**
- * 관련 키워드 목록을 가져오는 서버 액션입니다.
- * @param input 키워드를 포함하는 객체
- * @returns 관련 키워드 문자열 배열
- */
-export async function getRelatedKeywordsAction(input: RelatedKeywordsInput): Promise<string[]> {
-    try {
-        const keywords = await getRelatedKeywordsFlow(input);
-        // 항상 배열을 반환하도록 보장합니다.
-        return keywords || [];
-    } catch (error) {
-        console.error('Error in getRelatedKeywordsAction:', error);
-        // 실패 시 앱 충돌을 방지하기 위해 빈 배열을 반환합니다.
-        return [];
-    }
 }
 
 /**

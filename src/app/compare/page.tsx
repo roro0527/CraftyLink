@@ -35,7 +35,7 @@ import { format, parseISO } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose, DialogDescription } from '@/components/ui/dialog';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { useCompareStore } from '@/store/compare-store';
@@ -497,6 +497,9 @@ export default function ComparePage() {
         <DialogContent className="sm:max-w-md">
             <DialogHeader>
                 <DialogTitle>비교 결과 저장</DialogTitle>
+                <DialogDescription>
+                    현재 비교 중인 키워드를 저장합니다. 저장된 항목은 사이드바에서 확인할 수 있습니다.
+                </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-2">
                 <div className="space-y-2">

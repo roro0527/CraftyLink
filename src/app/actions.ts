@@ -12,7 +12,8 @@ import { getRelatedKeywords } from '@/ai/flows/related-keywords-flow';
 import { getYoutubeVideos, type YoutubeVideosInput, type YoutubeVideosData } from '@/ai/flows/youtube-videos-flow';
 import { getNaverNews, type NaverNewsInput, type RelatedNewsData } from '@/ai/flows/naver-news-flow';
 import { getDictionaryEntry, type DictionaryInput, type DictionaryEntry } from '@/ai/flows/dictionary-flow';
-import axios from 'axios';
+import { getFunctions, httpsCallable } from 'firebase/functions';
+import { getFirebase } from '@/firebase/client';
 import type { SearchResult } from '@/lib/types';
 
 // Google 이미지 검색을 위한 타입 정의
@@ -114,18 +115,12 @@ export async function getDictionaryEntryAction(input: DictionaryInput): Promise<
  */
 export async function getGoogleImagesAction(input: GoogleImagesInput): Promise<GoogleImagesData> {
     try {
-        // Next.js의 rewrites 설정을 통해 Cloud Function으로 요청이 전달됩니다.
-        const response = await axios.get('/api/getGoogleImages', {
-            params: {
-                query: input.query,
-                start: input.start || 1,
-            }
-        });
-        return response.data;
+        const { functions } = getFirebase();
+        const getGoogleImages = httpsCallable(functions, 'api-getGoogleImages');
+        const response = await getGoogleImages({ query: input.query, start: input.start || 1 });
+        return response.data as GoogleImagesData;
     } catch (error) {
         console.error('Error in getGoogleImagesAction calling Cloud Function:', error);
         throw new Error('Failed to get google images from a cloud function.');
     }
 }
-
-    

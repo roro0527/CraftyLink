@@ -10,15 +10,6 @@ const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
-   async rewrites() {
-    return [
-      {
-        source: '/api/:path*',
-        // This should be your cloud run url.
-        destination: `https://api-pfjlo9jtyjxx-an.a.run.app/:path*`,
-      },
-    ];
-  },
   images: {
     remotePatterns: [
       {

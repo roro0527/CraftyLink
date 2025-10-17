@@ -8,7 +8,7 @@
  */
 
 import { getKeywordTrends, type KeywordTrendsInput, type KeywordTrendsData } from '@/ai/flows/keyword-trends-flow';
-import { getRelatedKeywords } from '@/ai/flows/related-keywords-flow';
+import { getRelatedKeywordsFlow, type RelatedKeywordsInput } from '@/ai/flows/related-keywords-flow';
 import { getYoutubeVideos, type YoutubeVideosInput, type YoutubeVideosData } from '@/ai/flows/youtube-videos-flow';
 import { getNaverNews, type NaverNewsInput, type RelatedNewsData } from '@/ai/flows/naver-news-flow';
 import { getGoogleImages } from '@/ai/flows/google-images-flow';
@@ -35,9 +35,9 @@ export async function getKeywordTrendsAction(input: KeywordTrendsInput): Promise
  * @param input 키워드를 포함하는 객체
  * @returns 관련 키워드 문자열 배열
  */
-export async function getRelatedKeywordsAction(input: { keyword: string }): Promise<string[]> {
+export async function getRelatedKeywordsAction(input: RelatedKeywordsInput): Promise<string[]> {
     try {
-        const keywords = await getRelatedKeywords(input);
+        const keywords = await getRelatedKeywordsFlow(input);
         // 항상 배열을 반환하도록 보장합니다.
         return keywords || [];
     } catch (error) {

@@ -36,7 +36,7 @@ const dictionaryPrompt = ai.definePrompt({
         You are a helpful dictionary.
         For the given keyword, provide a clear and concise dictionary entry.
         Include the definition, etymology (if interesting or known), and 2-3 example sentences.
-        The response should be in Korean.
+        The response MUST be in Korean.
 
         Keyword: {{{keyword}}}
     `,

@@ -4,39 +4,13 @@
  * @fileOverview Genkit 플로우를 사용하여 Google Custom Search API로부터 이미지를 가져오는 에이전트입니다.
  *
  * - getGoogleImages: 특정 키워드와 관련된 이미지를 조회하는 공개 함수입니다.
- * - GoogleImagesInput: getGoogleImages 함수의 입력 타입입니다.
- * - GoogleImagesData: getGoogleImages 함수의 반환 타입입니다.
  */
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 import axios from 'axios';
 import type { SearchResult } from '@/lib/types';
-
-// 입력 스키마 정의
-export const GoogleImagesInputSchema = z.object({
-  query: z.string().describe('The keyword to search images for.'),
-  start: z.number().optional().describe('The starting index for search results.'),
-});
-export type GoogleImagesInput = z.infer<typeof GoogleImagesInputSchema>;
-
-// 개별 이미지 결과 스키마
-const ImageSearchResultSchema = z.object({
-  id: z.string(),
-  title: z.string(),
-  url: z.string(),
-  imageUrl: z.string(),
-  description: z.string().optional(),
-  source: z.string().optional(),
-});
-
-// 최종 출력 데이터 스키마
-export const GoogleImagesDataSchema = z.object({
-  photos: z.array(ImageSearchResultSchema),
-  nextPage: z.number().optional().nullable(),
-});
-export type GoogleImagesData = z.infer<typeof GoogleImagesDataSchema>;
-
+import type { GoogleImagesData, GoogleImagesInput } from '@/hooks/use-get-google-images';
 
 /**
  * Google Custom Search API를 호출하여 이미지 검색 결과를 가져오는 핵심 Genkit 플로우입니다.
@@ -44,8 +18,21 @@ export type GoogleImagesData = z.infer<typeof GoogleImagesDataSchema>;
 const getGoogleImagesFlow = ai.defineFlow(
   {
     name: 'getGoogleImagesFlow',
-    inputSchema: GoogleImagesInputSchema,
-    outputSchema: GoogleImagesDataSchema,
+    inputSchema: z.object({
+      query: z.string().describe('The keyword to search images for.'),
+      start: z.number().optional().describe('The starting index for search results.'),
+    }),
+    outputSchema: z.object({
+        photos: z.array(z.object({
+            id: z.string(),
+            title: z.string(),
+            url: z.string(),
+            imageUrl: z.string(),
+            description: z.string().optional(),
+            source: z.string().optional(),
+        })),
+        nextPage: z.number().optional().nullable(),
+    }),
   },
   async (input) => {
     const { query, start = 1 } = input;

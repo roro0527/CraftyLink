@@ -12,7 +12,7 @@ import { getRelatedKeywords } from '@/ai/flows/related-keywords-flow';
 import { getYoutubeVideos, type YoutubeVideosInput, type YoutubeVideosData } from '@/ai/flows/youtube-videos-flow';
 import { getNaverNews, type NaverNewsInput, type RelatedNewsData } from '@/ai/flows/naver-news-flow';
 import { getDictionaryEntry, type DictionaryInput, type DictionaryEntry } from '@/ai/flows/dictionary-flow';
-import { getGoogleImages, type GoogleImagesInput, type GoogleImagesData } from '@/ai/flows/google-images-flow';
+import { getGoogleImages } from '@/ai/flows/google-images-flow';
 
 
 /**
@@ -101,7 +101,7 @@ export async function getDictionaryEntryAction(input: DictionaryInput): Promise<
  * @param input 키워드와 시작 인덱스를 포함하는 객체
  * @returns 이미지 데이터와 다음 페이지 인덱스를 포함하는 객체
  */
-export async function getGoogleImagesAction(input: GoogleImagesInput): Promise<GoogleImagesData> {
+export async function getGoogleImagesAction(input: any): Promise<any> {
     try {
         const data = await getGoogleImages(input);
         return data;

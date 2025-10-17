@@ -10,6 +10,17 @@ import { useState, useEffect, useCallback } from 'react';
 import type { SearchResult } from '@/lib/types';
 import { getGoogleImagesAction } from '@/app/actions';
 
+// 타입 정의
+export interface GoogleImagesInput {
+  query: string;
+  start?: number;
+}
+
+export interface GoogleImagesData {
+  photos: SearchResult[];
+  nextPage?: number | null;
+}
+
 export const useGetGoogleImages = (query: string) => {
   // --- State 정의 ---
   const [results, setResults] = useState<SearchResult[]>([]); // 이미지 검색 결과 목록
@@ -31,7 +42,7 @@ export const useGetGoogleImages = (query: string) => {
     setError(null);
 
     try {
-        const response = await getGoogleImagesAction({ query: currentQuery, start: start });
+        const response: GoogleImagesData = await getGoogleImagesAction({ query: currentQuery, start: start });
       
       const { photos, nextPage } = response;
       

@@ -13,8 +13,10 @@ import { getYoutubeVideos, type YoutubeVideosInput, type YoutubeVideosData } fro
 import { getNaverNews, type NaverNewsInput, type RelatedNewsData } from '@/ai/flows/naver-news-flow';
 import { getDictionaryEntry, type DictionaryInput, type DictionaryEntry } from '@/ai/flows/dictionary-flow';
 import { getFunctions, httpsCallable } from 'firebase/functions';
-import { getFirebase } from '@/firebase/client';
+import { initializeApp, getApps } from 'firebase/app';
+import { firebaseConfig } from '@/firebase/config';
 import type { SearchResult } from '@/lib/types';
+
 
 // Google 이미지 검색을 위한 타입 정의
 export interface GoogleImagesInput {
@@ -108,6 +110,14 @@ export async function getDictionaryEntryAction(input: DictionaryInput): Promise<
     }
 }
 
+// 서버 환경에서 Firebase 앱을 한 번만 초기화하기 위한 헬퍼
+const getFirebaseApp = () => {
+    if (getApps().length === 0) {
+        return initializeApp(firebaseConfig);
+    }
+    return getApps()[0];
+};
+
 /**
  * 구글 이미지 목록을 가져오는 서버 액션입니다. (Cloud Function 사용)
  * @param input 키워드와 시작 인덱스를 포함하는 객체
@@ -115,10 +125,18 @@ export async function getDictionaryEntryAction(input: DictionaryInput): Promise<
  */
 export async function getGoogleImagesAction(input: GoogleImagesInput): Promise<GoogleImagesData> {
     try {
-        const { functions } = getFirebase();
+        const app = getFirebaseApp();
+        // 'asia-northeast3' 리전을 명시적으로 지정
+        const functions = getFunctions(app, 'asia-northeast3'); 
         const getGoogleImages = httpsCallable(functions, 'api-getGoogleImages');
         const response = await getGoogleImages({ query: input.query, start: input.start || 1 });
+        
+        if (!response.data) {
+            throw new Error('Response data is null or undefined');
+        }
+
         return response.data as GoogleImagesData;
+
     } catch (error) {
         console.error('Error in getGoogleImagesAction calling Cloud Function:', error);
         throw new Error('Failed to get google images from a cloud function.');

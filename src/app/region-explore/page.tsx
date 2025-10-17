@@ -1,9 +1,8 @@
-
 'use client';
 
 /**
  * @file '탐색' 페이지 컴포넌트입니다.
- * 사용자는 검색어를 입력하여 사진, 뉴스, 사전, 동영상 등 다양한 카테고리의 정보를 탐색할 수 있습니다.
+ * 사용자는 검색어를 입력하여 사진, 뉴스, 동영상 등 다양한 카테고리의 정보를 탐색할 수 있습니다.
  * 각 카테고리는 탭으로 구분됩니다.
  */
 
@@ -14,7 +13,6 @@ import { LoaderCircle, Search } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import PhotoResults from '@/components/app/photo-results';
 import NewsResults from '@/components/app/news-results';
-import DictionaryResult from '@/components/app/dictionary-result';
 import VideoResults from '@/components/app/video-results';
 import type { SearchCategory } from '@/lib/types';
 
@@ -72,10 +70,9 @@ export default function RegionExplorePage() {
       <div className="container mx-auto px-4 md:px-8 py-6 flex-1">
         {/* 탭 메뉴 */}
         <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as SearchCategory)} className="w-full">
-          <TabsList className="grid w-full grid-cols-4 mb-6">
+          <TabsList className="grid w-full grid-cols-3 mb-6">
               <TabsTrigger value="photo">사진</TabsTrigger>
               <TabsTrigger value="news">뉴스</TabsTrigger>
-              <TabsTrigger value="dictionary">사전</TabsTrigger>
               <TabsTrigger value="video">동영상</TabsTrigger>
           </TabsList>
 
@@ -94,9 +91,6 @@ export default function RegionExplorePage() {
                       </TabsContent>
                       <TabsContent value="news">
                           <NewsResults query={submittedQuery} />
-                      </TabsContent>
-                      <TabsContent value="dictionary">
-                          <DictionaryResult query={submittedQuery} />
                       </TabsContent>
                       <TabsContent value="video">
                           <VideoResults query={submittedQuery} />

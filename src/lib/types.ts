@@ -22,7 +22,7 @@ export interface YoutubeVideo {
     channelTitle: string;
 }
 
-export type SearchCategory = 'photo' | 'news' | 'dictionary' | 'video';
+export type SearchCategory = 'photo' | 'news' | 'video';
 
 export interface SearchResult {
   id: string;

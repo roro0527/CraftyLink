@@ -11,7 +11,6 @@ import { getKeywordTrends, type KeywordTrendsInput, type KeywordTrendsData } fro
 import { getRelatedKeywords } from '@/ai/flows/related-keywords-flow';
 import { getYoutubeVideos, type YoutubeVideosInput, type YoutubeVideosData } from '@/ai/flows/youtube-videos-flow';
 import { getNaverNews, type NaverNewsInput, type RelatedNewsData } from '@/ai/flows/naver-news-flow';
-import { getDictionaryEntry, type DictionaryInput, type DictionaryEntry } from '@/ai/flows/dictionary-flow';
 import { getGoogleImages } from '@/ai/flows/google-images-flow';
 
 
@@ -77,22 +76,6 @@ export async function getYoutubeVideosAction(input: YoutubeVideosInput): Promise
         console.error('Error in getYoutubeVideosAction:', error);
         // 에러 발생 시 앱 충돌을 막기 위해 기본 빈 상태를 반환합니다.
         return { videos: [], nextPageToken: null };
-    }
-}
-
-/**
- * 사전 정보를 가져오는 서버 액션입니다.
- * @param input 키워드를 포함하는 객체
- * @returns 사전 항목 데이터 객체
- */
-export async function getDictionaryEntryAction(input: DictionaryInput): Promise<DictionaryEntry> {
-    try {
-        const entry = await getDictionaryEntry(input);
-        return entry;
-    } catch (error) {
-        console.error('Error in getDictionaryEntryAction:', error);
-        // 클라이언트에서 에러 상태를 처리할 수 있도록 다시 던집니다.
-        throw new Error('Failed to get dictionary entry.');
     }
 }
 

@@ -1,4 +1,6 @@
-# Firebase Studio
+# CraftyLink
+
+Firebase Studio NextJS Starter Project
 
 This is a NextJS starter in Firebase Studio.
 

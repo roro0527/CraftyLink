@@ -274,12 +274,6 @@ function KeywordPageContent() {
                     <span className="sr-only">검색</span>
                 </Button>
             </div>
-             {keywordSearch && !isSearching && (
-                <Button onClick={handleAddToCompare} size="lg" className="h-14">
-                    <Plus className="mr-2 h-5 w-5" />
-                    비교
-                </Button>
-            )}
           </div>
           <p className="text-muted-foreground mt-2 ml-2">이 키워드에 대한 간단한 설명입니다.</p>
         </div>
@@ -305,7 +299,7 @@ function KeywordPageContent() {
         </div>
       </div>
 
-      {/* 시간 범위 선택 */}
+      {/* 시간 범위 선택 및 비교 버튼 */}
       <div className="flex flex-col md:flex-row justify-between items-center mb-4 gap-4">
         <Select value={timeRange} onValueChange={(value) => setTimeRange(value as '5d' | '1w' | '1m')} disabled={isSearching || !keywordSearch.trim()}>
           <SelectTrigger className="w-full md:w-[180px]">
@@ -317,6 +311,12 @@ function KeywordPageContent() {
             <SelectItem value="1m">최근 1개월</SelectItem>
           </SelectContent>
         </Select>
+        {keywordSearch && !isSearching && (
+            <Button onClick={handleAddToCompare}>
+                <Plus className="mr-2 h-4 w-4" />
+                비교
+            </Button>
+        )}
       </div>
 
       {/* 메인 영역: 차트, 테이블 */}

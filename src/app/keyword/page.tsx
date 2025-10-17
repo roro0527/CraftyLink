@@ -30,8 +30,8 @@ import {
   TableCell,
 } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
-import { LoaderCircle, Search, ArrowUp, ArrowDown } from 'lucide-react';
-import { useSearchParams } from 'next/navigation';
+import { LoaderCircle, Search, ArrowUp, ArrowDown, Plus } from 'lucide-react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { getKeywordTrendsAction, getYoutubeVideosAction } from '@/app/actions';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartConfig } from '@/components/ui/chart';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid } from 'recharts';
@@ -42,6 +42,7 @@ import type { KeywordTrendPoint } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import type { YoutubeVideosData } from '@/ai/flows/youtube-videos-flow';
 import { Suspense } from 'react';
+import { useCompareStore } from '@/store/compare-store';
 
 
 // 차트 설정을 정의합니다.
@@ -55,8 +56,10 @@ const chartConfig = {
 // useSearchParams를 사용하는 컴포넌트를 분리합니다.
 function KeywordPageContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const initialKeyword = searchParams.get('q') || ''; // URL 쿼리 파라미터에서 초기 키워드를 가져옵니다.
   const { toast } = useToast();
+  const { addKeyword, keywords } = useCompareStore();
 
   // --- State 정의 ---
   const [keywordSearch, setKeywordSearch] = React.useState(initialKeyword); // 현재 검색 중인 키워드
@@ -69,12 +72,6 @@ function KeywordPageContent() {
   const [lowestSearchVolume, setLowestSearchVolume] = React.useState<number | null>(null);
   const [youtubeVideos, setYoutubeVideos] = React.useState<YoutubeVideosData>({ videos: [], nextPageToken: null }); // 유튜브 영상 데이터
   const [isFetchingVideos, setIsFetchingVideos] = React.useState(false); // 유튜브 영상 로딩 상태
-
-  // 목업 데이터
-  const keywordData = {
-    name: keywordSearch,
-    description: '이 키워드에 대한 간단한 설명입니다.',
-  };
 
   /**
    * 트렌드 데이터 배열을 받아 통계를 계산합니다.
@@ -195,6 +192,38 @@ function KeywordPageContent() {
     window.open(`https://www.youtube.com/watch?v=${videoId}`, '_blank', 'noopener,noreferrer');
   };
 
+  /**
+   * 현재 키워드를 비교 페이지에 추가하는 핸들러입니다.
+   */
+  const handleAddToCompare = () => {
+    if (!keywordSearch.trim()) return;
+
+    if (keywords.includes(keywordSearch)) {
+      toast({
+        title: '이미 추가된 키워드입니다.',
+        description: '비교 페이지로 이동합니다.',
+      });
+      router.push('/compare');
+      return;
+    }
+
+    if (keywords.length >= 5) {
+      toast({
+        variant: 'destructive',
+        title: '비교 목록이 가득 찼습니다.',
+        description: '최대 5개의 키워드만 비교할 수 있습니다.',
+      });
+      return;
+    }
+
+    addKeyword(keywordSearch);
+    toast({
+      title: '비교 목록에 추가됨',
+      description: `'${keywordSearch}' 키워드가 비교 목록에 추가되었습니다.`,
+    });
+    router.push('/compare');
+  };
+
   const StatCard = ({ title, value, icon, isLoading }: { title: string; value: number | null; icon: React.ReactNode; isLoading: boolean}) => (
       <Card>
         <CardHeader className="pb-2 flex flex-row items-center justify-between">
@@ -218,33 +247,41 @@ function KeywordPageContent() {
     <div id="keyword-page" className="p-6">
       {/* 상단: 키워드 개요 + KPI */}
       <div className="flex flex-col md:flex-row justify-between items-start mb-6">
-        <div className="w-full md:w-auto md:max-w-md">
-           <div className="relative">
-             <Input
-              type="text"
-              placeholder="키워드 검색..."
-              value={keywordSearch}
-              onChange={(e) => setKeywordSearch(e.target.value)}
-              onKeyDown={handleKeyDown}
-              className="pl-14 pr-4 h-14 text-3xl font-bold rounded-lg border-2 border-transparent hover:border-border focus:border-primary transition-colors bg-card"
-              disabled={isSearching}
-            />
-            <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => handleSearch(keywordSearch)}
-                disabled={isSearching || !keywordSearch.trim()}
-                className="absolute left-2 top-1/2 -translate-y-1/2 h-10 w-10"
-              >
-                {isSearching ? (
-                  <LoaderCircle className="h-6 w-6 text-gray-400 animate-spin" />
-                ) : (
-                  <Search className="h-6 w-6 text-gray-500" />
-                )}
-                 <span className="sr-only">검색</span>
-              </Button>
+        <div className="w-full md:w-auto md:max-w-2xl">
+           <div className="flex items-center gap-2">
+             <div className="relative flex-grow">
+                <Input
+                type="text"
+                placeholder="키워드 검색..."
+                value={keywordSearch}
+                onChange={(e) => setKeywordSearch(e.target.value)}
+                onKeyDown={handleKeyDown}
+                className="pl-12 pr-4 h-14 text-3xl font-bold rounded-lg border-2 border-transparent hover:border-border focus:border-primary transition-colors bg-card"
+                disabled={isSearching}
+                />
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleSearch(keywordSearch)}
+                    disabled={isSearching || !keywordSearch.trim()}
+                    className="absolute left-2 top-1/2 -translate-y-1/2 h-10 w-10"
+                >
+                    {isSearching ? (
+                    <LoaderCircle className="h-6 w-6 text-gray-400 animate-spin" />
+                    ) : (
+                    <Search className="h-6 w-6 text-gray-500" />
+                    )}
+                    <span className="sr-only">검색</span>
+                </Button>
+            </div>
+             {keywordSearch && !isSearching && (
+                <Button onClick={handleAddToCompare} size="lg" className="h-14">
+                    <Plus className="mr-2 h-5 w-5" />
+                    비교
+                </Button>
+            )}
           </div>
-          <p className="text-muted-foreground mt-2 ml-2">{keywordData.description}</p>
+          <p className="text-muted-foreground mt-2 ml-2">이 키워드에 대한 간단한 설명입니다.</p>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4 md:mt-0 w-full md:w-auto md:min-w-[500px]">
             <StatCard 
@@ -391,3 +428,5 @@ export default function KeywordPage() {
     </Suspense>
   );
 }
+
+    

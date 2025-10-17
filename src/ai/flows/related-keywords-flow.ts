@@ -30,7 +30,9 @@ const relatedKeywordsPrompt = ai.definePrompt(
     input: { schema: RelatedKeywordsInputSchema }, // 입력 스키마
     output: { schema: RelatedKeywordsDataSchema }, // 원하는 출력 스키마
     // 실제 언어 모델에게 전달될 프롬프트 템플릿입니다.
-    prompt: `사용자가 제공한 키워드와 관련성이 높은 검색어 또는 태그 5개를 생성해줘. 답변은 다른 설명 없이 태그 목록만 포함해야 해.
+    prompt: `사용자가 제공한 키워드와 관련성이 높은 검색어 또는 태그 5개를 생성하여 JSON 형식으로 반환해줘.
+응답은 반드시 'tags'라는 키를 가진 객체여야 하며, 값은 태그 문자열 배열이어야 해.
+다른 설명 없이 JSON 객체만 반환해야 한다.
 
 키워드: {{{keyword}}}`,
   },
@@ -53,3 +55,4 @@ export async function getRelatedKeywords(input: RelatedKeywordsInput): Promise<s
     return [];
   }
 }
+

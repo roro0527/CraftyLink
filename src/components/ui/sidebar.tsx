@@ -14,8 +14,8 @@ import { ScrollArea } from './scroll-area';
 import { Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
-import { getFirebase } from '@/firebase/client';
 import { useCollection } from '@/firebase/firestore/use-collection';
+import { useMemoFirebase, useFirestore } from '@/firebase/provider';
 import { collection, query, where, doc } from 'firebase/firestore';
 import { deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { Skeleton } from './skeleton';
@@ -25,11 +25,11 @@ export function Sidebar() {
   const pathname = usePathname();
   const { toast } = useToast();
   const { user, loading: userLoading } = useAuth();
-  const { firestore } = getFirebase();
+  const firestore = useFirestore();
   const { setKeywords } = useCompareStore();
 
   // Firestore 쿼리 생성
-  const savedItemsQuery = React.useMemo(() => {
+  const savedItemsQuery = useMemoFirebase(() => {
     if (!user) return null;
     return query(
       collection(firestore, 'users', user.uid, 'savedComparisonPages')

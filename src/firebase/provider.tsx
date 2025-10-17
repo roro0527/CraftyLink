@@ -156,13 +156,37 @@ export const useFirebaseApp = (): FirebaseApp => {
 
 type MemoFirebase <T> = T & {__memo?: boolean};
 
+// WeakMap to track memoized objects without mutating them
+const memoizedObjects = new WeakMap<object, boolean>();
+
 export function useMemoFirebase<T>(factory: () => T, deps: DependencyList): T | (MemoFirebase<T>) {
-  const memoized = useMemo(factory, deps);
-  
-  if(typeof memoized !== 'object' || memoized === null) return memoized;
-  (memoized as MemoFirebase<T>).__memo = true;
+  const memoized = useMemo(() => {
+    const result = factory();
+    
+    // If it's not an object or is null, just return it
+    if(typeof result !== 'object' || result === null) return result;
+    
+    // Track this object as memoized using WeakMap
+    memoizedObjects.set(result, true);
+    
+    // Also try to add __memo property (for backward compatibility)
+    // This might fail silently if the object is frozen/sealed
+    try {
+      (result as MemoFirebase<T>).__memo = true;
+    } catch (e) {
+      // Object is read-only, that's fine - WeakMap will track it
+    }
+    
+    return result;
+  }, deps);
   
   return memoized;
+}
+
+// Export helper to check if an object was memoized
+export function isMemoized(obj: any): boolean {
+  if (!obj || typeof obj !== 'object') return false;
+  return memoizedObjects.has(obj) || obj.__memo === true;
 }
 
 /**

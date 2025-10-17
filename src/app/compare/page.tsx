@@ -40,7 +40,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { useCompareStore } from '@/store/compare-store';
 import { useAuth } from '@/hooks/use-auth';
-import { getFirebase } from '@/firebase/client';
+import { useFirestore } from '@/firebase/provider';
 import { collection, addDoc } from 'firebase/firestore';
 import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 
@@ -72,7 +72,7 @@ const saveColors = [
 export default function ComparePage() {
   const { toast } = useToast();
   const { user, loading: userLoading } = useAuth();
-  const { firestore } = getFirebase();
+  const firestore = useFirestore();
 
   // 전역 상태 스토어 사용
   const {

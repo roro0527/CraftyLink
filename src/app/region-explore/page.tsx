@@ -1,3 +1,4 @@
+
 'use client';
 
 /**
@@ -9,12 +10,14 @@
 import * as React from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { LoaderCircle, Search } from 'lucide-react';
+import { LoaderCircle, Search, LogIn } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import PhotoResults from '@/components/app/photo-results';
 import NewsResults from '@/components/app/news-results';
 import VideoResults from '@/components/app/video-results';
 import type { SearchCategory } from '@/lib/types';
+import { useAuth } from '@/hooks/use-auth';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function RegionExplorePage() {
   // --- State 정의 ---
@@ -22,6 +25,7 @@ export default function RegionExplorePage() {
   const [submittedQuery, setSubmittedQuery] = React.useState(''); // 실제 검색을 실행한 검색어
   const [activeTab, setActiveTab] = React.useState<SearchCategory>('photo'); // 현재 활성화된 탭
   const [isSearching, setIsSearching] = React.useState(false); // 검색 버튼 자체의 로딩 상태
+  const { user, loading: userLoading, signInWithGoogle } = useAuth();
 
   /**
    * 검색 버튼 클릭 또는 Enter 입력 시 실행될 핸들러.
@@ -45,6 +49,25 @@ export default function RegionExplorePage() {
     }
   };
 
+  if (userLoading) {
+    return (
+      <div className="flex flex-col h-full animate-pulse">
+        <header className="sticky top-16 z-10 bg-background/80 backdrop-blur-sm border-b p-4">
+          <div className="w-full max-w-xl mx-auto flex gap-2">
+            <Skeleton className="h-12 text-lg flex-grow" />
+            <Skeleton className="h-12 w-28" />
+          </div>
+        </header>
+        <div className="container mx-auto px-4 md:px-8 py-6 flex-1">
+           <Skeleton className="h-10 w-full max-w-xl mx-auto mb-6" />
+           <div className="text-center py-20">
+              <Skeleton className="h-8 w-48 mx-auto" />
+           </div>
+        </div>
+      </div>
+    );
+  }
+
   // --- JSX 렌더링 ---
   return (
     <div className="flex flex-col h-full">
@@ -58,9 +81,9 @@ export default function RegionExplorePage() {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={handleKeyDown}
                 className="h-12 text-lg"
-                disabled={isSearching}
+                disabled={isSearching || !user}
             />
-            <Button onClick={handleSearch} disabled={isSearching || !searchQuery.trim()} className="h-12 px-6">
+            <Button onClick={handleSearch} disabled={isSearching || !searchQuery.trim() || !user} className="h-12 px-6">
                 {isSearching ? <LoaderCircle className="mr-2 h-4 w-4 animate-spin" /> : <Search className="mr-2 h-4 w-4" />}
                 검색
             </Button>
@@ -68,38 +91,51 @@ export default function RegionExplorePage() {
       </header>
 
       <div className="container mx-auto px-4 md:px-8 py-6 flex-1">
-        {/* 탭 메뉴 */}
-        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as SearchCategory)} className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-6">
-              <TabsTrigger value="photo">사진</TabsTrigger>
-              <TabsTrigger value="news">뉴스</TabsTrigger>
-              <TabsTrigger value="video">동영상</TabsTrigger>
-          </TabsList>
-
-          {/* 탭 콘텐츠 */}
-          <div className="mt-6">
-              {!submittedQuery ? (
-                  // 검색어가 제출되기 전의 초기 화면
-                  <div className="text-center py-20 text-muted-foreground">
-                      <p>궁금한 내용을 검색해보세요.</p>
-                  </div>
-              ) : (
-                  // 검색어가 제출된 후 각 탭에 맞는 콘텐츠를 보여줌
-                  <>
-                      <TabsContent value="photo">
-                          <PhotoResults query={submittedQuery} />
-                      </TabsContent>
-                      <TabsContent value="news">
-                          <NewsResults query={submittedQuery} />
-                      </TabsContent>
-                      <TabsContent value="video">
-                          <VideoResults query={submittedQuery} />
-                      </TabsContent>
-                  </>
-              )}
+        {!user ? (
+          <div className="flex flex-col items-center justify-center h-[calc(100vh-20rem)]">
+            <div className="text-center">
+              <h2 className="text-2xl font-semibold mb-2">로그인이 필요합니다</h2>
+              <p className="text-muted-foreground mb-6">
+                탐색 기능은 로그인 후 이용할 수 있습니다.
+              </p>
+              <Button onClick={signInWithGoogle}>
+                <LogIn className="mr-2 h-4 w-4" />
+                구글 계정으로 로그인
+              </Button>
+            </div>
           </div>
-        </Tabs>
+        ) : (
+          <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as SearchCategory)} className="w-full">
+            <TabsList className="grid w-full grid-cols-3 mb-6">
+                <TabsTrigger value="photo">사진</TabsTrigger>
+                <TabsTrigger value="news">뉴스</TabsTrigger>
+                <TabsTrigger value="video">동영상</TabsTrigger>
+            </TabsList>
+
+            <div className="mt-6">
+                {!submittedQuery ? (
+                    <div className="text-center py-20 text-muted-foreground">
+                        <p>궁금한 내용을 검색해보세요.</p>
+                    </div>
+                ) : (
+                    <>
+                        <TabsContent value="photo">
+                            <PhotoResults query={submittedQuery} />
+                        </TabsContent>
+                        <TabsContent value="news">
+                            <NewsResults query={submittedQuery} />
+                        </TabsContent>
+                        <TabsContent value="video">
+                            <VideoResults query={submittedQuery} />
+                        </TabsContent>
+                    </>
+                )}
+            </div>
+          </Tabs>
+        )}
       </div>
     </div>
   );
 }
+
+    

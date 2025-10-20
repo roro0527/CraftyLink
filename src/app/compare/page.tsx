@@ -19,7 +19,7 @@ import {
   TableCell,
 } from '@/components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, Trash2, X, Save, History, LoaderCircle } from 'lucide-react';
+import { Plus, Trash2, X, Save, History, LoaderCircle, LogIn } from 'lucide-react';
 import { getKeywordTrendsAction } from '@/app/actions';
 import type { KeywordTrendPoint } from '@/lib/types';
 import {
@@ -41,7 +41,7 @@ import { Label } from '@/components/ui/label';
 import { useCompareStore } from '@/store/compare-store';
 import { useAuth } from '@/hooks/use-auth';
 import { useFirestore } from '@/firebase/provider';
-import { collection, addDoc } from 'firebase/firestore';
+import { collection } from 'firebase/firestore';
 import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 
 // 각 데이터 유형에 대한 타입 정의
@@ -71,7 +71,7 @@ const saveColors = [
 
 export default function ComparePage() {
   const { toast } = useToast();
-  const { user, loading: userLoading } = useAuth();
+  const { user, loading: userLoading, signInWithGoogle } = useAuth();
   const firestore = useFirestore();
 
   // 전역 상태 스토어 사용
@@ -99,6 +99,8 @@ export default function ComparePage() {
    * 가져온 데이터를 기반으로 요약(summary) 및 분석(analysis) 데이터를 계산하고 state를 업데이트합니다.
    */
   React.useEffect(() => {
+    if (!user) return; // 로그인하지 않았으면 데이터 요청 안 함
+
     const fetchAllTrends = async () => {
       if (keywords.length === 0) {
         setTrendData({});
@@ -180,7 +182,7 @@ export default function ComparePage() {
     };
 
     fetchAllTrends();
-  }, [keywords, timeRange, toast]);
+  }, [keywords, timeRange, toast, user]);
 
   /**
    * 입력된 키워드를 비교 목록에 추가하는 핸들러입니다.
@@ -333,6 +335,42 @@ export default function ComparePage() {
   
     return { chartConfig: config, chartData: data };
   }, [keywords, trendData]);
+
+  if (userLoading) {
+    return (
+      <div className="p-6 space-y-6 animate-pulse">
+        <header className="flex flex-col sm:flex-row items-center gap-4">
+          <Skeleton className="h-10 w-48" />
+          <div className="flex gap-2 items-center flex-wrap">
+            <Skeleton className="h-10 w-64" />
+            <Skeleton className="h-10 w-24" />
+            <Skeleton className="h-10 w-24" />
+            <Skeleton className="h-10 w-40" />
+          </div>
+        </header>
+        <Skeleton className="h-8 w-full" />
+        <Skeleton className="h-96 w-full" />
+        <Skeleton className="h-64 w-full" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="flex flex-col items-center justify-center h-[calc(100vh-10rem)]">
+        <div className="text-center">
+          <h2 className="text-2xl font-semibold mb-2">로그인이 필요합니다</h2>
+          <p className="text-muted-foreground mb-6">
+            키워드 비교 기능은 로그인 후 이용할 수 있습니다.
+          </p>
+          <Button onClick={signInWithGoogle}>
+            <LogIn className="mr-2 h-4 w-4" />
+            구글 계정으로 로그인
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   // --- JSX 렌더링 ---
   return (
@@ -534,3 +572,5 @@ export default function ComparePage() {
     </div>
   );
 }
+
+    

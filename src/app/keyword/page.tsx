@@ -43,6 +43,7 @@ import { useToast } from '@/hooks/use-toast';
 import type { YoutubeVideosData } from '@/ai/flows/youtube-videos-flow';
 import { Suspense } from 'react';
 import { useCompareStore } from '@/store/compare-store';
+import { useAuth } from '@/hooks/use-auth';
 
 
 // 차트 설정을 정의합니다.
@@ -60,6 +61,7 @@ function KeywordPageContent() {
   const initialKeyword = searchParams.get('q') || ''; // URL 쿼리 파라미터에서 초기 키워드를 가져옵니다.
   const { toast } = useToast();
   const { addKeyword, keywords } = useCompareStore();
+  const { user } = useAuth();
 
   // --- State 정의 ---
   const [keywordSearch, setKeywordSearch] = React.useState(initialKeyword); // 현재 검색 중인 키워드
@@ -311,7 +313,7 @@ function KeywordPageContent() {
             <SelectItem value="1m">최근 1개월</SelectItem>
           </SelectContent>
         </Select>
-        {keywordSearch && !isSearching && (
+        {user && keywordSearch && !isSearching && (
             <Button onClick={handleAddToCompare}>
                 <Plus className="mr-2 h-4 w-4" />
                 비교
@@ -428,5 +430,3 @@ export default function KeywordPage() {
     </Suspense>
   );
 }
-
-    
